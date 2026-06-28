@@ -8,7 +8,7 @@ import { meetingService } from '@/services/meeting'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert, X, Maximize2, Minimize2 } from 'lucide-react'
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert, X, Maximize2, Minimize2, Subtitles } from 'lucide-react'
 
 interface RoomPageProps {
   params: Promise<{
@@ -141,8 +141,19 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [meetingHostId, setMeetingHostId] = useState<string | null>(null)
   const [shareError, setShareError] = useState<string | null>(null)
   // Captions state
-  const [captions, setCaptions] = useState<Array<{ participantId: string; text: string }>>([])
   const [showCaptions, setShowCaptions] = useState(true)
+  const [activeCaption, setActiveCaption] = useState<{ participantId: string; text: string } | null>(null)
+  const showCaptionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const displayCaption = (participantId: string, text: string) => {
+    setActiveCaption({ participantId, text })
+    if (showCaptionTimeoutRef.current) {
+      clearTimeout(showCaptionTimeoutRef.current)
+    }
+    showCaptionTimeoutRef.current = setTimeout(() => {
+      setActiveCaption(null)
+    }, 5000)
+  }
 
   // Layout States
   const [pinnedId, setPinnedId] = useState<string | null>(null) // Format: "sid:source" e.g., "p_123:camera"
@@ -275,6 +286,10 @@ export default function RoomPage({ params }: RoomPageProps) {
           window.location.href = '/dashboard'
           return
         }
+        if (parsed.type === 'CAPTION') {
+          displayCaption(parsed.sender || participant?.identity || 'Unknown', parsed.text)
+          return
+        }
         setMessages(prev => [...prev, { sender: parsed.sender || participant?.identity || 'Unknown', text: parsed.text, time: new Date() }])
       } catch(e) {}
     })
@@ -282,7 +297,7 @@ export default function RoomPage({ params }: RoomPageProps) {
     // Register transcription text stream handler
     activeRoom.registerTextStreamHandler('lk.transcription', async (reader, participant) => {
       for await (const raw of reader) {
-        setCaptions(prev => [...prev, { participantId: participant.identity, text: raw }])
+        displayCaption(participant.identity, raw)
       }
     })
 
@@ -314,6 +329,55 @@ export default function RoomPage({ params }: RoomPageProps) {
       activeRoom.disconnect()
     }
   }, [token, hasJoined])
+
+  // Client-side speech recognition for captions
+  useEffect(() => {
+    if (!room || isMuted || !hasJoined) return
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) return
+
+    const recognition = new SpeechRecognition()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+
+    recognition.onresult = async (event: any) => {
+      let finalTranscript = ''
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript
+        }
+      }
+
+      if (finalTranscript.trim()) {
+        const payload = JSON.stringify({ type: 'CAPTION', text: finalTranscript.trim(), sender: lobbyName })
+        const data = new TextEncoder().encode(payload)
+        try {
+          await room.localParticipant.publishData(data, { reliable: true })
+        } catch (e) {
+          console.error('Failed to broadcast caption', e)
+        }
+        displayCaption(lobbyName, finalTranscript.trim())
+      }
+    }
+
+    recognition.onerror = (event: any) => {
+      console.warn('Speech recognition error/warning', event.error)
+    }
+
+    try {
+      recognition.start()
+    } catch (e) {
+      console.error('Failed to start speech recognition', e)
+    }
+
+    return () => {
+      try {
+        recognition.stop()
+      } catch (e) {}
+    }
+  }, [room, isMuted, hasJoined, lobbyName])
 
   const handleMuteToggle = async () => {
     if (!room) { setIsMuted(!isMuted); return }
@@ -460,9 +524,9 @@ export default function RoomPage({ params }: RoomPageProps) {
 
   // --- Render Meeting Room ---
   return (
-    <div className="relative min-h-screen bg-background text-foreground flex flex-col justify-between overflow-hidden">
+    <div className="relative h-[100dvh] bg-background text-foreground flex flex-col justify-between overflow-hidden">
       {/* Header */}
-      <header className="px-4 sm:px-6 py-3 bg-primary flex flex-col md:flex-row items-center md:items-stretch justify-between gap-2 md:gap-0 z-10 shrink-0 shadow-lg shadow-primary/25" style={{borderBottom: '2px solid rgba(147,210,255,0.55)'}}>
+      <header className="px-4 sm:px-6 py-3 bg-primary flex items-center justify-between z-10 shrink-0 shadow-lg shadow-primary/25" style={{borderBottom: '2px solid rgba(147,210,255,0.55)'}}>
         <div className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
             <Video className="h-4 w-4 text-white" strokeWidth={2.5} />
@@ -540,13 +604,16 @@ export default function RoomPage({ params }: RoomPageProps) {
           )}
           </main>
 
-          {/* Captions Panel */}
-          {showCaptions && (
-            <aside className="fixed bottom-0 left-0 w-full max-h-48 bg-black/60 text-white p-2 overflow-y-auto z-20">
-              {captions.map((c, i) => (
-                <p key={i} className="text-sm">{c.text}</p>
-              ))}
-            </aside>
+          {/* Floating Captions Overlay */}
+          {showCaptions && activeCaption && (
+            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-xl bg-black/75 backdrop-blur-md text-white p-3 rounded-xl z-20 text-center pointer-events-none shadow-lg border border-white/10 select-none animate-in fade-in zoom-in-95 duration-200">
+              <p className="text-xs text-primary/80 font-bold mb-0.5 uppercase tracking-wide">
+                {activeCaption.participantId}
+              </p>
+              <p className="text-sm font-medium">
+                {activeCaption.text}
+              </p>
+            </div>
           )}
 
           {/* Sidebar Panel */}
@@ -620,35 +687,35 @@ export default function RoomPage({ params }: RoomPageProps) {
       </div>
 
       {/* Footer Controls */}
-      <footer className="px-6 py-4 bg-card border-t border-border flex items-center justify-center gap-4 shrink-0 shadow-sm">
-        <Button size="icon" onClick={handleMuteToggle} className={`h-12 w-12 rounded-full border transition-all ${isMuted ? 'bg-red-500 hover:bg-red-600 border-red-500 text-white' : 'bg-secondary hover:bg-secondary/80 border-border text-foreground'}`} disabled={!room}>
+      <footer className="px-4 py-3 bg-card border-t border-border flex items-center justify-center gap-2 sm:gap-4 shrink-0 shadow-sm">
+        <Button size="icon" onClick={handleMuteToggle} className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full border transition-all ${isMuted ? 'bg-red-500 hover:bg-red-600 border-red-500 text-white' : 'bg-secondary hover:bg-secondary/80 border-border text-foreground'}`} disabled={!room}>
           {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
         </Button>
 
-        <Button size="icon" onClick={handleVideoToggle} className={`h-12 w-12 rounded-full border transition-all ${isVideoOff ? 'bg-red-500 hover:bg-red-600 border-red-500 text-white' : 'bg-secondary hover:bg-secondary/80 border-border text-foreground'}`} disabled={!room}>
+        <Button size="icon" onClick={handleVideoToggle} className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full border transition-all ${isVideoOff ? 'bg-red-500 hover:bg-red-600 border-red-500 text-white' : 'bg-secondary hover:bg-secondary/80 border-border text-foreground'}`} disabled={!room}>
           {isVideoOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
         </Button>
 
-        <Button size="icon" onClick={handleScreenShareToggle} className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full border transition-all ${isScreenSharing ? 'bg-primary hover:opacity-90 border-primary text-white' : 'bg-secondary hover:bg-secondary/80 border-border text-foreground'}`} disabled={!room}>
+        <Button size="icon" onClick={handleScreenShareToggle} className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full border transition-all hidden sm:inline-flex ${isScreenSharing ? 'bg-primary hover:opacity-90 border-primary text-white' : 'bg-secondary hover:bg-secondary/80 border-border text-foreground'}`} disabled={!room}>
           <MonitorUp className="h-5 w-5" />
         </Button>
         {/* Captions toggle */}
-        <Button size="icon" onClick={() => setShowCaptions(!showCaptions)} className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full border ${showCaptions ? 'bg-primary text-white' : 'bg-secondary text-foreground'}`} title="Toggle Captions">
-          <ShieldAlert className="h-5 w-5" />
+        <Button size="icon" onClick={() => setShowCaptions(!showCaptions)} className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full border transition-all ${showCaptions ? 'bg-primary text-white' : 'bg-secondary text-foreground'}`} title="Toggle Captions">
+          <Subtitles className="h-5 w-5" />
         </Button>
 
         {user && user.id === meetingHostId ? (
-          <div className="flex gap-2 ml-4">
-            <Button onClick={handleLeaveCall} variant="outline" className="h-12 px-6 rounded-full border-slate-700 hover:bg-slate-800 font-semibold text-md">
+          <div className="flex gap-2 ml-2 sm:ml-4">
+            <Button onClick={handleLeaveCall} variant="outline" className="h-10 sm:h-12 px-3 sm:px-6 rounded-full border-slate-700 hover:bg-slate-800 font-semibold text-sm sm:text-md">
               Leave
             </Button>
-            <Button onClick={handleEndMeetingForAll} className="h-12 px-6 rounded-full bg-red-600 hover:bg-red-700 font-semibold text-md">
-              <PhoneOff className="h-5 w-5 mr-2" /> End Meeting
+            <Button onClick={handleEndMeetingForAll} className="h-10 sm:h-12 px-3 sm:px-6 rounded-full bg-red-600 hover:bg-red-700 font-semibold text-sm sm:text-md">
+              <PhoneOff className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" /> <span className="hidden sm:inline">End Meeting</span><span className="sm:hidden">End</span>
             </Button>
           </div>
         ) : (
-          <Button onClick={handleLeaveCall} className="h-12 px-6 rounded-full bg-red-600 hover:bg-red-700 ml-4 font-semibold text-md">
-            <PhoneOff className="h-5 w-5 mr-2" /> Leave
+          <Button onClick={handleLeaveCall} className="h-10 sm:h-12 px-4 sm:px-6 rounded-full bg-red-600 hover:bg-red-700 ml-2 sm:ml-4 font-semibold text-sm sm:text-md">
+            <PhoneOff className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" /> Leave
           </Button>
         )}
       </footer>
