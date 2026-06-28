@@ -139,6 +139,10 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [isScreenSharing, setIsScreenSharing] = useState(false)
   const [statusText, setStatusText] = useState('')
   const [meetingHostId, setMeetingHostId] = useState<string | null>(null)
+  const [shareError, setShareError] = useState<string | null>(null)
+  // Captions state
+  const [captions, setCaptions] = useState<Array<{ participantId: string; text: string }>>([])
+  const [showCaptions, setShowCaptions] = useState(true)
 
   // Layout States
   const [pinnedId, setPinnedId] = useState<string | null>(null) // Format: "sid:source" e.g., "p_123:camera"
@@ -275,6 +279,13 @@ export default function RoomPage({ params }: RoomPageProps) {
       } catch(e) {}
     })
 
+    // Register transcription text stream handler
+    activeRoom.registerTextStreamHandler('lk.transcription', async (reader, participant) => {
+      for await (const raw of reader) {
+        setCaptions(prev => [...prev, { participantId: participant.identity, text: raw }])
+      }
+    })
+
     const connectToRoom = async () => {
       try {
         const wsUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'ws://localhost:7800'
@@ -295,7 +306,13 @@ export default function RoomPage({ params }: RoomPageProps) {
     }
     connectToRoom()
 
-    return () => activeRoom.disconnect()
+    return () => {
+      // Cleanup: unregister handler if available
+      if (activeRoom.unregisterTextStreamHandler) {
+        activeRoom.unregisterTextStreamHandler('lk.transcription')
+      }
+      activeRoom.disconnect()
+    }
   }, [token, hasJoined])
 
   const handleMuteToggle = async () => {
@@ -332,13 +349,15 @@ export default function RoomPage({ params }: RoomPageProps) {
     try {
       await room.localParticipant.setScreenShareEnabled(!isScreenSharing)
       setIsScreenSharing(!isScreenSharing)
+      setShareError(null)
       if (!isScreenSharing) {
         setPinnedId(`${room.localParticipant.sid || room.localParticipant.identity}:screen_share`)
       } else {
         setPinnedId(null)
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to share screen', e)
+      setShareError(e.message ?? 'Unable to start screen share. Ensure the site is served over HTTPS and you have granted permission.')
     }
   }
 
@@ -403,8 +422,8 @@ export default function RoomPage({ params }: RoomPageProps) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-white">
         <h1 className="text-3xl font-bold mb-8">Ready to join?</h1>
-        <div className="flex flex-col md:flex-row gap-8 items-center w-full max-w-4xl">
-          <div className="flex-1 w-full bg-slate-900 rounded-2xl overflow-hidden aspect-video relative border border-slate-800 flex items-center justify-center shadow-2xl">
+        <div className="flex flex-col md:flex-row gap-8 items-center w-full max-w-full sm:max-w-4xl">
+          <div className="flex-1 w-full bg-slate-900 rounded-2xl overflow-hidden aspect-video relative border border-slate-800 flex items-center justify-center shadow-2xl max-w-full">
             <video ref={previewVideoRef} autoPlay playsInline muted className={`w-full h-full object-cover transform scale-x-[-1] ${isVideoOff ? 'hidden' : ''}`} />
             
             {isVideoOff && (
@@ -415,10 +434,10 @@ export default function RoomPage({ params }: RoomPageProps) {
             )}
             
             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-              <Button onClick={handleMuteToggle} size="icon" className={`h-12 w-12 rounded-full border-none ${isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-800/80 hover:bg-slate-700 backdrop-blur-sm'}`}>
+              <Button onClick={handleMuteToggle} size="icon" className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full border-none ${isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-800/80 hover:bg-slate-700 backdrop-blur-sm'}`}>
                 {isMuted ? <MicOff className="h-5 w-5 text-white" /> : <Mic className="h-5 w-5 text-white" />}
               </Button>
-              <Button onClick={handleVideoToggle} size="icon" className={`h-12 w-12 rounded-full border-none ${isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-800/80 hover:bg-slate-700 backdrop-blur-sm'}`}>
+              <Button onClick={handleVideoToggle} size="icon" className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full border-none ${isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-800/80 hover:bg-slate-700 backdrop-blur-sm'}`}>
                 {isVideoOff ? <VideoOff className="h-5 w-5 text-white" /> : <Video className="h-5 w-5 text-white" />}
               </Button>
             </div>
@@ -443,7 +462,7 @@ export default function RoomPage({ params }: RoomPageProps) {
   return (
     <div className="relative min-h-screen bg-background text-foreground flex flex-col justify-between overflow-hidden">
       {/* Header */}
-      <header className="px-6 py-3 bg-primary flex items-center justify-between z-10 shrink-0 shadow-lg shadow-primary/25" style={{borderBottom: '2px solid rgba(147,210,255,0.55)'}}>
+      <header className="px-4 sm:px-6 py-3 bg-primary flex flex-col md:flex-row items-center md:items-stretch justify-between gap-2 md:gap-0 z-10 shrink-0 shadow-lg shadow-primary/25" style={{borderBottom: '2px solid rgba(147,210,255,0.55)'}}>
         <div className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
             <Video className="h-4 w-4 text-white" strokeWidth={2.5} />
@@ -519,9 +538,18 @@ export default function RoomPage({ params }: RoomPageProps) {
               )}
             </div>
           )}
-        </main>
+          </main>
 
-        {/* Sidebar Panel */}
+          {/* Captions Panel */}
+          {showCaptions && (
+            <aside className="fixed bottom-0 left-0 w-full max-h-48 bg-black/60 text-white p-2 overflow-y-auto z-20">
+              {captions.map((c, i) => (
+                <p key={i} className="text-sm">{c.text}</p>
+              ))}
+            </aside>
+          )}
+
+          {/* Sidebar Panel */}
         {activeSidebar && (
           <aside className="w-80 bg-card border-l border-border flex flex-col shrink-0 animate-in slide-in-from-right-8 duration-200">
             <div className="p-4 border-b border-border flex justify-between items-center">
@@ -601,8 +629,12 @@ export default function RoomPage({ params }: RoomPageProps) {
           {isVideoOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
         </Button>
 
-        <Button size="icon" onClick={handleScreenShareToggle} className={`h-12 w-12 rounded-full border transition-all ${isScreenSharing ? 'bg-primary hover:opacity-90 border-primary text-white' : 'bg-secondary hover:bg-secondary/80 border-border text-foreground'}`} disabled={!room}>
+        <Button size="icon" onClick={handleScreenShareToggle} className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full border transition-all ${isScreenSharing ? 'bg-primary hover:opacity-90 border-primary text-white' : 'bg-secondary hover:bg-secondary/80 border-border text-foreground'}`} disabled={!room}>
           <MonitorUp className="h-5 w-5" />
+        </Button>
+        {/* Captions toggle */}
+        <Button size="icon" onClick={() => setShowCaptions(!showCaptions)} className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full border ${showCaptions ? 'bg-primary text-white' : 'bg-secondary text-foreground'}`} title="Toggle Captions">
+          <ShieldAlert className="h-5 w-5" />
         </Button>
 
         {user && user.id === meetingHostId ? (
@@ -620,6 +652,11 @@ export default function RoomPage({ params }: RoomPageProps) {
           </Button>
         )}
       </footer>
+      {shareError && (
+        <div className="bg-destructive/10 border border-destructive text-destructive p-3 rounded-lg mx-6 mt-4 text-sm">
+          ⚠️ {shareError}
+        </div>
+      )}
     </div>
   )
 }
