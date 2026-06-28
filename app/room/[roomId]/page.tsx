@@ -96,14 +96,29 @@ function VideoTile({ participant, source, isPinned, onTogglePin }: { participant
 
   return (
     <div className={`relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex items-center justify-center shadow-lg group ${isPinned ? 'w-full h-full' : 'w-full aspect-video'}`}>
-      <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full ${source === 'screen_share' || isPinned ? 'object-contain bg-black' : 'object-cover'} ${!videoEnabled ? 'hidden' : ''}`} />
+      <video 
+        ref={videoRef} 
+        autoPlay 
+        playsInline 
+        muted 
+        className={`w-full h-full ${source === 'screen_share' || isPinned ? 'object-contain bg-black' : 'object-cover'}`} 
+      />
       
-      {!videoEnabled && source === 'camera' && (
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold uppercase border border-primary/20">
-            {getDisplayName(participant.identity).slice(0, 2).toUpperCase()}
-          </div>
-          <span className="text-xs text-foreground/50">Camera Off</span>
+      {!videoEnabled && (
+        <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center gap-2 z-10 select-none">
+          {source === 'camera' ? (
+            <>
+              <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold uppercase border border-primary/20">
+                {getDisplayName(participant.identity).slice(0, 2).toUpperCase()}
+              </div>
+              <span className="text-xs text-foreground/50">Camera Off</span>
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-slate-500">
+              <MonitorUp className="h-10 w-10 animate-pulse" />
+              <span className="text-xs">Loading screen share...</span>
+            </div>
+          )}
         </div>
       )}
 
