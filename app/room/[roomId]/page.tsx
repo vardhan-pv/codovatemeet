@@ -16,6 +16,15 @@ interface RoomPageProps {
   }>
 }
 
+const getDisplayName = (identity: string) => {
+  if (!identity) return 'Unknown'
+  const index = identity.lastIndexOf('_')
+  if (index !== -1) {
+    return identity.substring(0, index)
+  }
+  return identity
+}
+
 function VideoTile({ participant, source, isPinned, onTogglePin }: { participant: any, source: 'camera' | 'screen_share', isPinned: boolean, onTogglePin: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -92,7 +101,7 @@ function VideoTile({ participant, source, isPinned, onTogglePin }: { participant
       {!videoEnabled && source === 'camera' && (
         <div className="flex flex-col items-center gap-2">
           <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold uppercase border border-primary/20">
-            {participant.identity.slice(0, 2).toUpperCase()}
+            {getDisplayName(participant.identity).slice(0, 2).toUpperCase()}
           </div>
           <span className="text-xs text-foreground/50">Camera Off</span>
         </div>
@@ -102,7 +111,7 @@ function VideoTile({ participant, source, isPinned, onTogglePin }: { participant
       
       {/* Overlay Information */}
       <div className="absolute bottom-3 left-3 bg-black/60 px-3 py-1 rounded-md text-xs font-semibold backdrop-blur-xs flex items-center gap-1.5 text-white z-10">
-        <span>{participant.identity}</span>
+        <span>{getDisplayName(participant.identity)}</span>
         {participant.isLocal && <span className="text-[10px] uppercase font-bold text-primary">(You)</span>}
         {source === 'screen_share' && <span className="text-[10px] uppercase font-bold text-blue-400 border border-blue-400/50 px-1 rounded">Screen</span>}
         {audioMuted && source === 'camera' && <MicOff className="h-3 w-3 text-red-500 ml-1" />}
@@ -140,6 +149,7 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [statusText, setStatusText] = useState('')
   const [meetingHostId, setMeetingHostId] = useState<string | null>(null)
   const [shareError, setShareError] = useState<string | null>(null)
+  const [serverUrl, setServerUrl] = useState<string | null>(null)
   // Captions state
   const [showCaptions, setShowCaptions] = useState(true)
   const [activeCaption, setActiveCaption] = useState<{ participantId: string; text: string } | null>(null)
@@ -229,8 +239,10 @@ export default function RoomPage({ params }: RoomPageProps) {
     setStatusText('Requesting room token...')
 
     try {
-      const data = await livekitService.getRoomToken(roomId, lobbyName.trim())
+      const uniqueIdentity = `${lobbyName.trim()}_${Math.random().toString(36).substring(2, 7)}`
+      const data = await livekitService.getRoomToken(roomId.toUpperCase(), uniqueIdentity)
       setToken(data.token)
+      setServerUrl(data.serverUrl)
     } catch (err) {
       setStatusText('Failed to obtain room token.')
     }
@@ -303,7 +315,7 @@ export default function RoomPage({ params }: RoomPageProps) {
 
     const connectToRoom = async () => {
       try {
-        const wsUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'ws://localhost:7800'
+        const wsUrl = serverUrl || process.env.NEXT_PUBLIC_LIVEKIT_URL || 'ws://localhost:7800'
         await activeRoom.connect(wsUrl, token)
         setRoom(activeRoom)
         updateParticipantList()
@@ -328,7 +340,7 @@ export default function RoomPage({ params }: RoomPageProps) {
       }
       activeRoom.disconnect()
     }
-  }, [token, hasJoined])
+  }, [token, hasJoined, serverUrl])
 
   // Client-side speech recognition for captions
   useEffect(() => {
@@ -655,16 +667,16 @@ export default function RoomPage({ params }: RoomPageProps) {
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-2">
                   {participants.map(p => {
-                    const isHost = user && p.identity === user.name && user.id === meetingHostId
+                    const isHost = user && getDisplayName(p.identity) === user.name && user.id === meetingHostId
                     return (
                       <div key={p.sid || p.identity} className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/50 border border-border">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase border border-primary/20">
-                            {p.identity.slice(0, 2)}
+                            {getDisplayName(p.identity).slice(0, 2)}
                           </div>
                           <div>
                             <p className="text-sm font-semibold flex items-center gap-2 text-foreground">
-                              {p.identity} {p.isLocal && <span className="text-[10px] text-muted-foreground">(You)</span>}
+                              {getDisplayName(p.identity)} {p.isLocal && <span className="text-[10px] text-muted-foreground">(You)</span>}
                               {isHost && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 font-bold">Host</span>}
                             </p>
                           </div>
