@@ -1784,10 +1784,9 @@ export default function RoomPage({ params }: RoomPageProps) {
                   className="bg-slate-800 border border-slate-700 text-white rounded text-[10px] px-2 py-0.5"
                 >
                   <option value="none">Original Language</option>
-                  <option value="es">Translate to Spanish</option>
-                  <option value="fr">Translate to French</option>
-                  <option value="de">Translate to German</option>
-                  <option value="ja">Translate to Japanese</option>
+                  <option value="en">Translate to English</option>
+                  <option value="kn">Translate to Kannada</option>
+                  <option value="hi">Translate to Hindi</option>
                 </select>
               </div>
 
@@ -1796,17 +1795,14 @@ export default function RoomPage({ params }: RoomPageProps) {
                 let displayedText = msg.text
                 if (translationLang !== 'none') {
                   const translations: Record<string, Record<string, string>> = {
-                    es: {
-                      'hello': 'hola', 'hi': 'hola', 'welcome': 'bienvenido', 'good': 'bueno', 'code': 'código', 'whiteboard': 'pizarra', 'meeting': 'reunión'
+                    en: {
+                      'hello': 'hello', 'hi': 'hi', 'welcome': 'welcome', 'good': 'good', 'code': 'code', 'whiteboard': 'whiteboard', 'meeting': 'meeting'
                     },
-                    fr: {
-                      'hello': 'bonjour', 'hi': 'salut', 'welcome': 'bienvenue', 'good': 'bon', 'code': 'code', 'whiteboard': 'tableau blanc', 'meeting': 'réunion'
+                    kn: {
+                      'hello': 'ನಮಸ್ಕಾರ', 'hi': 'ನಮಸ್ಕಾರ', 'welcome': 'ಸುಸ್ವಾಗತ', 'good': 'ಒಳ್ಳೆಯದು', 'code': 'ಕೋಡ್', 'whiteboard': 'ಶ್ವೇತಫಲಕ', 'meeting': 'ಸಭೆ'
                     },
-                    de: {
-                      'hello': 'hallo', 'hi': 'hallo', 'welcome': 'willkommen', 'good': 'gut', 'code': 'code', 'whiteboard': 'whiteboard', 'meeting': 'meeting'
-                    },
-                    ja: {
-                      'hello': 'こんにちは', 'hi': 'やあ', 'welcome': 'ようこそ', 'good': '良い', 'code': 'コード', 'whiteboard': 'ホワイトボード', 'meeting': '会議'
+                    hi: {
+                      'hello': 'नमस्ते', 'hi': 'नमस्ते', 'welcome': 'स्वागत', 'good': 'अच्छा', 'code': 'कोड', 'whiteboard': 'श्वेतपट', 'meeting': 'बैठक'
                     }
                   }
                   const words = msg.text.toLowerCase().split(/\b/)
