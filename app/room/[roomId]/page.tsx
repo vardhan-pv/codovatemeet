@@ -887,6 +887,15 @@ export default function RoomPage({ params }: RoomPageProps) {
 
   // Workspace Split Layout: 'none' | 'code' | 'whiteboard' | 'uno'
   const [activeWorkspace, setActiveWorkspace] = useState<'none' | 'code' | 'whiteboard' | 'uno'>('none')
+  const [currentPage, setCurrentPage] = useState(0)
+  const [isWorkspaceMaximized, setIsWorkspaceMaximized] = useState(false)
+
+  useEffect(() => {
+    if (activeWorkspace === 'none') {
+      setIsWorkspaceMaximized(false)
+    }
+    setCurrentPage(0)
+  }, [activeWorkspace])
 
   // Sidebar Panel: 'chat' | 'participants' | 'ai' | 'polls' | 'effects' | 'analytics' | 'dev' | 'timetravel' | 'focus' | 'interview' | 'scheduler' | 'abuse' | null
   const [activeSidebar, setActiveSidebar] = useState<string | null>(null)
@@ -1497,15 +1506,19 @@ export default function RoomPage({ params }: RoomPageProps) {
   const handleEndMeetingForAll = async () => {
     if (!room) return
     
+    // Main host check: only allow ending the meeting if user is the meeting creator
+    if (!user || user.id !== meetingHostId) {
+      console.warn("Only the main host can end the meeting for all.")
+      return
+    }
+
     const payload = JSON.stringify({ type: 'END_MEETING' })
     const data = new TextEncoder().encode(payload)
     try {
       await room.localParticipant.publishData(data, { reliable: true })
     } catch (e) {}
 
-    if (user && user.id === meetingHostId) {
-      try { await meetingService.endMeeting(roomId, 60) } catch(e) {}
-    }
+    try { await meetingService.endMeeting(roomId, 60) } catch(e) {}
     room.disconnect()
     window.location.href = '/dashboard'
   }
@@ -1685,6 +1698,12 @@ export default function RoomPage({ params }: RoomPageProps) {
 
   const pinnedTile = activeTiles.find(t => t.id === pinnedId)
   const unpinnedTiles = activeTiles.filter(t => t.id !== pinnedId)
+
+  // Paginate activeTiles to resolve mixed/crowded layout
+  const tilesPerPage = activeWorkspace !== 'none' ? 2 : 4
+  const totalPages = Math.ceil(activeTiles.length / tilesPerPage)
+  const activePage = Math.min(currentPage, Math.max(0, totalPages - 1))
+  const visibleTiles = activeTiles.slice(activePage * tilesPerPage, (activePage + 1) * tilesPerPage)
 
   // On-the-Go Mode Simplified Layout
   if (isOnToGoMode) {
@@ -2458,7 +2477,7 @@ export default function RoomPage({ params }: RoomPageProps) {
           )}
 
           {/* Right panel: Video grid */}
-          <div className={`h-full overflow-y-auto transition-all ${activeWorkspace !== 'none' ? 'w-full md:w-80 shrink-0' : 'flex-1'}`}>
+          <div className={`h-full overflow-y-auto transition-all ${isWorkspaceMaximized ? 'hidden' : activeWorkspace !== 'none' ? 'w-full md:w-80 shrink-0' : 'flex-1'}`}>
             {statusText ? (
               <div className="h-full flex flex-col items-center justify-center gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -2536,28 +2555,57 @@ export default function RoomPage({ params }: RoomPageProps) {
                     )}
                   </>
                 ) : (
-                  <div className={`grid gap-4 w-full h-full content-center ${
-                    activeTiles.length <= 1 ? 'grid-cols-1 max-w-2xl mx-auto' :
-                    activeTiles.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto' :
-                    'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto'
-                  }`}>
-                    {activeTiles.map(tile => {
-                      const pid = tile.id.split(':')[0]
-                      return (
-                        <VideoTile
-                          key={tile.id}
-                          participant={tile.participant}
-                          source={tile.source}
-                          isPinned={false}
-                          onTogglePin={() => setPinnedId(tile.id)}
-                          trackPub={tile.trackPub}
-                          reactions={reactions.filter(r => r.participantSid === pid)}
-                          filter={participantFilters[pid]}
-                          handRaised={raisedHands[pid]}
-                          isCompanionMode={isCompanionMode}
-                        />
-                      )
-                    })}
+                  <div className="flex flex-col h-full justify-center">
+                    <div className={`grid gap-4 w-full h-full content-center ${
+                      visibleTiles.length <= 1 ? 'grid-cols-1 max-w-2xl mx-auto' :
+                      visibleTiles.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto' :
+                      'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto'
+                    }`}>
+                      {visibleTiles.map(tile => {
+                        const pid = tile.id.split(':')[0]
+                        return (
+                          <VideoTile
+                            key={tile.id}
+                            participant={tile.participant}
+                            source={tile.source}
+                            isPinned={false}
+                            onTogglePin={() => setPinnedId(tile.id)}
+                            trackPub={tile.trackPub}
+                            reactions={reactions.filter(r => r.participantSid === pid)}
+                            filter={participantFilters[pid]}
+                            handRaised={raisedHands[pid]}
+                            isCompanionMode={isCompanionMode}
+                          />
+                        )
+                      })}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-4 mt-4 bg-slate-900/80 border border-slate-800 rounded-full px-4 py-1.5 w-fit mx-auto select-none shadow-lg">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                          disabled={activePage === 0}
+                          className="h-7 w-7 text-slate-400 hover:text-white disabled:opacity-30 hover:bg-slate-800 border-none"
+                        >
+                          ◀
+                        </Button>
+                        <span className="text-[11px] font-bold text-slate-300">
+                          Page {activePage + 1} of {totalPages}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                          disabled={activePage === totalPages - 1}
+                          className="h-7 w-7 text-slate-400 hover:text-white disabled:opacity-30 hover:bg-slate-800 border-none"
+                        >
+                          ▶
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -2668,6 +2716,16 @@ export default function RoomPage({ params }: RoomPageProps) {
             >
               <span className="text-sm">🃏</span>
             </Button>
+            {activeWorkspace !== 'none' && (
+              <Button
+                size="icon"
+                onClick={() => setIsWorkspaceMaximized(!isWorkspaceMaximized)}
+                className={`h-9 w-9 rounded-lg border ${isWorkspaceMaximized ? 'bg-primary text-white border-primary' : 'bg-slate-850 text-slate-400 border-slate-800'}`}
+                title={isWorkspaceMaximized ? "Restore Screen" : "Enlarge Workspace"}
+              >
+                {isWorkspaceMaximized ? "🔍" : "🖥️"}
+              </Button>
+            )}
           </div>
 
           {/* Desktop view (Text + Icons) */}
@@ -2693,6 +2751,15 @@ export default function RoomPage({ params }: RoomPageProps) {
             >
               🃏 UNO! Game
             </Button>
+            {activeWorkspace !== 'none' && (
+              <Button
+                size="sm"
+                onClick={() => setIsWorkspaceMaximized(!isWorkspaceMaximized)}
+                className={`h-9 font-semibold text-xs border ${isWorkspaceMaximized ? 'bg-primary text-white border-primary' : 'bg-slate-850 text-slate-300 border-slate-800'}`}
+              >
+                {isWorkspaceMaximized ? "🔍 Show Videos" : "🖥️ Enlarge Workspace"}
+              </Button>
+            )}
           </div>
 
           {/* Mobile Leave actions */}
