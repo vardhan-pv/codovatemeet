@@ -2395,28 +2395,50 @@ export default function RoomPage({ params }: RoomPageProps) {
         </div>
         
         {/* Navigation Sidebar selectors */}
-        <div className="flex gap-1 flex-wrap">
-          <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'chat' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
-            <MessageSquare className="h-4 w-4 mr-1" /> Chat
-          </Button>
-          <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'participants' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
-            <Users className="h-4 w-4 mr-1" /> {participants.length}
-          </Button>
-          <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'ai' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
-            <Sparkles className="h-4 w-4 mr-1 text-amber-400 animate-pulse" /> AI Notes
-          </Button>
-          <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'dev' ? null : 'dev')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'dev' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
-            <Activity className="h-4 w-4 mr-1 text-primary animate-pulse" /> Dev Panel
-          </Button>
-          <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'timetravel' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
-            <Clock className="h-4 w-4 mr-1 text-sky-400" /> Timeline
-          </Button>
-          <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'focus' ? null : 'focus')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'focus' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
-            ⏱️ Focus
-          </Button>
-          <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'interview' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
-            <Crown className="h-4 w-4 mr-1 text-amber-500" /> Interview
-          </Button>
+        <div className="flex gap-2">
+          {/* Mobile Select Tool dropdown */}
+          <select
+            onChange={(e) => {
+              const val = e.target.value
+              setActiveSidebar(val ? val : null)
+            }}
+            value={activeSidebar || ''}
+            className="md:hidden bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold rounded-lg px-2 py-1 outline-none h-8"
+          >
+            <option value="">⚙️ Select Sidebar Tool</option>
+            <option value="chat">💬 Chat</option>
+            <option value="participants">👥 Participants ({participants.length})</option>
+            <option value="ai">✨ AI Notes</option>
+            <option value="dev">⚡ Dev Panel</option>
+            <option value="timetravel">⏰ Timeline</option>
+            <option value="focus">⏱️ Focus</option>
+            <option value="interview">👑 Interview</option>
+          </select>
+
+          {/* Desktop selector buttons */}
+          <div className="hidden md:flex gap-1 flex-wrap">
+            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'chat' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+              <MessageSquare className="h-4 w-4 mr-1" /> Chat
+            </Button>
+            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'participants' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+              <Users className="h-4 w-4 mr-1" /> {participants.length}
+            </Button>
+            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'ai' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+              <Sparkles className="h-4 w-4 mr-1 text-amber-400 animate-pulse" /> AI Notes
+            </Button>
+            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'dev' ? null : 'dev')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'dev' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+              <Activity className="h-4 w-4 mr-1 text-primary animate-pulse" /> Dev Panel
+            </Button>
+            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'timetravel' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+              <Clock className="h-4 w-4 mr-1 text-sky-400" /> Timeline
+            </Button>
+            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'focus' ? null : 'focus')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'focus' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+              ⏱️ Focus
+            </Button>
+            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'interview' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+              <Crown className="h-4 w-4 mr-1 text-amber-500" /> Interview
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -2616,35 +2638,78 @@ export default function RoomPage({ params }: RoomPageProps) {
       )}
 
       {/* Bottom Floating Control Dock */}
-      <footer className="px-4 py-3 bg-slate-900 border-t border-slate-855 flex items-center justify-between shrink-0 shadow-2xl">
+      <footer className="px-4 py-3 bg-slate-900 border-t border-slate-855 flex flex-col md:flex-row items-center justify-between shrink-0 shadow-2xl gap-3">
         
         {/* Left footer: workspaces triggers */}
-        <div className="flex gap-1.5 flex-wrap">
-          <Button
-            size="sm"
-            onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
-            className={`h-9 font-semibold text-xs border ${activeWorkspace === 'code' ? 'bg-primary text-white border-primary' : 'bg-slate-850 text-slate-300 border-slate-800'}`}
-          >
-            <Code className="h-4 w-4 mr-1.5" /> Code Workspace
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
-            className={`h-9 font-semibold text-xs border ${activeWorkspace === 'whiteboard' ? 'bg-primary text-white border-primary' : 'bg-slate-855 text-slate-300 border-slate-800'}`}
-          >
-            <Paintbrush className="h-4 w-4 mr-1.5" /> Whiteboard
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
-            className={`h-9 font-semibold text-xs border ${activeWorkspace === 'uno' ? 'bg-primary text-white border-primary' : 'bg-slate-855 text-slate-300 border-slate-800'}`}
-          >
-            🃏 UNO! Game
-          </Button>
+        <div className="w-full md:w-auto flex justify-between md:justify-start items-center gap-2">
+          {/* Mobile view (Icons only) */}
+          <div className="flex md:hidden gap-1">
+            <Button
+              size="icon"
+              onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
+              className={`h-9 w-9 rounded-lg border ${activeWorkspace === 'code' ? 'bg-primary text-white border-primary' : 'bg-slate-850 text-slate-400 border-slate-800'}`}
+              title="Code Workspace"
+            >
+              <Code className="h-4.5 w-4.5" />
+            </Button>
+            <Button
+              size="icon"
+              onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
+              className={`h-9 w-9 rounded-lg border ${activeWorkspace === 'whiteboard' ? 'bg-primary text-white border-primary' : 'bg-slate-855 text-slate-400 border-slate-800'}`}
+              title="Whiteboard"
+            >
+              <Paintbrush className="h-4.5 w-4.5" />
+            </Button>
+            <Button
+              size="icon"
+              onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
+              className={`h-9 w-9 rounded-lg border ${activeWorkspace === 'uno' ? 'bg-primary text-white border-primary' : 'bg-slate-855 text-slate-400 border-slate-800'}`}
+              title="UNO! Game"
+            >
+              <span className="text-sm">🃏</span>
+            </Button>
+          </div>
+
+          {/* Desktop view (Text + Icons) */}
+          <div className="hidden md:flex gap-1.5">
+            <Button
+              size="sm"
+              onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
+              className={`h-9 font-semibold text-xs border ${activeWorkspace === 'code' ? 'bg-primary text-white border-primary' : 'bg-slate-850 text-slate-300 border-slate-800'}`}
+            >
+              <Code className="h-4 w-4 mr-1.5" /> Code Workspace
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
+              className={`h-9 font-semibold text-xs border ${activeWorkspace === 'whiteboard' ? 'bg-primary text-white border-primary' : 'bg-slate-855 text-slate-300 border-slate-800'}`}
+            >
+              <Paintbrush className="h-4 w-4 mr-1.5" /> Whiteboard
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
+              className={`h-9 font-semibold text-xs border ${activeWorkspace === 'uno' ? 'bg-primary text-white border-primary' : 'bg-slate-855 text-slate-300 border-slate-800'}`}
+            >
+              🃏 UNO! Game
+            </Button>
+          </div>
+
+          {/* Mobile Leave actions */}
+          <div className="flex md:hidden gap-1.5">
+            <Button onClick={handleLeaveCall} variant="outline" className="h-9 px-3 rounded-lg border-slate-800 hover:bg-slate-850 font-bold text-xs select-none">
+              Leave
+            </Button>
+            {user && user.id === meetingHostId && (
+              <Button onClick={handleEndMeetingForAll} className="h-9 px-3 rounded-lg bg-red-600 hover:bg-red-700 font-bold text-xs border-none select-none">
+                End
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Center footer: webcam media controls & triggers */}
-        <div className="flex items-center gap-2 sm:gap-3.5">
+        {/* Center footer: media controls */}
+        <div className="flex items-center justify-center gap-2 sm:gap-3.5 w-full md:w-auto">
           <Button size="icon" onClick={handleMuteToggle} className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all ${isMuted ? 'bg-red-500 border-red-500 text-white' : 'bg-slate-850 border-slate-800 text-white hover:bg-slate-800'}`} disabled={!room}>
             {isMuted ? <MicOff className="h-4.5 w-4.5" /> : <Mic className="h-4.5 w-4.5" />}
           </Button>
@@ -2670,13 +2735,13 @@ export default function RoomPage({ params }: RoomPageProps) {
           </Button>
         </div>
 
-        {/* Right footer: utilities sidebar panels & call actions */}
-        <div className="flex items-center gap-2">
+        {/* Right footer: Desktop utilities & call actions */}
+        <div className="hidden md:flex items-center gap-2">
           <div className="hidden lg:flex gap-1">
-            <Button size="icon" onClick={() => setIsOnToGoMode(true)} className="h-8 w-8 rounded bg-slate-850 border border-slate-800 text-slate-400 hover:text-white" title="On-the-Go Mode">
+            <Button size="icon" onClick={() => setIsOnToGoMode(true)} className="h-8 w-8 rounded bg-slate-855 border border-slate-800 text-slate-400 hover:text-white" title="On-the-Go Mode">
               🚶
             </Button>
-            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')} className={`h-8 w-8 rounded bg-slate-850 border border-slate-800 hover:bg-slate-800 ${activeSidebar === 'effects' ? 'text-primary' : 'text-slate-400'}`} title="Effects">
+            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')} className={`h-8 w-8 rounded bg-slate-855 border border-slate-800 hover:bg-slate-800 ${activeSidebar === 'effects' ? 'text-primary' : 'text-slate-400'}`} title="Effects">
               <User className="h-4 w-4" />
             </Button>
             <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'scheduler' ? null : 'scheduler')} className={`h-8 w-8 rounded bg-slate-855 border border-slate-800 hover:bg-slate-800 ${activeSidebar === 'scheduler' ? 'text-primary' : 'text-slate-400'}`} title="Schedule Follow-up">
