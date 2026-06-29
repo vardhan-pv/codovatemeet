@@ -61,15 +61,6 @@ export async function POST(request: Request) {
     // 3. Reset failed login attempts on successful login
     await query('UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = $1', [user.id])
 
-    // 4. Enforce Signup Verification
-    if (user.is_verified === false) {
-      return NextResponse.json({
-        error: 'Please verify your email address to continue.',
-        isUnverified: true,
-        userId: user.id
-      }, { status: 403 })
-    }
-
     // 5. Multi-Factor Authentication (MFA) check
     if (user.mfa_enabled) {
       return NextResponse.json({

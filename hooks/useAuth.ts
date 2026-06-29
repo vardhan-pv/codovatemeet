@@ -16,7 +16,7 @@ interface AuthState {
   loading: boolean
   error: string | null
   login: (email: string, password: string) => Promise<boolean>
-  register: (name: string, email: string, password: string) => Promise<any>
+  register: (name: string, email: string, password: string) => Promise<boolean>
   logout: () => void
   loadProfile: () => Promise<void>
 }
@@ -44,9 +44,11 @@ export const useAuth = create<AuthState>((set, get) => ({
   register: async (name, email, password) => {
     set({ loading: true, error: null })
     try {
-      const data = await authService.register(name, email, password)
-      set({ loading: false })
-      return data
+      await authService.register(name, email, password)
+      const data = await authService.login(email, password)
+      localStorage.setItem('token', data.token)
+      set({ token: data.token, user: data.user, loading: false })
+      return true
     } catch (err: any) {
       const msg = err.response?.data?.error || 'Registration failed'
       set({ error: msg, loading: false })

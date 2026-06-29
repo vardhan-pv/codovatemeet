@@ -34,31 +34,12 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
     const userId = crypto.randomUUID()
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
 
-    // Insert user with default is_verified: false and role: 'user'
+    // Insert user with default is_verified: true and role: 'user'
     await query(
       'INSERT INTO users (id, name, email, password, verification_code, is_verified, role) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [userId, name, email.toLowerCase(), hashedPassword, verificationCode, false, 'user']
+      [userId, name, email.toLowerCase(), hashedPassword, null, true, 'user']
     )
-
-    // Dispatch confirmation email (real SMTP or logging fallback)
-    await sendEmail({
-      to: email.toLowerCase(),
-      subject: 'Confirm Your CodovateMeet Email',
-      text: `Welcome to CodovateMeet, ${name}! Your 6-digit email confirmation code is: ${verificationCode}`,
-      html: `
-        <div style="font-family: sans-serif; padding: 24px; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-          <h2 style="color: #2563eb; font-weight: 800; font-family: sans-serif; margin-bottom: 16px;">Welcome to CodovateMeet!</h2>
-          <p style="font-size: 14px; color: #334155; line-height: 1.6;">Hi ${name},</p>
-          <p style="font-size: 14px; color: #334155; line-height: 1.6;">Thank you for signing up. Please enter the following 6-digit confirmation code on the activation screen to verify your email address:</p>
-          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; font-family: monospace; font-size: 28px; font-weight: bold; text-align: center; padding: 16px; margin: 24px 0; border-radius: 8px; letter-spacing: 4px; color: #1e293b;">
-            ${verificationCode}
-          </div>
-          <p style="color: #64748b; font-size: 11px; line-height: 1.5; border-top: 1px solid #e2e8f0; padding-top: 12px;">If you did not register for this account, you can safely ignore this email.</p>
-        </div>
-      `
-    })
 
     // Write security audit log
     await query(
@@ -67,7 +48,7 @@ export async function POST(request: Request) {
         crypto.randomUUID(),
         'SIGNUP',
         userId,
-        `User ${email.toLowerCase()} registered. Verification code ${verificationCode} generated.`
+        `User ${email.toLowerCase()} registered and auto-activated.`
       ]
     )
 
