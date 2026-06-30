@@ -323,11 +323,11 @@ export default function DashboardPage() {
   }
 
   const colorDotClasses: Record<string, string> = {
-    red: 'bg-red-500',
-    blue: 'bg-blue-500',
+    red: 'bg-red-950/400',
+    blue: 'bg-blue-950/400',
     green: 'bg-green-500',
     yellow: 'bg-yellow-500',
-    indigo: 'bg-indigo-500'
+    indigo: 'bg-indigo-950/400'
   }
 
   return (
@@ -336,7 +336,7 @@ export default function DashboardPage() {
       {/* ── HEADER ── */}
       <header className="bg-primary px-6 flex items-center justify-between z-50 h-16 shadow-lg shadow-primary/25" style={{ borderBottom: '2px solid rgba(147,210,255,0.55)' }}>
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full premium-card/20 border border-white/30 flex items-center justify-center">
             <Video className="h-4 w-4 text-white" strokeWidth={2.5} />
           </div>
           <span className="font-extrabold text-lg tracking-tight text-white select-none">Codovate-Meet</span>
@@ -347,11 +347,11 @@ export default function DashboardPage() {
             <p className="text-sm font-bold text-white leading-tight">{user.name}</p>
             <p className="text-[10px] text-blue-200/70">{user.email}</p>
           </div>
-          <div className="w-9 h-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white font-bold text-sm select-none">
+          <div className="w-9 h-9 rounded-full premium-card/20 border border-white/30 flex items-center justify-center text-white font-bold text-sm select-none">
             {user.name?.[0]?.toUpperCase()}
           </div>
           <Button variant="outline" size="sm" onClick={logout}
-            className="border-white/30 text-white bg-white/10 hover:bg-white/20 hover:border-white/50 font-semibold h-9 rounded-xl">
+            className="border-white/30 text-white premium-card/10 hover:premium-card/20 hover:border-white/50 font-semibold h-9 rounded-xl">
             <LogOut className="h-4 w-4 mr-1.5" /> Logout
           </Button>
         </div>
@@ -362,7 +362,7 @@ export default function DashboardPage() {
 
         {/* Welcome banner */}
         <motion.div {...fadeInUp} className="relative overflow-hidden hero-gradient rounded-2xl p-8 shadow-lg">
-          <div className="orb w-64 h-64 bg-blue-300/20 top-[-40px] right-0" />
+          <div className="absolute rounded-full blur-[100px] pointer-events-none w-64 h-64 bg-blue-300/20 top-[-40px] right-0" />
           <div className="relative z-10 select-none">
             <p className="text-blue-200 text-sm font-semibold mb-1">👋 Welcome back</p>
             <h1 className="text-3xl font-black text-white mb-2">{user.name}</h1>
@@ -374,8 +374,8 @@ export default function DashboardPage() {
         <div className="grid md:grid-cols-2 gap-6">
 
           {/* Create / Schedule Meeting Card */}
-          <motion.div {...fadeInUp} className="bg-white border border-border rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-r from-primary/5 to-blue-50 border-b border-border px-6 py-4 flex items-center justify-between">
+          <motion.div {...fadeInUp} className="premium-card border border-border rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-r bg-secondary/40 border-b border-border px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center shadow-sm shadow-primary/30">
                   <Video className="h-5 w-5 text-white" />
@@ -445,8 +445,8 @@ export default function DashboardPage() {
           </motion.div>
 
           {/* Join Meeting Card */}
-          <motion.div {...fadeInUp} className="bg-white border border-border rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-border px-6 py-4 flex items-center gap-3">
+          <motion.div {...fadeInUp} className="premium-card border border-border rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-r bg-secondary/40 border-b border-border px-6 py-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-sm shadow-indigo-500/30">
                 <Users className="h-5 w-5 text-white" />
               </div>
@@ -459,7 +459,7 @@ export default function DashboardPage() {
             <div className="p-6">
               <form onSubmit={handleJoinMeeting} className="space-y-4">
                 {joinError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl font-medium">
+                  <div className="p-3 bg-red-950/40 border border-red-900/50 text-red-400 text-sm rounded-xl font-medium">
                     ⚠ {joinError}
                   </div>
                 )}
@@ -487,7 +487,7 @@ export default function DashboardPage() {
             <h2 className="font-black text-foreground uppercase tracking-widest text-xs">Upcoming & Recent Meetings</h2>
           </div>
 
-          <div className="bg-white border border-border rounded-2xl overflow-hidden shadow-sm">
+          <div className="premium-card border border-border rounded-2xl overflow-hidden shadow-sm">
             {recentMeetings.length === 0 ? (
               <div className="py-16 text-center flex flex-col items-center gap-4 select-none">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -518,7 +518,7 @@ export default function DashboardPage() {
                         <tr key={m.id} className="hover:bg-secondary/10 transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2.5">
-                              <span className={`w-3 h-3 rounded-full shrink-0 ${colorDotClasses[calData.color] || 'bg-blue-500'}`} title={`Color category: ${calData.color}`} />
+                              <span className={`w-3 h-3 rounded-full shrink-0 ${colorDotClasses[calData.color] || 'bg-blue-950/400'}`} title={`Color category: ${calData.color}`} />
                               <div>
                                 <p className="font-semibold text-foreground text-sm leading-none">{calData.name}</p>
                                 {calData.desc && <p className="text-[10px] text-slate-400 mt-1 truncate max-w-44">{calData.desc}</p>}
@@ -556,39 +556,39 @@ export default function DashboardPage() {
         {/* ── SECURITY SETTINGS & AUDIT LOGS SECTION ── */}
         <motion.section {...fadeInUp} className="grid md:grid-cols-2 gap-6 pt-4">
           {/* Security controls */}
-          <div className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-6">
+          <div className="premium-card border border-border rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-6">
             <div>
               <div className="flex items-center gap-3 border-b border-border pb-4 mb-4 select-none">
-                <div className="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                <div className="w-9 h-9 rounded-lg bg-indigo-950/40 border border-indigo-900/50 flex items-center justify-center text-indigo-400">
                   <Lock className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-800 text-sm leading-none">Security Center</h3>
+                  <h3 className="font-extrabold text-slate-100 text-sm leading-none">Security Center</h3>
                   <p className="text-[10px] text-muted-foreground mt-1">Configure MFA, resets, and RBAC authorization</p>
                 </div>
               </div>
 
               <div className="space-y-4 text-sm">
                 {/* Email Verification status */}
-                <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                <div className="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-700/50 rounded-xl">
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4 text-emerald-500" />
                     <div>
-                      <p className="font-bold text-slate-700 text-xs leading-none">Account Status</p>
+                      <p className="font-bold text-slate-200 text-xs leading-none">Account Status</p>
                       <p className="text-[10px] text-slate-400 mt-1">Verification and validation</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  <span className="text-[10px] font-extrabold bg-emerald-950/40 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-900/50">
                     ✓ Verified Email
                   </span>
                 </div>
 
                 {/* Two Factor setup */}
-                <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                <div className="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-700/50 rounded-xl">
                   <div className="flex items-center gap-2">
                     <KeyRound className="h-4 w-4 text-indigo-500" />
                     <div>
-                      <p className="font-bold text-slate-700 text-xs leading-none">Two-Factor Auth (2FA)</p>
+                      <p className="font-bold text-slate-200 text-xs leading-none">Two-Factor Auth (2FA)</p>
                       <p className="text-[10px] text-slate-400 mt-1">Protect with authenticator codes</p>
                     </div>
                   </div>
@@ -623,15 +623,15 @@ export default function DashboardPage() {
                 )}
 
                 {/* RBAC details */}
-                <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl select-none">
+                <div className="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-700/50 rounded-xl select-none">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-blue-500" />
                     <div>
-                      <p className="font-bold text-slate-700 text-xs leading-none">Security Role (RBAC)</p>
+                      <p className="font-bold text-slate-200 text-xs leading-none">Security Role (RBAC)</p>
                       <p className="text-[10px] text-slate-400 mt-1">Access control groups</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-extrabold bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full border border-blue-200 uppercase">
+                  <span className="text-[10px] font-extrabold bg-blue-950/40 text-blue-400 px-2.5 py-0.5 rounded-full border border-blue-900/50 uppercase">
                     👥 {user.role || 'user'}
                   </span>
                 </div>
@@ -657,14 +657,14 @@ export default function DashboardPage() {
           </div>
 
           {/* Security Audit Timeline */}
-          <div className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col h-[380px]">
+          <div className="premium-card border border-border rounded-2xl p-6 shadow-sm flex flex-col h-[380px]">
             <div className="flex items-center justify-between border-b border-border pb-4 mb-4 select-none">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+                <div className="w-9 h-9 rounded-lg bg-amber-950/40 border border-amber-900/50 flex items-center justify-center text-amber-400">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-800 text-sm leading-none">Audit Trail Log</h3>
+                  <h3 className="font-extrabold text-slate-100 text-sm leading-none">Audit Trail Log</h3>
                   <p className="text-[10px] text-muted-foreground mt-1">Real-time record of authentication events</p>
                 </div>
               </div>
@@ -683,10 +683,10 @@ export default function DashboardPage() {
                   <div key={index} className="flex gap-3 text-xs leading-relaxed items-start border-b border-slate-50 pb-2.5">
                     <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
                       log.event_type.includes('SUCCESS') || log.event_type.includes('ENABLED') ? 'bg-emerald-500' :
-                      log.event_type.includes('FAIL') || log.event_type.includes('LOCKED') ? 'bg-red-500' : 'bg-indigo-500'
+                      log.event_type.includes('FAIL') || log.event_type.includes('LOCKED') ? 'bg-red-950/400' : 'bg-indigo-950/400'
                     }`} />
                     <div className="flex-1">
-                      <p className="font-bold text-slate-700 text-xs leading-tight flex items-center gap-1.5 justify-between">
+                      <p className="font-bold text-slate-200 text-xs leading-tight flex items-center gap-1.5 justify-between">
                         <span>{log.event_type}</span>
                         <span className="text-[9px] font-normal text-muted-foreground">IP: {log.ip_address}</span>
                       </p>
@@ -709,7 +709,7 @@ export default function DashboardPage() {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-border"
+            className="premium-card rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-border"
           >
             {/* Modal header */}
             <div className="px-6 py-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center text-white">

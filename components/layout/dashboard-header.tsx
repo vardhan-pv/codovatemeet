@@ -4,7 +4,7 @@ import { Bell, Search, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
-import { useTheme } from 'next-themes'
+import { useTheme } from '@/components/theme-provider'
 import { useEffect, useState } from 'react'
 
 export function DashboardHeader() {

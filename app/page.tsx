@@ -1,56 +1,56 @@
 'use client'
 
-
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Video, Shield, Zap, Users, MessageSquare, Monitor, CheckCircle } from 'lucide-react'
+import { 
+  ArrowRight, Video, Terminal, GitBranch, Cpu, Sparkles, Layout, 
+  MessageSquareCode, Rocket, Shield, Users, CheckCircle, Play
+} from 'lucide-react'
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.7 },
+  transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
 }
 
 const stagger = {
-  animate: { transition: { staggerChildren: 0.12, delayChildren: 0.2 } },
+  animate: { transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
 }
 
 export default function LandingPage() {
-
-
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-sans selection:bg-primary/30">
 
       {/* ── NAVBAR ── */}
-      <nav className="fixed top-0 inset-x-0 z-50 bg-primary shadow-lg shadow-primary/25" style={{ borderBottom: '2px solid rgba(147,210,255,0.55)' }}>
+      <nav className="fixed top-0 inset-x-0 z-50 bg-background/60 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-9 h-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-indigo-400 flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
                 <Video className="h-4 w-4 text-white" strokeWidth={2.5} />
               </div>
               <div className="flex flex-col leading-none">
-                <span className="font-extrabold text-base sm:text-lg tracking-tight gradient-text">
-                  Codovate-Meet
+                <span className="font-extrabold text-base tracking-tight text-white group-hover:text-primary transition-colors">
+                  Codovate Meet
                 </span>
               </div>
             </Link>
 
-          <div className="hidden md:flex items-center gap-8 text-sm font-semibold">
-            <Link href="#features" className="text-white/80 hover:text-white transition-colors">Features</Link>
-            <Link href="#how" className="text-white/80 hover:text-white transition-colors">How it works</Link>
-            <Link href="/login" className="text-white/80 hover:text-white transition-colors">Sign In</Link>
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+            <Link href="#features" className="text-muted-foreground hover:text-white transition-colors">Features</Link>
+            <Link href="#ai" className="text-muted-foreground hover:text-white transition-colors">AI Pair Programmer</Link>
+            <Link href="#workspace" className="text-muted-foreground hover:text-white transition-colors">Live Workspace</Link>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link href="/login" className="sm:inline-block">
-              <Button variant="ghost" className="font-semibold text-white hover:bg-white/15 rounded-lg px-2 sm:px-3 text-xs sm:text-sm">
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="hidden sm:inline-block">
+              <Button variant="ghost" className="font-medium text-muted-foreground hover:text-white hover:bg-white/5 rounded-lg">
                 Sign In
               </Button>
             </Link>
             <Link href="/register">
-              <Button className="bg-white text-primary font-bold rounded-full px-3 sm:px-5 text-xs sm:text-sm hover:bg-blue-50 shadow-md transition-all hover:scale-105">
-                Get Started Free
+              <Button className="btn-glow text-white font-bold rounded-lg px-5">
+                Start Building Free
               </Button>
             </Link>
           </div>
@@ -58,98 +58,145 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ── */}
-      <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 hero-gradient overflow-hidden">
-        {/* Floating orbs */}
-        <div className="orb w-[500px] h-[500px] bg-blue-400/20 top-[-100px] right-[-100px]" />
-        <div className="orb w-[400px] h-[400px] bg-indigo-500/15 bottom-[-80px] left-[-80px]" />
+      <section className="relative pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden hero-gradient">
+        {/* Abstract shapes */}
+        <div className="absolute rounded-full blur-[100px] pointer-events-none w-[600px] h-[600px] bg-primary/20 top-[-200px] right-[-200px]" />
+        <div className="absolute rounded-full blur-[100px] pointer-events-none w-[500px] h-[500px] bg-purple-500/10 bottom-[-100px] left-[-200px]" />
 
         <motion.div
-          className="relative z-10 max-w-7xl mx-auto px-6 text-center"
+          className="relative z-10 max-w-5xl mx-auto px-6 text-center"
           variants={stagger}
           initial="initial"
           animate="animate"
         >
           <motion.div variants={fadeInUp}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-blue-100 text-xs font-bold uppercase tracking-widest mb-8 backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              Live · Enterprise Video Conferencing
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/30 text-primary text-xs font-bold uppercase tracking-widest mb-8 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+              <Sparkles className="w-3.5 h-3.5" />
+              The AI-Powered Developer Platform
             </div>
           </motion.div>
 
           <motion.h1
             variants={fadeInUp}
-            className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.05] tracking-tight mb-6"
+            className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.05] tracking-tight mb-8"
           >
-            Meet Without
-            <br />
-            <span className="gradient-text">Limits.</span>
+            Meet. Code. <br className="hidden md:block" />
+            <span className="gradient-primary">Deploy Together.</span>
           </motion.h1>
 
           <motion.p
             variants={fadeInUp}
-            className="text-lg md:text-xl text-blue-100/80 max-w-2xl mx-auto leading-relaxed mb-10"
+            className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-12"
           >
-            Crystal-clear video calls, real-time chat, screen sharing — all in one beautifully simple platform.
-            No downloads. No friction.
+            Not just another video call. Codovate Meet combines HD video conferencing with a shared VS Code workspace, integrated terminal, and an AI Pair Programmer. Build software instantly during your meetings.
           </motion.p>
 
-          <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/dashboard">
-              <Button size="lg" className="h-14 px-10 rounded-xl text-base font-extrabold bg-white text-primary hover:bg-blue-50 shadow-2xl shadow-black/30 transition-all hover:scale-105 border-2 border-white">
-                Start a Meeting <ArrowRight className="ml-2 h-5 w-5" />
+          <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link href="/dashboard" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto h-14 px-10 rounded-xl text-base font-bold btn-glow text-white">
+                Launch Workspace <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/join">
-              <Button size="lg" variant="outline" className="h-14 px-10 rounded-xl text-base font-extrabold border-2 border-white text-white bg-white/15 hover:bg-white hover:text-primary shadow-xl shadow-black/20 transition-all hover:scale-105 backdrop-blur-sm">
-                Join with Code
+            <Link href="/join" className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-10 rounded-xl text-base font-bold border-white/10 text-white bg-white/5 hover:bg-white/10 shadow-xl backdrop-blur-md transition-all">
+                <Play className="mr-2 h-4 w-4" /> Join a Session
               </Button>
             </Link>
-          </motion.div>
-
-          {/* Social proof strip */}
-          <motion.div variants={fadeInUp} className="mt-14 flex flex-wrap justify-center gap-6 text-sm text-white/60">
-            {['✅ No downloads required', '✅ End-to-end secure', '✅ Works on any device', '✅ Free to get started'].map(t => (
-              <span key={t} className="flex items-center gap-1.5">{t}</span>
-            ))}
           </motion.div>
         </motion.div>
 
-        {/* Hero mockup card */}
+        {/* Hero mockup - The IDE Interface */}
         <motion.div
-          className="relative z-10 max-w-4xl mx-auto mt-20 px-6"
-          initial={{ opacity: 0, y: 60 }}
+          className="relative z-10 max-w-6xl mx-auto mt-24 px-4 sm:px-6"
+          initial={{ opacity: 0, y: 80 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.5 }}
+          transition={{ duration: 1, delay: 0.3, type: "spring", bounce: 0.2 }}
         >
-          <div className="glass-card-dark p-4 blue-glow">
-            <div className="bg-slate-900/80 rounded-xl aspect-video flex items-center justify-center relative overflow-hidden">
-              {/* Fake video grid */}
-              <div className="absolute inset-0 grid grid-cols-2 gap-2 p-4">
-                {['Vardhan (Host)', 'Reddy', 'Priya', 'Arun'].map((name, i) => (
-                  <div key={i} className="bg-slate-800 rounded-lg flex flex-col items-center justify-center relative">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                      {name[0]}
-                    </div>
-                    <span className="absolute bottom-2 left-2 text-[10px] font-semibold text-white bg-black/50 px-2 py-0.5 rounded">{name}</span>
-                    {i === 0 && <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-green-400 animate-pulse" />}
-                  </div>
-                ))}
+          <div className="glass-card-dark p-2 blue-glow ring-1 ring-white/10">
+            {/* Fake IDE Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-card rounded-t-xl border-b border-white/5">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5 mr-4">
+                  <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                </div>
+                <GitBranch className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground font-mono">codovate / api-service</span>
               </div>
-              {/* Bottom controls bar */}
-              <div className="absolute bottom-0 inset-x-0 bg-black/50 backdrop-blur-sm flex items-center justify-center gap-4 py-3">
-                {['Mic', 'Camera', 'Share', 'Chat'].map(ctrl => (
-                  <div key={ctrl} className="flex flex-col items-center gap-1">
-                    <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-                      <div className="w-3.5 h-3.5 rounded-sm bg-white/60" />
+              <div className="flex items-center gap-3">
+                <div className="flex -space-x-2">
+                  <div className="w-7 h-7 rounded-full border-2 border-background bg-primary flex items-center justify-center text-[10px] font-bold text-white">JD</div>
+                  <div className="w-7 h-7 rounded-full border-2 border-background bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white">AK</div>
+                </div>
+                <Button size="sm" className="h-7 text-xs bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20">
+                  <Play className="w-3 h-3 mr-1" fill="currentColor" /> Live
+                </Button>
+              </div>
+            </div>
+            
+            {/* Split View */}
+            <div className="grid grid-cols-12 gap-0 bg-card rounded-b-xl overflow-hidden h-[500px]">
+              {/* Sidebar (Video + Chat) */}
+              <div className="col-span-3 border-r border-white/5 flex flex-col bg-secondary">
+                <div className="p-3 grid grid-rows-2 gap-2 flex-1">
+                  <div className="bg-slate-800 rounded-lg relative overflow-hidden group">
+                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover opacity-80 mix-blend-luminosity group-hover:mix-blend-normal transition-all" alt="Participant" />
+                    <span className="absolute bottom-2 left-2 text-[10px] bg-black/60 px-2 py-0.5 rounded text-white backdrop-blur-md border border-white/10">Alex</span>
+                  </div>
+                  <div className="bg-slate-800 rounded-lg relative overflow-hidden group">
+                    <img src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover opacity-80 mix-blend-luminosity group-hover:mix-blend-normal transition-all" alt="Participant" />
+                    <span className="absolute bottom-2 left-2 text-[10px] bg-black/60 px-2 py-0.5 rounded text-white backdrop-blur-md border border-white/10">You</span>
+                    <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
+                  </div>
+                </div>
+                <div className="p-3 border-t border-white/5 h-1/3 bg-card">
+                  <div className="flex items-center gap-2 mb-2 text-xs text-primary font-semibold">
+                    <Sparkles className="w-3 h-3" /> AI Assistant
+                  </div>
+                  <div className="text-[11px] text-muted-foreground bg-white/5 p-2 rounded-md border border-white/5 font-mono">
+                    I optimized the Database query on line 42. It should reduce latency by 40%.
+                  </div>
+                </div>
+              </div>
+              
+              {/* Main Code Area */}
+              <div className="col-span-9 flex flex-col relative">
+                {/* Tabs */}
+                <div className="flex items-center bg-secondary border-b border-white/5">
+                  <div className="px-4 py-2 border-r border-white/5 border-t-2 border-t-primary bg-card text-xs font-mono text-white flex items-center gap-2">
+                    <Layout className="w-3 h-3 text-blue-400" /> server.ts
+                  </div>
+                  <div className="px-4 py-2 border-r border-white/5 text-xs font-mono text-muted-foreground flex items-center gap-2">
+                    <Terminal className="w-3 h-3 text-emerald-400" /> bash
+                  </div>
+                </div>
+                
+                {/* Code Content */}
+                <div className="flex-1 p-4 font-mono text-xs text-slate-300 leading-relaxed overflow-hidden relative">
+                  <div className="flex">
+                    <div className="text-slate-600 select-none text-right pr-4 border-r border-white/10 mr-4">
+                      {Array.from({length: 15}).map((_, i) => <div key={i}>{i + 1}</div>)}
                     </div>
-                    <span className="text-[9px] text-white/50">{ctrl}</span>
+                    <div>
+                      <div className="text-purple-400">import</div> {'{'} serve {'}'} <div className="text-purple-400 inline">from</div> <span className="text-emerald-300">'@hono/node-server'</span><br/>
+                      <div className="text-purple-400">import</div> {'{'} Hono {'}'} <div className="text-purple-400 inline">from</div> <span className="text-emerald-300">'hono'</span><br/><br/>
+                      <div className="text-blue-400">const</div> app = <div className="text-blue-400 inline">new</div> Hono()<br/><br/>
+                      <span className="text-slate-500">// AI Pair Programmer suggestion applied</span><br/>
+                      app.<div className="text-yellow-200 inline">get</div>(<span className="text-emerald-300">'/api/users'</span>, <div className="text-purple-400 inline">async</div> (c) <div className="text-blue-400 inline">={'>'}</div> {'{'}<br/>
+                      &nbsp;&nbsp;<div className="text-blue-400 inline">const</div> users = <div className="text-purple-400 inline">await</div> db.select().from(User).limit(50)<br/>
+                      &nbsp;&nbsp;<div className="text-purple-400 inline">return</div> c.json(users)<br/>
+                      {'}'})<br/>
+                      <br/>
+                      <div className="relative inline-block">
+                        <span className="absolute -left-1 w-[2px] h-full bg-primary" />
+                        <span className="bg-primary/20 text-white px-1">serve(app, (info) ={'>'} {'{'}</span>
+                        <div className="absolute -top-6 left-0 bg-primary text-white text-[9px] px-1.5 py-0.5 rounded shadow-lg">Alex</div>
+                      </div><br/>
+                      &nbsp;&nbsp;<span className="text-blue-400">console</span>.<span className="text-yellow-200">log</span>(<span className="text-emerald-300">`Listening on http://localhost:<div className="text-blue-300 inline">${'{'}info.port{'}'}</div>`</span>)<br/>
+                      {'}'})
+                    </div>
                   </div>
-                ))}
-                <div className="flex flex-col items-center gap-1 ml-4">
-                  <div className="w-9 h-9 rounded-full bg-red-500 flex items-center justify-center">
-                    <div className="w-4 h-1 rounded-full bg-white" />
-                  </div>
-                  <span className="text-[9px] text-white/50">Leave</span>
                 </div>
               </div>
             </div>
@@ -157,167 +204,183 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ── STATS STRIP ── */}
-      <section className="bg-white border-y border-border py-10">
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          {[
-            { value: '100%', label: 'Web-Based', icon: '🌐' },
-            { value: '<50ms', label: 'Latency', icon: '⚡' },
-            { value: 'HD+', label: 'Video Quality', icon: '🎥' },
-            { value: 'Free', label: 'To Get Started', icon: '🎁' },
-          ].map(s => (
-            <div key={s.label} className="space-y-1">
-              <p className="text-3xl font-black text-primary">{s.icon} {s.value}</p>
-              <p className="text-sm text-muted-foreground font-medium">{s.label}</p>
-            </div>
-          ))}
+      {/* ── LOGOS ── */}
+      <section className="py-10 border-b border-white/5 bg-background">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col items-center">
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-6">Built for modern tech stacks</p>
+          <div className="flex flex-wrap justify-center gap-10 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+            {/* Simulated Logos */}
+            {['Next.js', 'React', 'Docker', 'GitHub', 'Vercel', 'PostgreSQL'].map(tech => (
+              <span key={tech} className="text-lg font-bold text-white font-mono tracking-tight">{tech}</span>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── FEATURES ── */}
-      <section id="features" className="py-24 px-6 max-w-7xl mx-auto">
+      {/* ── DEVELOPER FEATURES ── */}
+      <section id="features" className="py-32 px-6 max-w-7xl mx-auto">
         <motion.div
-          className="text-center mb-16"
+          className="text-center mb-20"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <div className="inline-block px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest mb-4">
-            Everything You Need
-          </div>
-          <h2 className="text-4xl md:text-5xl font-black text-foreground tracking-tight mb-4">
-            Built for <span className="text-primary">Real Work</span>
+          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
+            Everything a <span className="gradient-primary">developer needs.</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            From quick standups to full team calls — Codovate Meet has every tool you need.
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Stop switching between Zoom, VS Code, and Slack. Codovate Meet brings your entire engineering workflow into one powerful window.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
             {
-              icon: Video,
-              title: 'HD Video Conferencing',
-              desc: 'Crystal-clear WebRTC streams powered by LiveKit. Zero packet loss, ultra-low latency — just effortless video.',
-              color: 'from-blue-500 to-blue-600',
+              icon: MessageSquareCode,
+              title: 'Live Shared Editor',
+              desc: 'VS Code-like experience in the browser. See cursors, write code together, and resolve conflicts instantly.',
             },
             {
-              icon: MessageSquare,
-              title: 'Real-Time Chat',
-              desc: 'Chat with participants during meetings. Messages persist — pick up where you left off.',
-              color: 'from-indigo-500 to-indigo-600',
+              icon: Sparkles,
+              title: 'AI Pair Programmer',
+              desc: 'Live bug fixing, code explanation, and auto-generated unit tests right inside your meeting workspace.',
             },
             {
-              icon: Monitor,
-              title: 'Screen Sharing',
-              desc: 'Share your screen with one click. Automatically spotlighted for all participants.',
-              color: 'from-blue-600 to-indigo-600',
+              icon: Terminal,
+              title: 'Integrated Terminal',
+              desc: 'Run commands, start servers, and view logs together. Fully synchronized sandboxed environments.',
             },
             {
-              icon: Users,
-              title: 'Participant Controls',
-              desc: 'Hosts can manage participants, end meetings for all, and track attendance.',
-              color: 'from-sky-500 to-blue-500',
+              icon: GitBranch,
+              title: 'GitHub Integration',
+              desc: 'Pull repositories, create branches, review PRs, and commit changes without leaving the call.',
             },
             {
-              icon: Shield,
-              title: 'Enterprise Security',
-              desc: 'JWT-secured rooms, hashed passwords, and encrypted data channels built in from day one.',
-              color: 'from-blue-700 to-indigo-700',
+              icon: Rocket,
+              title: 'One-Click Deploy',
+              desc: 'Deploy your workspace directly to Vercel, Netlify, or Docker containers instantly.',
             },
             {
-              icon: Zap,
-              title: 'Instant Access',
-              desc: 'Register, create a room, and share the link in under 30 seconds. No downloads ever.',
-              color: 'from-indigo-400 to-blue-500',
+              icon: Layout,
+              title: 'Advanced Whiteboard',
+              desc: 'Infinite canvas for architecture diagrams. Auto-generate UML or flowcharts using meeting context.',
             },
           ].map((f, i) => (
             <motion.div
               key={i}
-              className="premium-card p-7 group"
+              className="premium-card p-8 group"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
             >
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-5 shadow-md shadow-primary/20 group-hover:scale-110 transition-transform duration-300`}>
-                <f.icon className="h-5.5 w-5.5 text-white" />
+              <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
+                <f.icon className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-2">{f.title}</h3>
+              <h3 className="text-xl font-bold text-white mb-3">{f.title}</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
-      <section id="how" className="py-24 bg-white border-y border-border">
-        <div className="max-w-5xl mx-auto px-6">
-          <motion.div
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl md:text-5xl font-black text-foreground tracking-tight mb-4">
-              Up and running in <span className="text-primary">30 seconds</span>
-            </h2>
-          </motion.div>
+      {/* ── UNIQUE VALUE PROPOSITION ── */}
+      <section id="ai" className="py-24 border-y border-white/5 bg-secondary relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest mb-6">
+                Meeting Intelligence
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight">
+                Meetings that write <br />
+                <span className="text-muted-foreground">their own code.</span>
+              </h2>
+              <ul className="space-y-6">
+                {[
+                  { title: 'Auto-Meeting Summaries', desc: 'Never take notes again. Get action items, decisions made, and technical context extracted automatically.' },
+                  { title: 'Meeting-to-Code Conversion', desc: 'Discuss an architecture, and watch our AI generate boilerplate code and architecture diagrams live.' },
+                  { title: 'Speaker Insights & Timeline', desc: 'Search past meetings by codebase context, variable names, or technical decisions.' },
+                ].map((item, i) => (
+                  <li key={i} className="flex gap-4">
+                    <div className="mt-1 w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold mb-1">{item.title}</h4>
+                      <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            {[
-              { step: '01', title: 'Create Account', desc: 'Sign up with your email. Completely free.' },
-              { step: '02', title: 'Start a Meeting', desc: 'Click "New Meeting", get your shareable link instantly.' },
-              { step: '03', title: 'Invite & Connect', desc: 'Share the link. Your team joins — no app needed.' },
-            ].map((s, i) => (
-              <motion.div
-                key={i}
-                className="relative flex flex-col items-center"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-              >
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-primary/30 mb-5">
-                  {s.step}
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <div className="glass-card p-6 relative z-10">
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+                  <h3 className="font-bold text-white flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" /> AI Summary
+                  </h3>
+                  <span className="text-xs text-muted-foreground bg-white/5 px-2 py-1 rounded">Just now</span>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">{s.title}</h3>
-                <p className="text-muted-foreground text-sm">{s.desc}</p>
-                {i < 2 && (
-                  <div className="hidden md:block absolute top-8 left-[calc(100%+1rem)] w-12 border-t-2 border-dashed border-primary/30" />
-                )}
-              </motion.div>
-            ))}
+                <div className="space-y-4">
+                  <div className="bg-white/5 rounded-lg p-4 border border-white/5">
+                    <h4 className="text-sm font-semibold text-white mb-2">Decision Made</h4>
+                    <p className="text-sm text-muted-foreground">Migrate the authentication service from JWT to NextAuth.js to support GitHub SSO.</p>
+                  </div>
+                  <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
+                    <h4 className="text-sm font-semibold text-primary mb-2">Action Item (Assigned to JD)</h4>
+                    <div className="flex items-center gap-3 bg-secondary p-3 rounded border border-white/5">
+                      <Terminal className="w-4 h-4 text-muted-foreground" />
+                      <code className="text-xs text-slate-300">npm install next-auth @auth/prisma-adapter</code>
+                    </div>
+                    <Button size="sm" className="w-full mt-3 h-8 text-xs bg-primary hover:bg-primary/90 text-white border-none">Execute Command</Button>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute -inset-4 bg-gradient-to-r from-primary/30 to-purple-500/30 blur-2xl -z-10 rounded-full opacity-50" />
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* ── CTA BANNER ── */}
-      <section className="hero-gradient py-20 px-6 relative overflow-hidden">
-        <div className="orb w-96 h-96 bg-blue-300/20 top-[-80px] right-[10%]" />
+      {/* ── CTA ── */}
+      <section className="py-32 px-6 relative overflow-hidden">
+        <div className="absolute rounded-full blur-[100px] pointer-events-none w-[800px] h-[800px] bg-primary/10 top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2" />
         <motion.div
-          className="relative z-10 max-w-3xl mx-auto text-center"
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
+          className="relative z-10 max-w-4xl mx-auto text-center"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
-            Ready to meet smarter?
+          <h2 className="text-5xl md:text-6xl font-black text-white mb-6">
+            Ready to change how you build?
           </h2>
-          <p className="text-blue-100/80 text-lg mb-8">
-            Join thousands of teams already using Codovate Meet.
+          <p className="text-muted-foreground text-xl mb-10 max-w-2xl mx-auto">
+            Join the next generation of developers building better software together, in real-time.
           </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/register">
-              <Button size="lg" className="h-14 px-10 rounded-xl text-base font-extrabold bg-white text-primary hover:bg-blue-50 shadow-2xl shadow-black/30 transition-all hover:scale-105 border-2 border-white">
-                <CheckCircle className="mr-2 h-5 w-5" /> Create Free Account
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
+            <Link href="/register" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto h-14 px-10 rounded-xl text-base font-bold btn-glow text-white border-none">
+                Start Building Free
               </Button>
             </Link>
-            <Link href="/join">
-              <Button size="lg" variant="outline" className="h-14 px-10 rounded-xl text-base font-extrabold border-2 border-white text-white bg-white/15 hover:bg-white hover:text-primary shadow-xl shadow-black/20 transition-all hover:scale-105 backdrop-blur-sm">
-                Join a Meeting
+            <Link href="/login" className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-10 rounded-xl text-base font-bold border-white/10 text-white bg-white/5 hover:bg-white/10 transition-all backdrop-blur-md">
+                Sign In to Workspace
               </Button>
             </Link>
           </div>
@@ -325,19 +388,20 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="bg-white border-t border-border">
-        <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center">
-              <Video className="h-3.5 w-3.5 text-white" />
+      <footer className="border-t border-white/5 bg-secondary">
+        <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-indigo-400 flex items-center justify-center">
+              <Video className="h-4 w-4 text-white" />
             </div>
-            <span className="font-bold text-foreground"><span className="text-primary">Codovate</span>-Meet</span>
-            <span className="text-muted-foreground/50">· © 2026 Codovate Solutions</span>
+            <span className="font-bold text-white text-base">Codovate Meet</span>
+            <span className="opacity-50 ml-2">© 2026</span>
           </div>
-          <div className="flex gap-6">
-            <Link href="/login" className="hover:text-primary transition-colors font-medium">Sign In</Link>
-            <Link href="/register" className="hover:text-primary transition-colors font-medium">Sign Up</Link>
-            <Link href="/join" className="hover:text-primary transition-colors font-medium">Join Meeting</Link>
+          <div className="flex gap-8 font-medium">
+            <Link href="#" className="hover:text-white transition-colors">Documentation</Link>
+            <Link href="#" className="hover:text-white transition-colors">GitHub Sync</Link>
+            <Link href="#" className="hover:text-white transition-colors">Enterprise</Link>
+            <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
           </div>
         </div>
       </footer>

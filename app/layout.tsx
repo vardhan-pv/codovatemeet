@@ -3,13 +3,15 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Providers } from './providers'
 
-const geistSans = { variable: '' }
-const geistMono = { variable: '' }
+import { Inter, JetBrains_Mono } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
+const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' })
 
 export const metadata: Metadata = {
-  title: 'Codovate-Meet',
+  title: 'Codovate Meet — The AI-Powered Developer Collaboration Platform',
   description:
-    'Crystal-clear video calls, real-time chat, and screen sharing — all in one beautifully simple platform.',
+    'Join a meeting, write code together, debug together, draw architecture, and use AI assistance — all in one collaborative space.',
   icons: {
     icon: '/favicon.png',
     shortcut: '/favicon.png',
@@ -33,10 +35,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} bg-background`}
+      className={`${inter.variable} ${jetbrainsMono.variable} bg-background dark`}
       suppressHydrationWarning
     >
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased bg-[#030712] text-slate-200" suppressHydrationWarning>
         <Providers>{children}</Providers>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

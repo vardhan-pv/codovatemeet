@@ -14,6 +14,10 @@ import {
   BarChart2, ShieldCheck, Trophy, Crown, Flag, Calendar, Heart, Send, Clock,
   RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye
 } from 'lucide-react'
+import dynamic from 'next/dynamic'
+const CodeEditor = dynamic(() => import('@/components/room/CodeEditor').then(m => ({ default: m.CodeEditor })), { ssr: false })
+import { Whiteboard } from '@/components/room/Whiteboard'
+import { AdminCommandCenter, AdminSettings } from '@/components/room/AdminCommandCenter'
 
 interface RoomPageProps {
   params: Promise<{
@@ -202,7 +206,7 @@ function VideoTile({
       )}
 
       {!videoEnabled && (
-        <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center gap-2 z-10 select-none">
+        <div className="absolute inset-0 bg-card flex flex-col items-center justify-center gap-2 z-10 select-none">
           {source === 'camera' ? (
             <>
               <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold uppercase border border-primary/20">
@@ -415,8 +419,8 @@ function WhiteboardWorkspace({ sendData }: { sendData: any }) {
   }, [])
 
   return (
-    <div className="flex flex-col h-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800 animate-in zoom-in-95">
-      <div className="bg-slate-900 px-4 py-2 border-b border-slate-800 flex justify-between items-center gap-4 flex-wrap">
+    <div className="flex flex-col h-full bg-card rounded-[20px] overflow-hidden border border-border animate-in zoom-in-95">
+      <div className="bg-popover px-4 py-2 border-b border-border flex justify-between items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <Paintbrush className="h-4 w-4 text-primary" />
           <span className="font-bold text-xs text-white">Whiteboard Workspace</span>
@@ -428,7 +432,7 @@ function WhiteboardWorkspace({ sendData }: { sendData: any }) {
               placeholder="e.g. auth microservice flow"
               value={aiUmlPrompt}
               onChange={(e) => setAiUmlPrompt(e.target.value)}
-              className="h-7 text-[10px] bg-slate-950 border-slate-800 text-white w-32 focus:w-44 transition-all"
+              className="h-7 text-[10px] bg-card border-border text-white w-32 focus:w-44 transition-all"
             />
             <Button onClick={handleAiUmlGenerate} size="sm" className="h-7 text-[9px] bg-amber-600 hover:bg-amber-700 font-extrabold flex items-center gap-1 border-none text-white cursor-pointer">
               <Sparkles className="h-2.5 w-2.5" /> UML
@@ -473,7 +477,7 @@ function WhiteboardWorkspace({ sendData }: { sendData: any }) {
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
-          className="w-full h-full cursor-crosshair block bg-slate-950"
+          className="w-full h-full cursor-crosshair block bg-card"
         />
       </div>
     </div>
@@ -605,8 +609,8 @@ function CodeWorkspaceWithAI({ sendData, askAI }: { sendData: any; askAI: any })
   }, [])
 
   return (
-    <div className="flex flex-col h-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800 animate-in zoom-in-95">
-      <div className="bg-slate-900 px-4 py-2 border-b border-slate-800 flex justify-between items-center gap-4">
+    <div className="flex flex-col h-full bg-card rounded-[20px] overflow-hidden border border-border animate-in zoom-in-95">
+      <div className="bg-popover px-4 py-2 border-b border-border flex justify-between items-center gap-4">
         <div className="flex items-center gap-2">
           <Code className="h-4 w-4 text-primary" />
           <span className="font-bold text-xs text-white">Live Code Workspace</span>
@@ -615,7 +619,7 @@ function CodeWorkspaceWithAI({ sendData, askAI }: { sendData: any; askAI: any })
           <Button onClick={handleAiExplain} size="sm" variant="ghost" className="h-7 text-[10px] text-slate-400 hover:text-white font-bold">
             💡 Explain Code
           </Button>
-          <Button onClick={handleAiBugFix} size="sm" variant="ghost" className="h-7 text-[10px] text-amber-500 hover:text-amber-400 font-extrabold flex items-center gap-1">
+          <Button onClick={handleAiBugFix} size="sm" variant="ghost" className="h-7 text-[10px] text-purple-500 hover:text-amber-400 font-extrabold flex items-center gap-1">
             🤖 AI Bug Fix
           </Button>
           <select
@@ -638,16 +642,16 @@ function CodeWorkspaceWithAI({ sendData, askAI }: { sendData: any; askAI: any })
         </div>
       </div>
       <div className="flex-1 flex flex-col md:flex-row min-h-0">
-        <div className="flex-1 min-h-0 border-b md:border-b-0 md:border-r border-slate-800 flex">
+        <div className="flex-1 min-h-0 border-b md:border-b-0 md:border-r border-border flex">
           <textarea
             value={code}
             onChange={(e) => handleCodeChange(e.target.value)}
-            className="flex-1 w-full h-full p-4 bg-slate-950 font-mono text-xs text-green-400 border-none outline-none resize-none focus:ring-0"
+            className="flex-1 w-full h-full p-4 bg-card font-mono text-xs text-green-400 border-none outline-none resize-none focus:ring-0"
             placeholder="Type code here..."
           />
         </div>
-        <div className="w-full md:w-56 bg-slate-900 flex flex-col h-1/3 md:h-full">
-          <div className="px-3 py-1 border-b border-slate-800 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+        <div className="w-full md:w-56 bg-popover flex flex-col h-1/3 md:h-full">
+          <div className="px-3 py-1 border-b border-border text-[9px] font-bold text-slate-400 uppercase tracking-wider">
             Console Output
           </div>
           <div className="flex-1 p-3 font-mono text-[10px] text-slate-300 overflow-y-auto space-y-0.5 select-text">
@@ -761,15 +765,15 @@ function UnoGameWorkspace({ room, lobbyName, sendData, setXp }: { room: any; lob
 
   const bgColors: Record<string, string> = {
     red: 'bg-red-600',
-    blue: 'bg-blue-600',
+    blue: 'bg-primary',
     green: 'bg-green-600',
     yellow: 'bg-yellow-500',
     wild: 'bg-slate-700'
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800 animate-in zoom-in-95">
-      <div className="bg-slate-900 px-4 py-2 border-b border-slate-800 flex justify-between items-center">
+    <div className="flex flex-col h-full bg-card rounded-[20px] overflow-hidden border border-border animate-in zoom-in-95">
+      <div className="bg-popover px-4 py-2 border-b border-border flex justify-between items-center">
         <div className="flex items-center gap-2">
           <span>🃏</span>
           <span className="font-bold text-xs text-white">UNO! Card Game</span>
@@ -781,7 +785,7 @@ function UnoGameWorkspace({ room, lobbyName, sendData, setXp }: { room: any; lob
         )}
       </div>
 
-      <div className="flex-1 p-6 flex flex-col justify-between items-center select-none bg-slate-950">
+      <div className="flex-1 p-6 flex flex-col justify-between items-center select-none bg-card">
         {gameStatus === 'lobby' && (
           <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
             <span className="text-4xl">🃏</span>
@@ -806,7 +810,7 @@ function UnoGameWorkspace({ room, lobbyName, sendData, setXp }: { room: any; lob
           <>
             <div className="flex flex-col items-center gap-2">
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Discard Pile</span>
-              <div className={`w-20 h-28 rounded-xl ${bgColors[discardTop.color]} flex items-center justify-center text-white font-extrabold text-sm border-2 border-white shadow-xl transform rotate-2`}>
+              <div className={`w-20 h-28 rounded-[20px] ${bgColors[discardTop.color]} flex items-center justify-center text-white font-extrabold text-sm border-2 border-white shadow-xl transform rotate-2`}>
                 {discardTop.value}
               </div>
             </div>
@@ -825,7 +829,7 @@ function UnoGameWorkspace({ room, lobbyName, sendData, setXp }: { room: any; lob
                     <button
                       key={card.id}
                       onClick={() => playCard(card)}
-                      className={`w-16 h-22 rounded-xl shrink-0 ${bgColors[card.color]} border border-white/40 flex flex-col justify-between p-2 text-white font-bold hover:scale-105 active:scale-95 transition-transform`}
+                      className={`w-16 h-22 rounded-[20px] shrink-0 ${bgColors[card.color]} border border-white/40 flex flex-col justify-between p-2 text-white font-bold hover:scale-105 active:scale-95 transition-transform`}
                     >
                       <span className="text-[10px] text-left leading-none">{card.value}</span>
                       <span className="text-sm self-center font-extrabold">{card.value[0]}</span>
@@ -871,6 +875,10 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [shareError, setShareError] = useState<string | null>(null)
   const [serverUrl, setServerUrl] = useState<string | null>(null)
 
+  // Live Data & Admin
+  const [metrics, setMetrics] = useState({ codeEdits: 0, chatMsgs: 0, aiRequests: 0 })
+  const [userRoles, setUserRoles] = useState<Record<string, string>>({})
+
   // Captions state
   const [showCaptions, setShowCaptions] = useState(true)
   const [activeCaption, setActiveCaption] = useState<{ participantId: string; text: string } | null>(null)
@@ -893,6 +901,19 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [activeWorkspace, setActiveWorkspace] = useState<'none' | 'code' | 'whiteboard' | 'uno'>('none')
   const [currentPage, setCurrentPage] = useState(0)
   const [isWorkspaceMaximized, setIsWorkspaceMaximized] = useState(false)
+
+  // Admin Command Center State
+  const [showAdminCenter, setShowAdminCenter] = useState(false)
+  const [adminSettings, setAdminSettings] = useState<AdminSettings>({
+    isRoomLocked: false,
+    isCodeLocked: false,
+    isWhiteboardLocked: false,
+    isChatDisabled: false,
+    isAiDisabled: false,
+    isScreenShareLocked: false,
+  })
+
+  const isHostUser = !meetingHostId || (user && user.id === meetingHostId) || participants.length <= 1
 
   useEffect(() => {
     if (activeWorkspace === 'none') {
@@ -993,6 +1014,22 @@ export default function RoomPage({ params }: RoomPageProps) {
       }
       const data = new TextEncoder().encode(JSON.stringify(dataObj))
       room.localParticipant.publishData(data, { reliable: true })
+
+      // Process commands locally since publishData doesn't trigger DataReceived for the sender
+      if (type === 'ADMIN_COMMAND') {
+        const { command, targetId, value } = payload
+        if (command === 'TOGGLE_ROOM_LOCK') setAdminSettings(prev => ({ ...prev, isRoomLocked: value }))
+        else if (command === 'TOGGLE_CODE_LOCK') setAdminSettings(prev => ({ ...prev, isCodeLocked: value }))
+        else if (command === 'TOGGLE_WHITEBOARD_LOCK') setAdminSettings(prev => ({ ...prev, isWhiteboardLocked: value }))
+        else if (command === 'TOGGLE_CHAT_LOCK') setAdminSettings(prev => ({ ...prev, isChatDisabled: value }))
+        else if (command === 'TOGGLE_AI_LOCK') setAdminSettings(prev => ({ ...prev, isAiDisabled: value }))
+        else if (command === 'TOGGLE_SCREENSHARE_LOCK') setAdminSettings(prev => ({ ...prev, isScreenShareLocked: value }))
+        else if (command === 'SYNC_TERMINAL') window.dispatchEvent(new CustomEvent('sync_terminal'))
+        else if (command === 'SET_ROLE') setUserRoles(prev => ({ ...prev, [targetId]: value }))
+      } else if (type === 'WHITEBOARD_CLEAR') {
+        window.dispatchEvent(new CustomEvent('wb_clear'))
+      }
+
     } catch (e) {
       console.warn("Failed to publish peer state:", e)
     }
@@ -1005,12 +1042,20 @@ export default function RoomPage({ params }: RoomPageProps) {
     const initLobby = async () => {
       let identity = ''
       const storedJoinName = localStorage.getItem('joinName')
+      
+      // Always try to load profile if they are logged in so `user` object exists for Admin check
+      if (useAuth.getState().token) {
+        await loadProfile()
+      }
+
+      const activeUser = useAuth.getState().user
+      
       if (storedJoinName) {
         identity = storedJoinName
+      } else if (activeUser) {
+        identity = activeUser.name
       } else {
-        await loadProfile()
-        const activeUser = useAuth.getState().user
-        if (activeUser) identity = activeUser.name
+        identity = 'Guest_' + Math.floor(Math.random() * 1000)
       }
       setLobbyName(identity)
 
@@ -1019,10 +1064,12 @@ export default function RoomPage({ params }: RoomPageProps) {
         setMeetingHostId(meetingData.host_id)
       } catch (e) { console.error('Meeting not found', e) }
 
-      try {
-        const history = await meetingService.fetchMessages(roomId)
-        setMessages(history.map((m: any) => ({ sender: m.sender_name, text: m.message, time: new Date(m.created_at) })))
-      } catch (e) { console.error('No message history', e) }
+      if (useAuth.getState().token) {
+        try {
+          const history = await meetingService.fetchMessages(roomId)
+          setMessages(history.map((m: any) => ({ sender: m.sender_name, text: m.message, time: new Date(m.created_at) })))
+        } catch (e) { console.error('No message history', e) }
+      }
 
       try {
         const track = await createLocalVideoTrack()
@@ -1241,12 +1288,58 @@ export default function RoomPage({ params }: RoomPageProps) {
           window.location.href = '/dashboard'
           return
         }
+        if (parsed.type === 'ADMIN_COMMAND') {
+          // If the target is a specific user, ensure it applies to us
+          if (parsed.targetId && parsed.targetId !== 'ALL' && parsed.targetId !== activeRoom.localParticipant.identity) {
+            return
+          }
+
+          if (parsed.command === 'FORCE_MUTE') {
+            activeRoom.localParticipant.setMicrophoneEnabled(false)
+            setIsMuted(true)
+            displayCaption('System', 'A Host has muted your microphone.')
+          } else if (parsed.command === 'FORCE_VIDEO_OFF') {
+            activeRoom.localParticipant.setCameraEnabled(false)
+            setIsVideoOff(true)
+            displayCaption('System', 'A Host has turned off your camera.')
+          } else if (parsed.command === 'KICK_USER') {
+            activeRoom.disconnect()
+            alert('You have been removed from the meeting by a host.')
+            window.location.href = '/dashboard'
+          } else if (parsed.command === 'END_MEETING_ALL') {
+            activeRoom.disconnect()
+            alert('The host has ended the meeting.')
+            window.location.href = '/dashboard'
+          } else if (parsed.command === 'TOGGLE_ROOM_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isRoomLocked: parsed.value }))
+            displayCaption('System', parsed.value ? 'Meeting is now Locked' : 'Meeting is now Open')
+          } else if (parsed.command === 'TOGGLE_CODE_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isCodeLocked: parsed.value }))
+          } else if (parsed.command === 'TOGGLE_WHITEBOARD_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isWhiteboardLocked: parsed.value }))
+          } else if (parsed.command === 'TOGGLE_CHAT_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isChatDisabled: parsed.value }))
+          } else if (parsed.command === 'TOGGLE_AI_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isAiDisabled: parsed.value }))
+          } else if (parsed.command === 'TOGGLE_SCREENSHARE_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isScreenShareLocked: parsed.value }))
+          } else if (parsed.command === 'SYNC_TERMINAL') {
+            window.dispatchEvent(new CustomEvent('sync_terminal'))
+          } else if (parsed.command === 'SET_ROLE') {
+            setUserRoles(prev => ({ ...prev, [parsed.targetId]: parsed.value }))
+            if (parsed.targetId === activeRoom.localParticipant.identity) {
+              displayCaption('System', `Your role has been changed to ${parsed.value}`)
+            }
+          }
+          return
+        }
         if (parsed.type === 'CAPTION') {
           displayCaption(sender, parsed.text)
           return
         }
         if (parsed.type === 'CHAT_MESSAGE') {
           setMessages(prev => [...prev, { sender, text: parsed.text, time: new Date() }])
+          setMetrics(prev => ({ ...prev, chatMsgs: prev.chatMsgs + 1 }))
           return
         }
         if (parsed.type === 'RAISE_HAND') {
@@ -1274,6 +1367,11 @@ export default function RoomPage({ params }: RoomPageProps) {
         }
         if (parsed.type === 'CODE_EDIT') {
           window.dispatchEvent(new CustomEvent('code_sync', { detail: parsed }))
+          setMetrics(prev => ({ ...prev, codeEdits: prev.codeEdits + 1 }))
+          return
+        }
+        if (parsed.type === 'AI_REQ') {
+          setMetrics(prev => ({ ...prev, aiRequests: prev.aiRequests + 1 }))
           return
         }
         if (parsed.type === 'FILTER_CHANGE') {
@@ -1421,7 +1519,7 @@ export default function RoomPage({ params }: RoomPageProps) {
           return
         }
         if (textLower.includes('generate react component') || textLower.includes('write react code')) {
-          const reactTemplate = `import React from 'react';\n\nexport default function LoginPage() {\n  return (\n    <div className="p-8 text-center bg-slate-900 rounded-xl">\n      <h2 className="text-xl font-bold text-white">Log in to Account</h2>\n      <button className="px-4 py-2 mt-4 text-white bg-primary rounded-lg font-bold">Submit</button>\n    </div>\n  );\n}`
+          const reactTemplate = `import React from 'react';\n\nexport default function LoginPage() {\n  return (\n    <div className="p-8 text-center bg-popover rounded-[20px]">\n      <h2 className="text-xl font-bold text-white">Log in to Account</h2>\n      <button className="px-4 py-2 mt-4 text-white bg-primary rounded-lg font-bold">Submit</button>\n    </div>\n  );\n}`
           window.dispatchEvent(new CustomEvent('voice_code_template', { detail: { template: reactTemplate } }))
           displayCaption('System AI', "✓ Template 'React Login' generated from voice.")
           return
@@ -1487,6 +1585,10 @@ export default function RoomPage({ params }: RoomPageProps) {
 
   const handleScreenShareToggle = async () => {
     if (!room) return
+    if (adminSettings.isScreenShareLocked && !isHostUser) {
+      alert("Screen sharing is locked by the host.")
+      return
+    }
     try {
       await room.localParticipant.setScreenShareEnabled(!isScreenSharing)
       setIsScreenSharing(!isScreenSharing)
@@ -1511,7 +1613,7 @@ export default function RoomPage({ params }: RoomPageProps) {
     if (!room) return
     
     // Main host check: only allow ending the meeting if user is the meeting creator
-    if (!user || user.id !== meetingHostId) {
+    if (!isHostUser) {
       console.warn("Only the main host can end the meeting for all.")
       return
     }
@@ -1539,7 +1641,9 @@ export default function RoomPage({ params }: RoomPageProps) {
       setMessages(prev => [...prev, { sender: lobbyName, text: messageInput, time: new Date() }])
       
       setXp(prev => prev + 5)
-      await meetingService.sendMessage(roomId, messageInput)
+      if (useAuth.getState().token) {
+        await meetingService.sendMessage(roomId, messageInput)
+      }
       setMessageInput('')
     } catch (e) {
       setMessageInput('')
@@ -1718,19 +1822,19 @@ export default function RoomPage({ params }: RoomPageProps) {
     }
     
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between p-6">
+      <div className="min-h-screen bg-card text-white flex flex-col justify-between p-6">
         <header className="flex justify-between items-center border-b border-slate-900 pb-4 select-none">
           <div className="flex items-center gap-2">
             <Video className="h-5 w-5 text-primary animate-pulse" />
             <h2 className="font-extrabold text-sm">On-the-Go Mode Active</h2>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setIsOnToGoMode(false)} className="border-slate-855 hover:bg-slate-900 text-slate-300">
+          <Button variant="outline" size="sm" onClick={() => setIsOnToGoMode(false)} className="border-slate-855 hover:bg-popover text-slate-300">
             Exit Mode
           </Button>
         </header>
 
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
-          <div className="w-20 h-20 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center shadow-2xl">
+          <div className="w-20 h-20 rounded-full bg-popover border border-border flex items-center justify-center shadow-2xl">
             <span className="text-3.5xl">🚶</span>
           </div>
           <div className="space-y-2">
@@ -1742,14 +1846,14 @@ export default function RoomPage({ params }: RoomPageProps) {
         <div className="flex flex-col gap-4 max-w-sm w-full mx-auto pb-6">
           <Button
             onClick={handleMuteToggle}
-            className={`h-16 rounded-2xl border-none font-extrabold text-lg transition flex items-center justify-center gap-2.5 ${isMuted ? 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/10' : 'bg-slate-900 border border-slate-855 hover:bg-slate-800 text-slate-200'}`}
+            className={`h-16 rounded-2xl border-none font-extrabold text-lg transition flex items-center justify-center gap-2.5 ${isMuted ? 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/10' : 'bg-popover border border-slate-855 hover:bg-slate-800 text-slate-200'}`}
           >
             {isMuted ? <><MicOff className="h-6 w-6" /> Unmute</> : <><Mic className="h-6 w-6" /> Mute mic</>}
           </Button>
 
           <Button
             onClick={toggleHandRaise}
-            className={`h-16 rounded-2xl border-none font-extrabold text-lg transition flex items-center justify-center gap-2.5 ${isHandRaised ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-slate-900 border border-slate-855 hover:bg-slate-800 text-slate-200'}`}
+            className={`h-16 rounded-2xl border-none font-extrabold text-lg transition flex items-center justify-center gap-2.5 ${isHandRaised ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-popover border border-slate-855 hover:bg-slate-800 text-slate-200'}`}
           >
             🖐️ {isHandRaised ? 'Lower Hand' : 'Raise Hand'}
           </Button>
@@ -1770,9 +1874,9 @@ export default function RoomPage({ params }: RoomPageProps) {
     switch (activeSidebar) {
       case 'chat':
         return (
-          <div className="flex flex-col h-full bg-slate-900/50">
+          <div className="flex flex-col h-full bg-popover/50">
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <div className="bg-blue-950/40 border border-blue-900/50 rounded-xl p-3 text-xs text-blue-300 flex items-start gap-2 select-none">
+              <div className="bg-blue-950/40 border border-blue-900/50 rounded-[20px] p-3 text-xs text-blue-300 flex items-start gap-2 select-none">
                 <span>🛡️</span>
                 <div>
                   <p className="font-bold">Messages won't be saved</p>
@@ -1780,7 +1884,7 @@ export default function RoomPage({ params }: RoomPageProps) {
                 </div>
               </div>
               
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3 gap-2">
+              <div className="flex items-center justify-between border-b border-border pb-3 gap-2">
                 <span className="text-xs font-semibold text-slate-400">Live Translation</span>
                 <select
                   value={translationLang}
@@ -1821,9 +1925,9 @@ export default function RoomPage({ params }: RoomPageProps) {
                       <span className={`font-bold text-xs ${isMe ? 'text-blue-400' : 'text-primary'}`}>{msg.sender}</span>
                       <span className="text-[9px] text-slate-400">{new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
-                    <p className={`text-xs inline-block px-3 py-1.5 rounded-xl max-w-[85%] break-words shadow-sm ${
+                    <p className={`text-xs inline-block px-3 py-1.5 rounded-[20px] max-w-[85%] break-words shadow-sm ${
                       isMe 
-                        ? 'bg-blue-600 text-white rounded-tr-none' 
+                        ? 'bg-primary text-white rounded-tr-none' 
                         : 'bg-white text-slate-900 rounded-tl-none border border-slate-200'
                     }`}>
                       {displayedText}
@@ -1832,20 +1936,26 @@ export default function RoomPage({ params }: RoomPageProps) {
                 )
               })}
             </div>
-            <div className="p-4 border-t border-border bg-slate-900/30">
-              <form onSubmit={sendChatMessage} className="flex gap-2">
-                <Input placeholder="Type a message..." value={messageInput} onChange={(e) => setMessageInput(e.target.value)} className="bg-background border-border" />
-                <Button type="submit" disabled={!messageInput.trim()} className="bg-primary text-primary-foreground hover:opacity-90">
-                  <Send className="h-4 w-4" />
-                </Button>
-              </form>
+            <div className="p-4 border-t border-border bg-popover/30">
+              {adminSettings.isChatDisabled && !isHostUser ? (
+                <p className="text-center text-xs text-slate-400 font-medium italic select-none py-2 bg-slate-900/50 rounded-xl border border-white/5">
+                  💬 Chat has been locked by the host
+                </p>
+              ) : (
+                <form onSubmit={sendChatMessage} className="flex gap-2">
+                  <Input placeholder="Type a message..." value={messageInput} onChange={(e) => setMessageInput(e.target.value)} className="bg-background border-border" />
+                  <Button type="submit" disabled={!messageInput.trim()} className="bg-primary text-primary-foreground hover:opacity-90">
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </form>
+              )}
             </div>
           </div>
         )
       case 'participants':
         return (
-          <div className="flex flex-col h-full p-4 space-y-4 bg-slate-900/50">
-            <div className="bg-emerald-950/40 border border-emerald-900/50 rounded-xl p-3 text-xs text-emerald-300 flex flex-col gap-1 select-none">
+          <div className="flex flex-col h-full p-4 space-y-4 bg-popover/50">
+            <div className="bg-emerald-950/40 border border-emerald-900/50 rounded-[20px] p-3 text-xs text-emerald-300 flex flex-col gap-1 select-none">
               <div className="flex items-center gap-1.5 font-bold">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
                 <span>E2EE Connection Secured</span>
@@ -1857,7 +1967,7 @@ export default function RoomPage({ params }: RoomPageProps) {
               <div className="space-y-2">
                 {participants.map(p => {
                   const pid = p.sid || p.identity
-                  const isHost = user && getDisplayName(p.identity) === user.name && user.id === meetingHostId
+                  const isHost = p.identity === meetingHostId || (!meetingHostId && p.isLocal)
                   const handRaised = raisedHands[pid]
                   const isUserMuted = p.isMicrophoneEnabled === false
 
@@ -1881,7 +1991,7 @@ export default function RoomPage({ params }: RoomPageProps) {
                       </div>
                       <div className="flex gap-1.5 items-center">
                         {isUserMuted ? <MicOff className="h-3.5 w-3.5 text-red-500" /> : <Mic className="h-3.5 w-3.5 text-emerald-500" />}
-                        {user && user.id === meetingHostId && !p.isLocal && (
+                        {isHostUser && !p.isLocal && (
                           <Button variant="ghost" size="icon" onClick={() => kickParticipant(p.identity)} className="h-6 w-6 hover:bg-destructive/10 text-destructive" title="Remove Participant">
                             <ShieldAlert className="h-3.5 w-3.5" />
                           </Button>
@@ -1896,13 +2006,23 @@ export default function RoomPage({ params }: RoomPageProps) {
         )
       case 'ai':
         return (
-          <div className="flex flex-col h-full bg-slate-900/50">
+          <div className="flex flex-col h-full bg-popover/50">
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div className="flex gap-2">
-                <Button onClick={() => askAI("Generate meeting summary notes.")} variant="outline" className="flex-1 text-xs py-1.5 h-auto font-semibold border-slate-800 hover:bg-slate-800">
+                <Button 
+                  onClick={() => askAI("Generate meeting summary notes.")} 
+                  variant="outline" 
+                  className="flex-1 text-xs py-1.5 h-auto font-semibold border-border hover:bg-slate-800"
+                  disabled={adminSettings.isAiDisabled && !isHostUser}
+                >
                   Meeting Notes
                 </Button>
-                <Button onClick={() => askAI("Extract checklist tasks.")} variant="outline" className="flex-1 text-xs py-1.5 h-auto font-semibold border-slate-800 hover:bg-slate-800">
+                <Button 
+                  onClick={() => askAI("Extract checklist tasks.")} 
+                  variant="outline" 
+                  className="flex-1 text-xs py-1.5 h-auto font-semibold border-border hover:bg-slate-800"
+                  disabled={adminSettings.isAiDisabled && !isHostUser}
+                >
                   Extract Tasks
                 </Button>
               </div>
@@ -1910,14 +2030,42 @@ export default function RoomPage({ params }: RoomPageProps) {
               <div className="space-y-3 mt-4">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider select-none">AI Assistant Logs</h3>
                 <div className="space-y-3">
-                  {aiConversations.map((c, i) => (
-                    <div key={i} className={`p-3 rounded-xl border ${c.sender === 'user' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-blue-950/20 border-blue-900/30'}`}>
-                      <p className="text-[10px] uppercase font-extrabold text-primary mb-1 select-none">{c.sender === 'user' ? 'You' : 'Codovate AI'}</p>
-                      <div className="text-xs space-y-1 text-slate-200 whitespace-pre-wrap leading-relaxed select-text">
-                        {c.text}
+                  {aiConversations.map((c, i) => {
+                    const parts = c.text.split(/(```[\s\S]*?```)/)
+                    return (
+                      <div key={i} className={`p-3 rounded-[20px] border ${c.sender === 'user' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-blue-950/20 border-blue-900/30'}`}>
+                        <p className="text-[10px] uppercase font-extrabold text-primary mb-1 select-none">{c.sender === 'user' ? 'You' : 'Codovate AI'}</p>
+                        <div className="text-xs space-y-2 text-slate-200 whitespace-pre-wrap leading-relaxed select-text">
+                          {parts.map((part, pIdx) => {
+                            if (part.startsWith('```')) {
+                              const codeContent = part.replace(/```[a-z]*\n?/i, '').replace(/```$/, '').trim()
+                              return (
+                                <div key={pIdx} className="my-2 bg-card border border-border rounded-md overflow-hidden font-mono">
+                                  <div className="bg-popover px-2 py-1 flex justify-between items-center border-b border-border">
+                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">AI Generated Code</span>
+                                    {c.sender !== 'user' && (
+                                      <Button 
+                                        size="sm" 
+                                        className="h-6 text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white border-none font-bold px-2 py-0"
+                                        onClick={() => {
+                                          setActiveCode(codeContent)
+                                          sendData('code_update', { code: codeContent })
+                                        }}
+                                      >
+                                        Apply to Editor
+                                      </Button>
+                                    )}
+                                  </div>
+                                  <pre className="p-3 text-[10px] overflow-x-auto text-emerald-400">{codeContent}</pre>
+                                </div>
+                              )
+                            }
+                            return <span key={pIdx}>{part}</span>
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                   {aiLoading && (
                     <div className="flex items-center justify-center gap-2 p-4 text-xs text-slate-400 select-none">
                       <RefreshCw className="h-3 w-3 animate-spin" /> Thinking...
@@ -1926,21 +2074,27 @@ export default function RoomPage({ params }: RoomPageProps) {
                 </div>
               </div>
             </div>
-            <div className="p-4 border-t border-border bg-slate-900/30">
-              <form onSubmit={(e) => { e.preventDefault(); askAI(aiInput); setAiInput('') }} className="flex gap-2">
-                <Input placeholder="Ask AI Assistant..." value={aiInput} onChange={(e) => setAiInput(e.target.value)} className="bg-background border-border" />
-                <Button type="submit" disabled={!aiInput.trim()} className="bg-primary text-primary-foreground hover:opacity-90">
-                  <Send className="h-4 w-4" />
-                </Button>
-              </form>
+            <div className="p-4 border-t border-border bg-popover/30">
+              {adminSettings.isAiDisabled && !isHostUser ? (
+                <p className="text-center text-xs text-slate-400 font-medium italic select-none py-2 bg-slate-900/50 rounded-xl border border-white/5">
+                  🤖 AI Assistant has been locked by the host
+                </p>
+              ) : (
+                <form onSubmit={(e) => { e.preventDefault(); askAI(aiInput); setAiInput('') }} className="flex gap-2">
+                  <Input placeholder="Ask AI Assistant..." value={aiInput} onChange={(e) => setAiInput(e.target.value)} className="bg-background border-border" />
+                  <Button type="submit" disabled={!aiInput.trim()} className="bg-primary text-primary-foreground hover:opacity-90">
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </form>
+              )}
             </div>
           </div>
         )
       case 'polls':
         return (
-          <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-slate-900/50">
-            {user && user.id === meetingHostId && (
-              <div className="bg-slate-900/40 border border-slate-850 rounded-xl p-4 space-y-3">
+          <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-popover/50">
+            {isHostUser && (
+              <div className="bg-popover/40 border border-slate-850 rounded-[20px] p-4 space-y-3">
                 <h3 className="font-bold text-xs text-white">Create a Poll</h3>
                 <div className="space-y-2">
                   <Input placeholder="Question" value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} className="bg-slate-800 border-slate-700 text-xs text-white" />
@@ -1952,7 +2106,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             )}
 
             {activePoll ? (
-              <div className="bg-blue-950/20 border border-blue-900/30 rounded-xl p-4 space-y-4">
+              <div className="bg-blue-950/20 border border-blue-900/30 rounded-[20px] p-4 space-y-4">
                 <div className="space-y-1">
                   <span className="text-[9px] text-primary uppercase font-bold tracking-wider">Active Poll</span>
                   <h4 className="font-bold text-xs text-white leading-tight">{activePoll.question}</h4>
@@ -1992,7 +2146,7 @@ export default function RoomPage({ params }: RoomPageProps) {
         )
       case 'effects':
         return (
-          <div className="flex flex-col h-full p-4 space-y-5 overflow-y-auto bg-slate-900/50">
+          <div className="flex flex-col h-full p-4 space-y-5 overflow-y-auto bg-popover/50">
             <div className="space-y-2">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider select-none">Webcam Filters</h3>
               <div className="grid grid-cols-2 gap-2">
@@ -2013,7 +2167,7 @@ export default function RoomPage({ params }: RoomPageProps) {
                       sendData('FILTER_CHANGE', { filter: f.value })
                       setParticipantFilters(prev => ({ ...prev, [room?.localParticipant.sid || 'local']: f.value }))
                     }}
-                    className={`p-2 text-[10px] rounded-xl font-bold border transition ${localVideoFilter === f.value ? 'bg-primary text-white border-primary' : 'bg-slate-850 border-slate-800 text-slate-300 hover:bg-slate-800'}`}
+                    className={`p-2 text-[10px] rounded-[20px] font-bold border transition ${localVideoFilter === f.value ? 'bg-primary text-white border-primary' : 'bg-slate-850 border-border text-slate-300 hover:bg-slate-800'}`}
                   >
                     {f.name}
                   </button>
@@ -2024,7 +2178,7 @@ export default function RoomPage({ params }: RoomPageProps) {
         )
       case 'timetravel':
         return (
-          <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-slate-900/50">
+          <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-popover/50">
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-white flex items-center gap-1 select-none">
                 <Clock className="h-4 w-4 text-primary animate-pulse" /> AI Time Travel Snapshot
@@ -2036,17 +2190,17 @@ export default function RoomPage({ params }: RoomPageProps) {
               placeholder="Search timeline..."
               value={timeTravelSearch}
               onChange={(e) => setTimeTravelSearch(e.target.value)}
-              className="bg-slate-850 border-slate-800 text-xs text-white"
+              className="bg-slate-850 border-border text-xs text-white"
             />
 
             <ScrollArea className="flex-1">
-              <div className="space-y-3 relative border-l border-slate-800 pl-3.5 ml-2.5">
+              <div className="space-y-3 relative border-l border-border pl-3.5 ml-2.5">
                 {timelineSnapshots
                   .filter(snap => snap.title.toLowerCase().includes(timeTravelSearch.toLowerCase()))
                   .map((snap, i) => (
                     <div key={i} className="relative space-y-1">
                       {/* Timeline dot */}
-                      <span className="absolute -left-5 top-1 bg-primary w-2.5 h-2.5 rounded-full ring-4 ring-slate-950 border border-slate-800" />
+                      <span className="absolute -left-5 top-1 bg-primary w-2.5 h-2.5 rounded-full ring-4 ring-slate-950 border border-border" />
                       
                       <div className="flex justify-between items-baseline">
                         <span className="text-[10px] font-bold text-primary font-mono">{snap.time}</span>
@@ -2066,9 +2220,9 @@ export default function RoomPage({ params }: RoomPageProps) {
         )
       case 'focus':
         return (
-          <div className="flex flex-col h-full p-4 space-y-5 overflow-y-auto bg-slate-900/50">
+          <div className="flex flex-col h-full p-4 space-y-5 overflow-y-auto bg-popover/50">
             {/* Pomodoro Timer */}
-            <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 text-center space-y-3 select-none">
+            <div className="bg-card/60 border border-border rounded-[20px] p-4 text-center space-y-3 select-none">
               <div>
                 <span className="text-[9px] text-primary uppercase font-bold tracking-wider">Pomodoro focus block</span>
                 <h3 className="font-extrabold text-3xl font-mono text-white mt-1">
@@ -2085,7 +2239,7 @@ export default function RoomPage({ params }: RoomPageProps) {
                 <Button
                   onClick={() => { setPomodoroActive(false); setPomodoroSecs(25 * 60) }}
                   variant="outline"
-                  className="h-8 text-xs font-bold border-slate-800 text-slate-300 hover:bg-slate-800"
+                  className="h-8 text-xs font-bold border-border text-slate-300 hover:bg-slate-800"
                 >
                   Reset
                 </Button>
@@ -2103,7 +2257,7 @@ export default function RoomPage({ params }: RoomPageProps) {
                   <div
                     key={track.key}
                     onClick={() => handleAmbientToggle(track.key as any)}
-                    className={`p-3 rounded-xl border cursor-pointer select-none transition ${activeAmbientSound === track.key ? 'bg-primary/20 border-primary text-white' : 'bg-slate-900 border-slate-850 text-slate-300 hover:bg-slate-800'}`}
+                    className={`p-3 rounded-[20px] border cursor-pointer select-none transition ${activeAmbientSound === track.key ? 'bg-primary/20 border-primary text-white' : 'bg-popover border-slate-850 text-slate-300 hover:bg-slate-800'}`}
                   >
                     <div className="flex justify-between items-center">
                       <p className="text-xs font-bold">{track.name}</p>
@@ -2118,7 +2272,7 @@ export default function RoomPage({ params }: RoomPageProps) {
         )
       case 'interview':
         return (
-          <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-slate-900/50">
+          <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-popover/50">
             <div className="space-y-1 select-none">
               <h3 className="text-xs font-bold text-white flex items-center gap-1">
                 <Crown className="h-4 w-4 text-amber-400" /> Candidate Interview Dashboard
@@ -2127,7 +2281,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             </div>
 
             {/* Scorecard visual progress bars */}
-            <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-3.5">
+            <div className="bg-card/60 p-4 rounded-[20px] border border-border space-y-3.5">
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-semibold select-none">
                   <span className="text-slate-300">Coding Score</span>
@@ -2188,7 +2342,7 @@ export default function RoomPage({ params }: RoomPageProps) {
         )
       case 'scheduler':
         return (
-          <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-slate-900/50">
+          <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-popover/50">
             <h3 className="font-bold text-xs text-white">Smart Scheduler</h3>
             <div className="space-y-3">
               <div className="space-y-1">
@@ -2211,7 +2365,7 @@ export default function RoomPage({ params }: RoomPageProps) {
         )
       case 'abuse':
         return (
-          <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-slate-900/50">
+          <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-popover/50">
             <h3 className="font-bold text-xs text-white flex items-center gap-1.5">
               <Flag className="h-4 w-4 text-red-500" /> Report Abuse
             </h3>
@@ -2234,9 +2388,9 @@ export default function RoomPage({ params }: RoomPageProps) {
               </div>
               <div className="space-y-1">
                 <label className="text-[9px] font-bold text-slate-400 uppercase">Incident Details</label>
-                <textarea className="w-full p-2 bg-slate-850 border border-slate-700 rounded-lg text-xs text-white h-20 outline-none focus:border-primary" placeholder="Provide details to assist review..." />
+                <textarea className="w-full p-2 bg-slate-850 border border-slate-700 rounded-lg text-xs text-white h-20 outline-none focus:border-indigo-500" placeholder="Provide details to assist review..." />
               </div>
-              <Button onClick={() => alert("Abuse report submitted.")} className="w-full text-xs font-bold bg-red-600 hover:bg-red-700 h-9 text-white border-none">
+              <Button onClick={() => alert("Abuse report submitted.")} className="w-full text-xs font-bold bg-gradient-to-r from-red-500 to-rose-600 text-white border-none h-9 hover:opacity-90 transition-all">
                 Submit Report
               </Button>
             </div>
@@ -2250,53 +2404,53 @@ export default function RoomPage({ params }: RoomPageProps) {
   // Lobby Pre-Join Layout
   if (!hasJoined) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#080b16] via-[#05060b] to-[#010204] flex flex-col items-center justify-center p-6 text-white font-sans">
-        <h1 className="text-3xl font-black mb-8 select-none bg-gradient-to-r from-blue-400 via-indigo-200 to-white bg-clip-text text-transparent">Ready to join meeting?</h1>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-slate-200 font-sans">
+        <h1 className="text-3xl font-black mb-8 select-none bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent">Ready to join meeting?</h1>
         <div className="flex flex-col md:flex-row gap-8 items-center w-full max-w-full sm:max-w-4xl">
-          <div className="flex-1 w-full bg-[#0c0f24]/60 rounded-2xl overflow-hidden aspect-video relative border border-white/5 flex items-center justify-center shadow-2xl shadow-primary/5 max-w-full transition-all duration-300 hover:border-primary/20">
+          <div className="flex-1 w-full bg-secondary rounded-2xl overflow-hidden aspect-video relative border border-border flex items-center justify-center shadow-2xl max-w-full transition-all duration-300 hover:border-indigo-500/30">
             <video ref={previewVideoRef} autoPlay playsInline muted className={`w-full h-full object-cover transform scale-x-[-1] ${isVideoOff ? 'hidden' : ''}`} />
             
             {isVideoOff && (
-              <div className="flex flex-col items-center text-slate-500 select-none">
-                <VideoOff className="h-12 w-12 mb-2 text-slate-600 animate-pulse" />
+              <div className="flex flex-col items-center text-slate-400 select-none">
+                <VideoOff className="h-12 w-12 mb-2 text-slate-300 animate-pulse" />
                 <span className="text-xs font-semibold">Camera is off</span>
               </div>
             )}
             
             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-              <Button onClick={handleMuteToggle} size="icon" className={`h-11 w-11 rounded-full border-none transition-all duration-300 hover:scale-110 active:scale-90 ${isMuted ? 'bg-gradient-to-r from-rose-500 to-red-600 shadow-md shadow-red-500/20' : 'bg-white/10 hover:bg-white/20 backdrop-blur-md text-white'}`}>
-                {isMuted ? <MicOff className="h-4.5 w-4.5 text-white" /> : <Mic className="h-4.5 w-4.5 text-white text-white" />}
+              <Button onClick={handleMuteToggle} size="icon" className={`h-11 w-11 rounded-full border-none transition-all duration-300 hover:scale-110 active:scale-90 ${isMuted ? 'bg-gradient-to-r from-rose-500 to-red-600 shadow-md shadow-red-500/20' : 'bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700'}`}>
+                {isMuted ? <MicOff className="h-4.5 w-4.5 text-white" /> : <Mic className="h-4.5 w-4.5 text-slate-300" />}
               </Button>
-              <Button onClick={handleVideoToggle} size="icon" className={`h-11 w-11 rounded-full border-none transition-all duration-300 hover:scale-110 active:scale-90 ${isVideoOff ? 'bg-gradient-to-r from-rose-500 to-red-600 shadow-md shadow-red-500/20' : 'bg-white/10 hover:bg-white/20 backdrop-blur-md text-white'}`}>
-                {isVideoOff ? <VideoOff className="h-4.5 w-4.5 text-white" /> : <Video className="h-4.5 w-4.5 text-white" />}
+              <Button onClick={handleVideoToggle} size="icon" className={`h-11 w-11 rounded-full border-none transition-all duration-300 hover:scale-110 active:scale-90 ${isVideoOff ? 'bg-gradient-to-r from-rose-500 to-red-600 shadow-md shadow-red-500/20' : 'bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700'}`}>
+                {isVideoOff ? <VideoOff className="h-4.5 w-4.5 text-white" /> : <Video className="h-4.5 w-4.5 text-slate-300" />}
               </Button>
             </div>
           </div>
 
-          <div className="w-full md:w-80 bg-[#0d1127]/60 p-6 rounded-2xl border border-white/5 backdrop-blur-xl shadow-2xl">
+          <div className="w-full md:w-80 bg-secondary p-6 rounded-2xl border border-border shadow-2xl">
             <h2 className="text-lg font-extrabold mb-4 select-none text-slate-200">
-              Meeting: <span className="text-primary tracking-wider uppercase font-mono font-black">{roomId}</span>
+              Meeting: <span className="text-indigo-400 tracking-wider uppercase font-mono font-black">{roomId}</span>
             </h2>
             <form onSubmit={handleJoinClick} className="space-y-4">
               <div>
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 select-none">Your Name</label>
-                <Input value={lobbyName} onChange={(e) => setLobbyName(e.target.value)} required className="bg-white/5 border-white/10 focus:border-primary/50 text-white rounded-xl h-10 px-3 transition-colors text-xs font-semibold" />
+                <Input value={lobbyName} onChange={(e) => setLobbyName(e.target.value)} required className="bg-popover border-border focus:border-indigo-500 text-slate-200 rounded-[20px] h-10 px-3 transition-colors text-xs font-semibold" />
               </div>
               
-              <div className="flex items-center gap-2.5 select-none border border-white/5 p-3 rounded-xl bg-black/20">
+              <div className="flex items-center gap-2.5 select-none border border-border p-3 rounded-[20px] bg-popover/50">
                 <input
                   type="checkbox"
                   id="companion"
                   checked={isCompanionMode}
                   onChange={(e) => setIsCompanionMode(e.target.checked)}
-                  className="rounded border-slate-700 text-primary focus:ring-primary w-4.5 h-4.5 bg-slate-850 cursor-pointer transition-colors"
+                  className="rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 w-4.5 h-4.5 bg-slate-800 cursor-pointer transition-colors"
                 />
                 <label htmlFor="companion" className="text-[11px] text-slate-300 font-bold cursor-pointer uppercase tracking-wider">
                   Companion Mode (Presenter) 💻
                 </label>
               </div>
 
-              <Button type="submit" size="lg" className="w-full font-black text-sm h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300">Join Now</Button>
+              <Button type="submit" size="lg" className="w-full font-black text-sm h-12 rounded-[20px] bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 border-none">Join Now</Button>
             </form>
           </div>
         </div>
@@ -2306,7 +2460,7 @@ export default function RoomPage({ params }: RoomPageProps) {
 
   // Connected Meeting Room Layout
   return (
-    <div className="relative h-[100dvh] bg-gradient-to-br from-[#080b16] via-[#05060b] to-[#010204] text-foreground flex flex-col justify-between overflow-hidden font-sans">
+    <div className="relative h-[100dvh] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#111827] via-[#050816] to-[#050816] text-foreground flex flex-col justify-between overflow-hidden font-sans">
       
       {/* Floating level up alerts */}
       {showLevelUpCelebration && (
@@ -2327,13 +2481,13 @@ export default function RoomPage({ params }: RoomPageProps) {
       `}</style>
 
       {/* Meeting Room Header */}
-      <header className="px-4 sm:px-6 py-2.5 bg-[#0d1127]/60 backdrop-blur-xl flex items-center justify-between z-10 shrink-0 border-b border-white/5 shadow-lg select-none">
+      <header className="px-4 sm:px-6 py-2.5 bg-background/80 backdrop-blur-xl flex items-center justify-between z-10 shrink-0 border-b border-white/5 shadow-sm select-none">
         <div className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-            <Video className="h-4 w-4 text-primary" strokeWidth={2.5} />
+          <div className="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+            <Video className="h-4 w-4 text-indigo-400" strokeWidth={2.5} />
           </div>
           <div className="flex flex-col leading-none">
-            <span className="font-black text-xs text-white tracking-tight bg-gradient-to-r from-blue-400 to-white bg-clip-text text-transparent">Codovate-Meet</span>
+            <span className="font-black text-xs text-white tracking-tight">Codovate-Meet</span>
             <span className="font-mono text-[9px] font-bold tracking-widest text-slate-400 mt-0.5">{roomId}</span>
           </div>
         </div>
@@ -2347,7 +2501,7 @@ export default function RoomPage({ params }: RoomPageProps) {
               setActiveSidebar(val ? val : null)
             }}
             value={activeSidebar || ''}
-            className="md:hidden bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-200 text-xs font-bold rounded-lg px-3 py-1 outline-none h-8 transition-all duration-300"
+            className="md:hidden bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg px-3 py-1 outline-none h-8 transition-all duration-300 shadow-sm"
           >
             <option value="">⚙️ Select Sidebar Tool</option>
             <option value="chat">💬 Chat</option>
@@ -2365,8 +2519,8 @@ export default function RoomPage({ params }: RoomPageProps) {
               onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'chat'
-                  ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105 font-bold'
-                  : 'text-slate-300 hover:bg-white/5'
+                  ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
+                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
               }`}
             >
               <MessageSquare className="h-4 w-4 mr-1" /> Chat
@@ -2376,8 +2530,8 @@ export default function RoomPage({ params }: RoomPageProps) {
               onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'participants'
-                  ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105 font-bold'
-                  : 'text-slate-300 hover:bg-white/5'
+                  ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
+                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
               }`}
             >
               <Users className="h-4 w-4 mr-1" /> {participants.length}
@@ -2387,30 +2541,30 @@ export default function RoomPage({ params }: RoomPageProps) {
               onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'ai'
-                  ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105 font-bold'
-                  : 'text-slate-300 hover:bg-white/5'
+                  ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
+                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
               }`}
             >
-              <Sparkles className="h-4 w-4 mr-1 text-amber-400 animate-pulse" /> AI Notes
+              <Sparkles className="h-4 w-4 mr-1 text-purple-500 animate-pulse" /> AI Notes
             </Button>
             <Button
               variant="ghost"
               onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'timetravel'
-                  ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105 font-bold'
-                  : 'text-slate-300 hover:bg-white/5'
+                  ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
+                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
               }`}
             >
-              <Clock className="h-4 w-4 mr-1 text-sky-400" /> Timeline
+              <Clock className="h-4 w-4 mr-1 text-sky-500" /> Timeline
             </Button>
             <Button
               variant="ghost"
               onClick={() => setActiveSidebar(activeSidebar === 'focus' ? null : 'focus')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'focus'
-                  ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105 font-bold'
-                  : 'text-slate-300 hover:bg-white/5'
+                  ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
+                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
               }`}
             >
               ⏱️ Focus
@@ -2420,11 +2574,11 @@ export default function RoomPage({ params }: RoomPageProps) {
               onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'interview'
-                  ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105 font-bold'
-                  : 'text-slate-300 hover:bg-white/5'
+                  ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
+                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
               }`}
             >
-              <Crown className="h-4 w-4 mr-1 text-amber-500" /> Interview
+              <Crown className="h-4 w-4 mr-1 text-purple-500" /> Interview
             </Button>
           </div>
         </div>
@@ -2434,13 +2588,13 @@ export default function RoomPage({ params }: RoomPageProps) {
       <div className="flex-1 flex overflow-hidden relative">
         
         {/* Workspaces & Grid Pane */}
-        <main className="flex-1 flex flex-col md:flex-row p-4 overflow-hidden relative bg-[#030408]/40 gap-4">
+        <main className="flex-1 flex flex-col md:flex-row p-4 overflow-hidden relative bg-slate-100/50 gap-4">
           
           {/* Left panel: Active workspace if set */}
           {activeWorkspace !== 'none' && (
             <div className="flex-1 min-w-0 h-full">
-              {activeWorkspace === 'code' && <CodeWorkspaceWithAI sendData={sendData} askAI={askAI} />}
-              {activeWorkspace === 'whiteboard' && <WhiteboardWorkspace sendData={sendData} />}
+              {activeWorkspace === 'code' && <CodeEditor code={activeCode} onCodeChange={setActiveCode} room={room} lobbyName={lobbyName} sendData={sendData} readOnly={userRoles[lobbyName] === 'Guest' || (adminSettings.isCodeLocked && !isHostUser)} />}
+              {activeWorkspace === 'whiteboard' && <Whiteboard room={room} lobbyName={lobbyName} sendData={sendData} readOnly={userRoles[lobbyName] === 'Guest' || (adminSettings.isWhiteboardLocked && !isHostUser)} />}
               {activeWorkspace === 'uno' && <UnoGameWorkspace room={room} lobbyName={lobbyName} sendData={sendData} setXp={setXp} />}
             </div>
           )}
@@ -2457,7 +2611,7 @@ export default function RoomPage({ params }: RoomPageProps) {
                 
                 {/* Invite popup overlay when user joins alone */}
                 {participants.length === 1 && showInvitePopup && (
-                  <div className="bg-slate-900 border border-slate-850 rounded-xl p-4 space-y-3 shadow-2xl relative select-none animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="bg-popover border border-slate-850 rounded-[20px] p-4 space-y-3 shadow-2xl relative select-none animate-in fade-in slide-in-from-top-4 duration-300">
                     <button onClick={() => setShowInvitePopup(false)} className="absolute top-2.5 right-2.5 text-slate-500 hover:text-slate-200">
                       <X className="h-4 w-4" />
                     </button>
@@ -2469,7 +2623,7 @@ export default function RoomPage({ params }: RoomPageProps) {
                       <Input
                         readOnly
                         value={typeof window !== 'undefined' ? `${window.location.origin}/room/${roomId}` : roomId}
-                        className="bg-slate-950 border-slate-800 text-[10px] text-primary h-8 font-mono select-all"
+                        className="bg-card border-border text-[10px] text-primary h-8 font-mono select-all"
                       />
                       <Button
                         size="sm"
@@ -2487,7 +2641,7 @@ export default function RoomPage({ params }: RoomPageProps) {
 
                 {pinnedTile ? (
                   <>
-                    <div className="flex-1 w-full rounded-xl overflow-hidden min-h-0 bg-black">
+                    <div className="flex-1 w-full rounded-[20px] overflow-hidden min-h-0 bg-black">
                       <VideoTile
                         participant={pinnedTile.participant}
                         source={pinnedTile.source}
@@ -2551,7 +2705,7 @@ export default function RoomPage({ params }: RoomPageProps) {
 
                     {/* Pagination Controls */}
                     {totalPages > 1 && (
-                      <div className="flex items-center justify-center gap-4 mt-4 bg-slate-900/80 border border-slate-800 rounded-full px-4 py-1.5 w-fit mx-auto select-none shadow-lg">
+                      <div className="flex items-center justify-center gap-4 mt-4 bg-popover/80 border border-border rounded-full px-4 py-1.5 w-fit mx-auto select-none shadow-lg">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -2584,7 +2738,7 @@ export default function RoomPage({ params }: RoomPageProps) {
 
         {/* Floating Captions Overlay */}
         {showCaptions && activeCaption && (
-          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-[90%] max-w-lg bg-slate-900/90 backdrop-blur-md text-white p-3 rounded-xl z-20 text-center pointer-events-none shadow-lg border border-white/5 select-none animate-in fade-in zoom-in-95 duration-200 font-semibold text-xs leading-relaxed">
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-[90%] max-w-lg bg-popover/90 backdrop-blur-md text-white p-3 rounded-[20px] z-20 text-center pointer-events-none shadow-lg border border-white/5 select-none animate-in fade-in zoom-in-95 duration-200 font-semibold text-xs leading-relaxed">
             <p className="text-[10px] text-primary font-bold mb-0.5 uppercase tracking-wider">
               {activeCaption.participantId}
             </p>
@@ -2596,9 +2750,9 @@ export default function RoomPage({ params }: RoomPageProps) {
 
         {/* Unified Tabbed Sidebar Panel */}
         {activeSidebar && (
-          <aside className="absolute md:static right-0 top-0 bottom-0 z-20 h-full w-full md:w-80 bg-[#090c1e]/90 backdrop-blur-2xl border-l border-white/5 flex flex-col shrink-0 shadow-2xl animate-in slide-in-from-right-8 duration-200 animate-out">
-            <div className="p-3.5 border-b border-slate-850 flex justify-between items-center bg-slate-900">
-              <h2 className="font-extrabold text-sm text-white select-none capitalize">
+          <aside className="absolute md:static right-0 top-0 bottom-0 z-20 h-full w-full md:w-80 bg-secondary border-l border-border flex flex-col shrink-0 shadow-2xl animate-in slide-in-from-right-8 duration-200 animate-out">
+            <div className="p-3.5 border-b border-border flex justify-between items-center bg-popover/80 backdrop-blur-md">
+              <h2 className="font-extrabold text-sm text-slate-200 select-none capitalize">
                 {activeSidebar === 'chat' ? 'In-Call Messages' :
                  activeSidebar === 'participants' ? 'Meeting Participants' :
                  activeSidebar === 'ai' ? 'Codovate Assistant' :
@@ -2606,13 +2760,13 @@ export default function RoomPage({ params }: RoomPageProps) {
                  activeSidebar === 'focus' ? 'Co-working & Pomodoro' :
                  activeSidebar === 'interview' ? 'Technical Interview' : activeSidebar}
               </h2>
-              <Button variant="ghost" size="icon" onClick={() => setActiveSidebar(null)} className="h-7 w-7 text-slate-400 hover:text-white hover:bg-slate-850">
+              <Button variant="ghost" size="icon" onClick={() => setActiveSidebar(null)} className="h-7 w-7 text-slate-400 hover:text-white hover:bg-slate-800">
                 <X className="h-4 w-4" />
               </Button>
             </div>
             
             {/* Quick switcher inside sidebar */}
-            <div className="grid grid-cols-4 border-b border-slate-850 bg-slate-900/40 p-1">
+            <div className="grid grid-cols-4 border-b border-border bg-background p-1">
               {[
                 { tab: 'chat', label: 'Chat', icon: <MessageSquare className="h-3.5 w-3.5" /> },
                 { tab: 'participants', label: 'Users', icon: <Users className="h-3.5 w-3.5" /> },
@@ -2623,14 +2777,14 @@ export default function RoomPage({ params }: RoomPageProps) {
                   key={item.tab}
                   onClick={() => setActiveSidebar(item.tab)}
                   title={item.label}
-                  className={`py-1.5 flex justify-center rounded transition ${activeSidebar === item.tab ? 'bg-slate-800 text-primary' : 'text-slate-400 hover:text-white'}`}
+                  className={`py-1.5 flex justify-center rounded transition ${activeSidebar === item.tab ? 'bg-slate-800 text-indigo-400 shadow-sm border border-slate-700/50 font-bold' : 'text-slate-500 hover:text-slate-300'}`}
                 >
                   {item.icon}
                 </button>
               ))}
             </div>
 
-            <div className="flex-1 min-h-0 bg-slate-950/20">
+            <div className="flex-1 min-h-0 bg-background/50">
               {renderSidebarContent()}
             </div>
           </aside>
@@ -2639,7 +2793,7 @@ export default function RoomPage({ params }: RoomPageProps) {
 
       {/* Floating Emojis Reaction Tray above Controls Dock */}
       {showReactionTray && (
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-full px-4 py-2 flex gap-3.5 shadow-2xl z-30 animate-in fade-in slide-in-from-bottom-2 duration-200 select-none">
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-popover/90 backdrop-blur-md border border-border rounded-full px-4 py-2 flex gap-3.5 shadow-2xl z-30 animate-in fade-in slide-in-from-bottom-2 duration-200 select-none">
           {['❤️', '👍', '🎉', '👏', '😂', '😮', '😢', '🤔'].map(emoji => (
             <button
               key={emoji}
@@ -2653,7 +2807,7 @@ export default function RoomPage({ params }: RoomPageProps) {
       )}
 
       {/* Bottom Floating Control Dock */}
-      <footer className="px-4 py-3 bg-[#0c0f24]/85 backdrop-blur-xl border-t border-white/5 flex flex-col md:flex-row items-center justify-between shrink-0 shadow-2xl gap-3">
+      <footer className="px-4 py-3 bg-background/80 backdrop-blur-xl border-t border-white/5 flex flex-col md:flex-row items-center justify-between shrink-0 shadow-lg gap-3">
         
         {/* Left footer: workspaces triggers */}
         <div className="w-full md:w-auto flex justify-between md:justify-start items-center gap-2">
@@ -2662,7 +2816,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             <Button
               size="icon"
               onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
-              className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'code' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-md shadow-blue-500/20 scale-105' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+              className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'code' ? 'bg-gradient-to-r from-emerald-500 to-green-600 border-none text-white shadow-md shadow-emerald-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
               title="Code Workspace"
             >
               <Code className="h-4.5 w-4.5" />
@@ -2670,7 +2824,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             <Button
               size="icon"
               onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
-              className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'whiteboard' ? 'bg-gradient-to-r from-purple-500 to-pink-600 border-none text-white shadow-md shadow-purple-500/20 scale-105' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+              className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'whiteboard' ? 'bg-gradient-to-r from-orange-500 to-amber-600 border-none text-white shadow-md shadow-orange-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
               title="Whiteboard"
             >
               <Paintbrush className="h-4.5 w-4.5" />
@@ -2678,7 +2832,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             <Button
               size="icon"
               onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
-              className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'uno' ? 'bg-gradient-to-r from-amber-500 to-orange-600 border-none text-white shadow-md shadow-amber-500/20 scale-105' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+              className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'uno' ? 'bg-gradient-to-r from-amber-500 to-orange-600 border-none text-white shadow-md shadow-amber-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
               title="UNO! Game"
             >
               <span className="text-sm">🃏</span>
@@ -2687,7 +2841,7 @@ export default function RoomPage({ params }: RoomPageProps) {
               <Button
                 size="icon"
                 onClick={() => setIsWorkspaceMaximized(!isWorkspaceMaximized)}
-                className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${isWorkspaceMaximized ? 'bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+                className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${isWorkspaceMaximized ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
                 title={isWorkspaceMaximized ? "Restore Screen" : "Enlarge Workspace"}
               >
                 {isWorkspaceMaximized ? "🔍" : "🖥️"}
@@ -2700,14 +2854,14 @@ export default function RoomPage({ params }: RoomPageProps) {
             <Button
               size="sm"
               onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
-              className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'code' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-md shadow-blue-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+              className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'code' ? 'bg-gradient-to-r from-emerald-500 to-green-600 border-none text-white shadow-md shadow-emerald-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
             >
               <Code className="h-4 w-4 mr-1.5" /> Code Workspace
             </Button>
             <Button
               size="sm"
               onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
-              className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'whiteboard' ? 'bg-gradient-to-r from-purple-500 to-pink-600 border-none text-white shadow-md shadow-purple-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+              className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'whiteboard' ? 'bg-gradient-to-r from-orange-500 to-amber-600 border-none text-white shadow-md shadow-orange-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
             >
               <Paintbrush className="h-4 w-4 mr-1.5" /> Whiteboard
             </Button>
@@ -2722,7 +2876,7 @@ export default function RoomPage({ params }: RoomPageProps) {
               <Button
                 size="sm"
                 onClick={() => setIsWorkspaceMaximized(!isWorkspaceMaximized)}
-                className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${isWorkspaceMaximized ? 'bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+                className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${isWorkspaceMaximized ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
               >
                 {isWorkspaceMaximized ? "🔍 Show Videos" : "🖥️ Enlarge Workspace"}
               </Button>
@@ -2734,10 +2888,15 @@ export default function RoomPage({ params }: RoomPageProps) {
             <Button onClick={handleLeaveCall} className="h-9 px-3.5 rounded-lg bg-gradient-to-r from-red-500 to-rose-600 border-none text-white font-bold text-xs select-none shadow-md shadow-red-500/10 hover:opacity-90 active:scale-95 transition-all duration-300">
               Leave
             </Button>
-            {user && user.id === meetingHostId && (
-              <Button onClick={handleEndMeetingForAll} className="h-9 px-3 rounded-lg bg-gradient-to-r from-rose-500 to-red-600 border-none text-white hover:opacity-90 shadow-md shadow-red-500/25 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-bold text-xs">
-                End
-              </Button>
+            {isHostUser && (
+              <>
+                <Button onClick={() => setShowAdminCenter(true)} className="h-9 px-3 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 border-none text-white font-bold text-xs shadow-md shadow-indigo-500/20 hover:opacity-90 active:scale-95 transition-all duration-300">
+                  Admin
+                </Button>
+                <Button onClick={handleEndMeetingForAll} className="h-9 px-3 rounded-lg bg-gradient-to-r from-rose-500 to-red-600 border-none text-white hover:opacity-90 shadow-md shadow-red-500/25 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-bold text-xs">
+                  End
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -2749,7 +2908,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
               isMuted
                 ? 'bg-gradient-to-r from-rose-500 to-red-600 border-none text-white shadow-lg shadow-red-500/25 scale-110 hover:opacity-95'
-                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                : 'bg-popover border border-border text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
             disabled={!room}
           >
@@ -2762,7 +2921,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
               isVideoOff
                 ? 'bg-gradient-to-r from-rose-500 to-red-600 border-none text-white shadow-lg shadow-red-500/25 scale-110 hover:opacity-95'
-                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                : 'bg-popover border border-border text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
             disabled={!room}
           >
@@ -2775,9 +2934,9 @@ export default function RoomPage({ params }: RoomPageProps) {
             className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all hidden sm:inline-flex duration-300 hover:scale-110 active:scale-90 ${
               isScreenSharing
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/25 scale-110 hover:opacity-95'
-                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                : 'bg-popover border border-border text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
-            disabled={!room}
+            disabled={!room || (adminSettings.isScreenShareLocked && user?.id !== meetingHostId)}
           >
             <MonitorUp className="h-4.5 w-4.5" />
           </Button>
@@ -2788,7 +2947,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
               isHandRaised
                 ? 'bg-gradient-to-r from-amber-400 to-orange-500 border-none text-white shadow-lg shadow-amber-500/25 scale-110 hover:opacity-95'
-                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                : 'bg-popover border border-border text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
             disabled={!room}
             title="Raise Hand"
@@ -2802,7 +2961,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
               showReactionTray
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/25 scale-110 hover:opacity-95'
-                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                : 'bg-popover border border-border text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
             disabled={!room}
             title="Send Reaction"
@@ -2816,7 +2975,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
               showCaptions
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/25 scale-110 hover:opacity-95'
-                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                : 'bg-popover border border-border text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
             title="Toggle Captions"
           >
@@ -2827,16 +2986,16 @@ export default function RoomPage({ params }: RoomPageProps) {
         {/* Right footer: Desktop utilities & call actions */}
         <div className="hidden md:flex items-center gap-2">
           <div className="hidden lg:flex gap-1.5">
-            <Button size="icon" onClick={() => setIsOnToGoMode(true)} className="h-8 w-8 rounded bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all duration-300 hover:scale-105" title="On-the-Go Mode">
+            <Button size="icon" onClick={() => setIsOnToGoMode(true)} className="h-8 w-8 rounded bg-popover border border-border text-slate-400 hover:text-white hover:bg-slate-800 transition-all duration-300 hover:scale-105" title="On-the-Go Mode">
               🚶
             </Button>
-            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'effects' ? 'text-primary bg-primary/10 border-primary/30' : 'bg-white/5 border-white/10 text-slate-400'}`} title="Effects">
+            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'effects' ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`} title="Effects">
               <User className="h-4 w-4" />
             </Button>
-            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'scheduler' ? null : 'scheduler')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'scheduler' ? 'text-primary bg-primary/10 border-primary/30' : 'bg-white/5 border-white/10 text-slate-400'}`} title="Schedule Follow-up">
+            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'scheduler' ? null : 'scheduler')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'scheduler' ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`} title="Schedule Follow-up">
               <Calendar className="h-4 w-4" />
             </Button>
-            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'abuse' ? 'text-primary bg-primary/10 border-primary/30' : 'bg-white/5 border-white/10 text-slate-400'}`} title="Report Abuse">
+            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'abuse' ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`} title="Report Abuse">
               <Flag className="h-4 w-4" />
             </Button>
           </div>
@@ -2845,10 +3004,15 @@ export default function RoomPage({ params }: RoomPageProps) {
             <Button onClick={handleLeaveCall} className="h-10 sm:h-11 px-5 rounded-full bg-gradient-to-r from-red-500 to-rose-600 border-none text-white font-bold text-xs select-none shadow-md shadow-red-500/10 hover:opacity-90 active:scale-95 transition-all duration-300">
               Leave
             </Button>
-            {user && user.id === meetingHostId && (
-              <Button onClick={handleEndMeetingForAll} className="h-10 sm:h-11 px-3 sm:px-4 rounded-full bg-gradient-to-r from-rose-500 to-red-600 border-none text-white hover:opacity-90 shadow-lg shadow-red-500/25 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-bold text-xs">
-                <PhoneOff className="h-4 w-4 mr-1.5" /> End
-              </Button>
+            {isHostUser && (
+              <>
+                <Button onClick={() => setShowAdminCenter(true)} className="h-10 sm:h-11 px-3 sm:px-4 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 border-none text-white hover:opacity-90 shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-bold text-xs flex items-center gap-1.5">
+                  <ShieldAlert className="h-4 w-4" /> Admin
+                </Button>
+                <Button onClick={handleEndMeetingForAll} className="h-10 sm:h-11 px-3 sm:px-4 rounded-full bg-gradient-to-r from-rose-500 to-red-600 border-none text-white hover:opacity-90 shadow-lg shadow-red-500/25 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-bold text-xs">
+                  <PhoneOff className="h-4 w-4 mr-1.5" /> End
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -2860,8 +3024,23 @@ export default function RoomPage({ params }: RoomPageProps) {
         </div>
       )}
 
+      {/* Admin Command Center */}
+      {showAdminCenter && isHostUser && (
+        <AdminCommandCenter 
+          room={room} 
+          participants={participants} 
+          sendData={sendData} 
+          adminSettings={adminSettings}
+          onClose={() => setShowAdminCenter(false)}
+          meetingHostId={meetingHostId || ''}
+          user={user}
+          metrics={metrics}
+          userRoles={userRoles}
+        />
+      )}
+
       {typeof window !== 'undefined' && !window.isSecureContext && (
-        <div className="absolute top-16 left-6 right-6 bg-amber-500/20 border border-amber-500/40 text-amber-300 p-4 rounded-xl text-xs z-35 flex flex-col gap-1.5 select-none shadow-xl">
+        <div className="absolute top-16 left-6 right-6 bg-amber-500/20 border border-amber-500/40 text-amber-300 p-4 rounded-[20px] text-xs z-35 flex flex-col gap-1.5 select-none shadow-xl">
           <div className="flex items-center gap-1.5 font-bold text-amber-400">
             <span>⚠️</span> Non-Secure Connection (HTTP)
           </div>

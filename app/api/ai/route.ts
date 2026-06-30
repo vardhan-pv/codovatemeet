@@ -105,7 +105,8 @@ User Prompt: "${prompt}"
 
 Provide a professional, clear, and actionable response in Markdown format.
 If they ask for meeting summaries, action items, or code reviews, analyze the context provided above.
-Keep the formatting clean and suitable for a chat sidebar. Highlight key takeaways and code formatting where necessary.
+Keep the formatting clean and suitable for a chat sidebar. Highlight key takeaways.
+CRITICAL: If you write or generate any code, you MUST wrap it in standard markdown code blocks (e.g. \`\`\`javascript ... \`\`\`). The UI will automatically parse these blocks to let the user inject them into their live workspace.
 `
 
     let aiResponseText = ''
