@@ -166,7 +166,11 @@ function VideoTile({
   return (
     <div
       ref={containerRef}
-      className={`relative bg-slate-900 overflow-hidden flex items-center justify-center shadow-lg group transition-all ${isFullscreen ? 'w-screen h-screen rounded-none border-none' : `border border-slate-800 rounded-xl ${isPinned ? 'w-full h-full' : 'w-full aspect-video'}`}`}
+      className={`relative bg-[#0d1022] overflow-hidden flex items-center justify-center shadow-lg group transition-all duration-300 ${
+        isFullscreen 
+          ? 'w-screen h-screen rounded-none border-none' 
+          : `border rounded-2xl ${participant.isSpeaking ? 'border-primary ring-2 ring-primary/40 shadow-lg shadow-primary/20 scale-[1.01]' : 'border-white/5'} ${isPinned ? 'w-full h-full' : 'w-full aspect-video'}`
+      }`}
     >
       <video
         ref={videoRef}
@@ -2239,51 +2243,53 @@ export default function RoomPage({ params }: RoomPageProps) {
   // Lobby Pre-Join Layout
   if (!hasJoined) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-white font-sans">
-        <h1 className="text-3xl font-black mb-8 select-none">Ready to join meeting?</h1>
+      <div className="min-h-screen bg-gradient-to-br from-[#080b16] via-[#05060b] to-[#010204] flex flex-col items-center justify-center p-6 text-white font-sans">
+        <h1 className="text-3xl font-black mb-8 select-none bg-gradient-to-r from-blue-400 via-indigo-200 to-white bg-clip-text text-transparent">Ready to join meeting?</h1>
         <div className="flex flex-col md:flex-row gap-8 items-center w-full max-w-full sm:max-w-4xl">
-          <div className="flex-1 w-full bg-slate-900 rounded-2xl overflow-hidden aspect-video relative border border-slate-800 flex items-center justify-center shadow-2xl max-w-full">
+          <div className="flex-1 w-full bg-[#0c0f24]/60 rounded-2xl overflow-hidden aspect-video relative border border-white/5 flex items-center justify-center shadow-2xl shadow-primary/5 max-w-full transition-all duration-300 hover:border-primary/20">
             <video ref={previewVideoRef} autoPlay playsInline muted className={`w-full h-full object-cover transform scale-x-[-1] ${isVideoOff ? 'hidden' : ''}`} />
             
             {isVideoOff && (
               <div className="flex flex-col items-center text-slate-500 select-none">
-                <VideoOff className="h-12 w-12 mb-2" />
-                <span>Camera is off</span>
+                <VideoOff className="h-12 w-12 mb-2 text-slate-600 animate-pulse" />
+                <span className="text-xs font-semibold">Camera is off</span>
               </div>
             )}
             
             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-              <Button onClick={handleMuteToggle} size="icon" className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full border-none ${isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-800/80 hover:bg-slate-700 backdrop-blur-sm'}`}>
-                {isMuted ? <MicOff className="h-5 w-5 text-white" /> : <Mic className="h-5 w-5 text-white" />}
+              <Button onClick={handleMuteToggle} size="icon" className={`h-11 w-11 rounded-full border-none transition-all duration-300 hover:scale-110 active:scale-90 ${isMuted ? 'bg-gradient-to-r from-rose-500 to-red-600 shadow-md shadow-red-500/20' : 'bg-white/10 hover:bg-white/20 backdrop-blur-md text-white'}`}>
+                {isMuted ? <MicOff className="h-4.5 w-4.5 text-white" /> : <Mic className="h-4.5 w-4.5 text-white text-white" />}
               </Button>
-              <Button onClick={handleVideoToggle} size="icon" className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full border-none ${isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-800/80 hover:bg-slate-700 backdrop-blur-sm'}`}>
-                {isVideoOff ? <VideoOff className="h-5 w-5 text-white" /> : <Video className="h-5 w-5 text-white" />}
+              <Button onClick={handleVideoToggle} size="icon" className={`h-11 w-11 rounded-full border-none transition-all duration-300 hover:scale-110 active:scale-90 ${isVideoOff ? 'bg-gradient-to-r from-rose-500 to-red-600 shadow-md shadow-red-500/20' : 'bg-white/10 hover:bg-white/20 backdrop-blur-md text-white'}`}>
+                {isVideoOff ? <VideoOff className="h-4.5 w-4.5 text-white" /> : <Video className="h-4.5 w-4.5 text-white" />}
               </Button>
             </div>
           </div>
 
-          <div className="w-full md:w-80 bg-slate-900/50 p-6 rounded-2xl border border-slate-800 backdrop-blur-sm shadow-2xl">
-            <h2 className="text-xl font-bold mb-4">Meeting: <span className="text-primary tracking-widest uppercase font-mono">{roomId}</span></h2>
+          <div className="w-full md:w-80 bg-[#0d1127]/60 p-6 rounded-2xl border border-white/5 backdrop-blur-xl shadow-2xl">
+            <h2 className="text-lg font-extrabold mb-4 select-none text-slate-200">
+              Meeting: <span className="text-primary tracking-wider uppercase font-mono font-black">{roomId}</span>
+            </h2>
             <form onSubmit={handleJoinClick} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-400 mb-1">Your Name</label>
-                <Input value={lobbyName} onChange={(e) => setLobbyName(e.target.value)} required className="bg-slate-800 border-slate-700 text-white" />
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 select-none">Your Name</label>
+                <Input value={lobbyName} onChange={(e) => setLobbyName(e.target.value)} required className="bg-white/5 border-white/10 focus:border-primary/50 text-white rounded-xl h-10 px-3 transition-colors text-xs font-semibold" />
               </div>
               
-              <div className="flex items-center gap-2 select-none border border-slate-850 p-2.5 rounded-xl bg-slate-950/40">
+              <div className="flex items-center gap-2.5 select-none border border-white/5 p-3 rounded-xl bg-black/20">
                 <input
                   type="checkbox"
                   id="companion"
                   checked={isCompanionMode}
                   onChange={(e) => setIsCompanionMode(e.target.checked)}
-                  className="rounded border-slate-700 text-primary focus:ring-primary w-4 h-4 bg-slate-850 cursor-pointer"
+                  className="rounded border-slate-700 text-primary focus:ring-primary w-4.5 h-4.5 bg-slate-850 cursor-pointer transition-colors"
                 />
-                <label htmlFor="companion" className="text-xs text-slate-300 font-semibold cursor-pointer">
+                <label htmlFor="companion" className="text-[11px] text-slate-300 font-bold cursor-pointer uppercase tracking-wider">
                   Companion Mode (Presenter) 💻
                 </label>
               </div>
 
-              <Button type="submit" size="lg" className="w-full font-bold text-md h-12 btn-glow">Join Now</Button>
+              <Button type="submit" size="lg" className="w-full font-black text-sm h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300">Join Now</Button>
             </form>
           </div>
         </div>
@@ -2293,7 +2299,7 @@ export default function RoomPage({ params }: RoomPageProps) {
 
   // Connected Meeting Room Layout
   return (
-    <div className="relative h-[100dvh] bg-slate-950 text-foreground flex flex-col justify-between overflow-hidden font-sans">
+    <div className="relative h-[100dvh] bg-gradient-to-br from-[#080b16] via-[#05060b] to-[#010204] text-foreground flex flex-col justify-between overflow-hidden font-sans">
       
       {/* Floating level up alerts */}
       {showLevelUpCelebration && (
@@ -2314,14 +2320,14 @@ export default function RoomPage({ params }: RoomPageProps) {
       `}</style>
 
       {/* Meeting Room Header */}
-      <header className="px-4 sm:px-6 py-2 bg-slate-900 flex items-center justify-between z-10 shrink-0 border-b border-slate-850">
+      <header className="px-4 sm:px-6 py-2.5 bg-[#0d1127]/60 backdrop-blur-xl flex items-center justify-between z-10 shrink-0 border-b border-white/5 shadow-lg select-none">
         <div className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
             <Video className="h-4 w-4 text-primary" strokeWidth={2.5} />
           </div>
           <div className="flex flex-col leading-none">
-            <span className="font-black text-xs text-white tracking-tight">Codovate-Meet</span>
-            <span className="font-mono text-[9px] font-bold tracking-widest text-slate-400">{roomId}</span>
+            <span className="font-black text-xs text-white tracking-tight bg-gradient-to-r from-blue-400 to-white bg-clip-text text-transparent">Codovate-Meet</span>
+            <span className="font-mono text-[9px] font-bold tracking-widest text-slate-400 mt-0.5">{roomId}</span>
           </div>
         </div>
         
@@ -2334,7 +2340,7 @@ export default function RoomPage({ params }: RoomPageProps) {
               setActiveSidebar(val ? val : null)
             }}
             value={activeSidebar || ''}
-            className="md:hidden bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold rounded-lg px-2 py-1 outline-none h-8"
+            className="md:hidden bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-200 text-xs font-bold rounded-lg px-3 py-1 outline-none h-8 transition-all duration-300"
           >
             <option value="">⚙️ Select Sidebar Tool</option>
             <option value="chat">💬 Chat</option>
@@ -2346,23 +2352,71 @@ export default function RoomPage({ params }: RoomPageProps) {
           </select>
 
           {/* Desktop selector buttons */}
-          <div className="hidden md:flex gap-1 flex-wrap">
-            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'chat' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+          <div className="hidden md:flex gap-1.5 flex-wrap">
+            <Button
+              variant="ghost"
+              onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
+              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                activeSidebar === 'chat'
+                  ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105 font-bold'
+                  : 'text-slate-300 hover:bg-white/5'
+              }`}
+            >
               <MessageSquare className="h-4 w-4 mr-1" /> Chat
             </Button>
-            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'participants' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+            <Button
+              variant="ghost"
+              onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
+              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                activeSidebar === 'participants'
+                  ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105 font-bold'
+                  : 'text-slate-300 hover:bg-white/5'
+              }`}
+            >
               <Users className="h-4 w-4 mr-1" /> {participants.length}
             </Button>
-            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'ai' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+            <Button
+              variant="ghost"
+              onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
+              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                activeSidebar === 'ai'
+                  ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105 font-bold'
+                  : 'text-slate-300 hover:bg-white/5'
+              }`}
+            >
               <Sparkles className="h-4 w-4 mr-1 text-amber-400 animate-pulse" /> AI Notes
             </Button>
-            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'timetravel' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+            <Button
+              variant="ghost"
+              onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')}
+              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                activeSidebar === 'timetravel'
+                  ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105 font-bold'
+                  : 'text-slate-300 hover:bg-white/5'
+              }`}
+            >
               <Clock className="h-4 w-4 mr-1 text-sky-400" /> Timeline
             </Button>
-            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'focus' ? null : 'focus')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'focus' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+            <Button
+              variant="ghost"
+              onClick={() => setActiveSidebar(activeSidebar === 'focus' ? null : 'focus')}
+              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                activeSidebar === 'focus'
+                  ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105 font-bold'
+                  : 'text-slate-300 hover:bg-white/5'
+              }`}
+            >
               ⏱️ Focus
             </Button>
-            <Button variant="ghost" onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')} className={`h-8 text-xs font-semibold hover:bg-slate-800 ${activeSidebar === 'interview' ? 'bg-primary hover:bg-primary/95 text-white' : 'text-slate-300'}`}>
+            <Button
+              variant="ghost"
+              onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')}
+              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                activeSidebar === 'interview'
+                  ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105 font-bold'
+                  : 'text-slate-300 hover:bg-white/5'
+              }`}
+            >
               <Crown className="h-4 w-4 mr-1 text-amber-500" /> Interview
             </Button>
           </div>
@@ -2373,7 +2427,7 @@ export default function RoomPage({ params }: RoomPageProps) {
       <div className="flex-1 flex overflow-hidden relative">
         
         {/* Workspaces & Grid Pane */}
-        <main className="flex-1 flex flex-col md:flex-row p-4 overflow-hidden relative bg-slate-950 gap-4">
+        <main className="flex-1 flex flex-col md:flex-row p-4 overflow-hidden relative bg-[#030408]/40 gap-4">
           
           {/* Left panel: Active workspace if set */}
           {activeWorkspace !== 'none' && (
@@ -2535,7 +2589,7 @@ export default function RoomPage({ params }: RoomPageProps) {
 
         {/* Unified Tabbed Sidebar Panel */}
         {activeSidebar && (
-          <aside className="absolute md:static right-0 top-0 bottom-0 z-20 h-full w-full md:w-80 bg-slate-900 border-l border-slate-855 flex flex-col shrink-0 animate-in slide-in-from-right-8 duration-200 animate-out">
+          <aside className="absolute md:static right-0 top-0 bottom-0 z-20 h-full w-full md:w-80 bg-[#090c1e]/90 backdrop-blur-2xl border-l border-white/5 flex flex-col shrink-0 shadow-2xl animate-in slide-in-from-right-8 duration-200 animate-out">
             <div className="p-3.5 border-b border-slate-850 flex justify-between items-center bg-slate-900">
               <h2 className="font-extrabold text-sm text-white select-none capitalize">
                 {activeSidebar === 'chat' ? 'In-Call Messages' :
@@ -2592,16 +2646,16 @@ export default function RoomPage({ params }: RoomPageProps) {
       )}
 
       {/* Bottom Floating Control Dock */}
-      <footer className="px-4 py-3 bg-slate-900 border-t border-slate-855 flex flex-col md:flex-row items-center justify-between shrink-0 shadow-2xl gap-3">
+      <footer className="px-4 py-3 bg-[#0c0f24]/85 backdrop-blur-xl border-t border-white/5 flex flex-col md:flex-row items-center justify-between shrink-0 shadow-2xl gap-3">
         
         {/* Left footer: workspaces triggers */}
         <div className="w-full md:w-auto flex justify-between md:justify-start items-center gap-2">
           {/* Mobile view (Icons only) */}
-          <div className="flex md:hidden gap-1">
+          <div className="flex md:hidden gap-1.5">
             <Button
               size="icon"
               onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
-              className={`h-9 w-9 rounded-lg border ${activeWorkspace === 'code' ? 'bg-primary text-white border-primary' : 'bg-slate-850 text-slate-400 border-slate-800'}`}
+              className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'code' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-md shadow-blue-500/20 scale-105' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               title="Code Workspace"
             >
               <Code className="h-4.5 w-4.5" />
@@ -2609,7 +2663,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             <Button
               size="icon"
               onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
-              className={`h-9 w-9 rounded-lg border ${activeWorkspace === 'whiteboard' ? 'bg-primary text-white border-primary' : 'bg-slate-855 text-slate-400 border-slate-800'}`}
+              className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'whiteboard' ? 'bg-gradient-to-r from-purple-500 to-pink-600 border-none text-white shadow-md shadow-purple-500/20 scale-105' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               title="Whiteboard"
             >
               <Paintbrush className="h-4.5 w-4.5" />
@@ -2617,7 +2671,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             <Button
               size="icon"
               onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
-              className={`h-9 w-9 rounded-lg border ${activeWorkspace === 'uno' ? 'bg-primary text-white border-primary' : 'bg-slate-855 text-slate-400 border-slate-800'}`}
+              className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'uno' ? 'bg-gradient-to-r from-amber-500 to-orange-600 border-none text-white shadow-md shadow-amber-500/20 scale-105' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               title="UNO! Game"
             >
               <span className="text-sm">🃏</span>
@@ -2626,7 +2680,7 @@ export default function RoomPage({ params }: RoomPageProps) {
               <Button
                 size="icon"
                 onClick={() => setIsWorkspaceMaximized(!isWorkspaceMaximized)}
-                className={`h-9 w-9 rounded-lg border ${isWorkspaceMaximized ? 'bg-primary text-white border-primary' : 'bg-slate-850 text-slate-400 border-slate-800'}`}
+                className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${isWorkspaceMaximized ? 'bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
                 title={isWorkspaceMaximized ? "Restore Screen" : "Enlarge Workspace"}
               >
                 {isWorkspaceMaximized ? "🔍" : "🖥️"}
@@ -2639,21 +2693,21 @@ export default function RoomPage({ params }: RoomPageProps) {
             <Button
               size="sm"
               onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
-              className={`h-9 font-semibold text-xs border ${activeWorkspace === 'code' ? 'bg-primary text-white border-primary' : 'bg-slate-850 text-slate-300 border-slate-800'}`}
+              className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'code' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-md shadow-blue-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
             >
               <Code className="h-4 w-4 mr-1.5" /> Code Workspace
             </Button>
             <Button
               size="sm"
               onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
-              className={`h-9 font-semibold text-xs border ${activeWorkspace === 'whiteboard' ? 'bg-primary text-white border-primary' : 'bg-slate-855 text-slate-300 border-slate-800'}`}
+              className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'whiteboard' ? 'bg-gradient-to-r from-purple-500 to-pink-600 border-none text-white shadow-md shadow-purple-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
             >
               <Paintbrush className="h-4 w-4 mr-1.5" /> Whiteboard
             </Button>
             <Button
               size="sm"
               onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
-              className={`h-9 font-semibold text-xs border ${activeWorkspace === 'uno' ? 'bg-primary text-white border-primary' : 'bg-slate-855 text-slate-300 border-slate-800'}`}
+              className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'uno' ? 'bg-gradient-to-r from-amber-500 to-orange-600 border-none text-white shadow-md shadow-amber-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
             >
               🃏 UNO! Game
             </Button>
@@ -2661,7 +2715,7 @@ export default function RoomPage({ params }: RoomPageProps) {
               <Button
                 size="sm"
                 onClick={() => setIsWorkspaceMaximized(!isWorkspaceMaximized)}
-                className={`h-9 font-semibold text-xs border ${isWorkspaceMaximized ? 'bg-primary text-white border-primary' : 'bg-slate-850 text-slate-300 border-slate-800'}`}
+                className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${isWorkspaceMaximized ? 'bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
               >
                 {isWorkspaceMaximized ? "🔍 Show Videos" : "🖥️ Enlarge Workspace"}
               </Button>
@@ -2670,67 +2724,122 @@ export default function RoomPage({ params }: RoomPageProps) {
 
           {/* Mobile Leave actions */}
           <div className="flex md:hidden gap-1.5">
-            <Button onClick={handleLeaveCall} variant="outline" className="h-9 px-3 rounded-lg border-slate-800 hover:bg-slate-850 font-bold text-xs select-none">
+            <Button onClick={handleLeaveCall} variant="outline" className="h-9 px-3 rounded-lg border-white/10 bg-white/5 text-slate-300 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all duration-300 hover:scale-105 active:scale-95 select-none text-xs">
               Leave
             </Button>
             {user && user.id === meetingHostId && (
-              <Button onClick={handleEndMeetingForAll} className="h-9 px-3 rounded-lg bg-red-600 hover:bg-red-700 font-bold text-xs border-none select-none">
+              <Button onClick={handleEndMeetingForAll} className="h-9 px-3 rounded-lg bg-gradient-to-r from-rose-500 to-red-600 border-none text-white hover:opacity-90 shadow-md shadow-red-500/25 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-bold text-xs">
                 End
               </Button>
             )}
           </div>
         </div>
-
-        {/* Center footer: media controls */}
+               {/* Center footer: media controls */}
         <div className="flex items-center justify-center gap-2 sm:gap-3.5 w-full md:w-auto">
-          <Button size="icon" onClick={handleMuteToggle} className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all ${isMuted ? 'bg-red-500 border-red-500 text-white' : 'bg-slate-850 border-slate-800 text-white hover:bg-slate-800'}`} disabled={!room}>
+          <Button
+            size="icon"
+            onClick={handleMuteToggle}
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
+              isMuted
+                ? 'bg-gradient-to-r from-rose-500 to-red-600 border-none text-white shadow-lg shadow-red-500/25 scale-110 hover:opacity-95'
+                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+            }`}
+            disabled={!room}
+          >
             {isMuted ? <MicOff className="h-4.5 w-4.5" /> : <Mic className="h-4.5 w-4.5" />}
           </Button>
 
-          <Button size="icon" onClick={handleVideoToggle} className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all ${isVideoOff ? 'bg-red-500 border-red-500 text-white' : 'bg-slate-850 border-slate-800 text-white hover:bg-slate-800'}`} disabled={!room}>
+          <Button
+            size="icon"
+            onClick={handleVideoToggle}
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
+              isVideoOff
+                ? 'bg-gradient-to-r from-rose-500 to-red-600 border-none text-white shadow-lg shadow-red-500/25 scale-110 hover:opacity-95'
+                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+            }`}
+            disabled={!room}
+          >
             {isVideoOff ? <VideoOff className="h-4.5 w-4.5" /> : <Video className="h-4.5 w-4.5" />}
           </Button>
 
-          <Button size="icon" onClick={handleScreenShareToggle} className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all hidden sm:inline-flex ${isScreenSharing ? 'bg-primary border-primary text-white' : 'bg-slate-850 border-slate-800 text-white hover:bg-slate-800'}`} disabled={!room}>
+          <Button
+            size="icon"
+            onClick={handleScreenShareToggle}
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all hidden sm:inline-flex duration-300 hover:scale-110 active:scale-90 ${
+              isScreenSharing
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/25 scale-110 hover:opacity-95'
+                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+            }`}
+            disabled={!room}
+          >
             <MonitorUp className="h-4.5 w-4.5" />
           </Button>
 
-          <Button size="icon" onClick={toggleHandRaise} className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all ${isHandRaised ? 'bg-amber-500 border-amber-500 text-white' : 'bg-slate-850 border-slate-800 text-white hover:bg-slate-800'}`} disabled={!room} title="Raise Hand">
+          <Button
+            size="icon"
+            onClick={toggleHandRaise}
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
+              isHandRaised
+                ? 'bg-gradient-to-r from-amber-400 to-orange-500 border-none text-white shadow-lg shadow-amber-500/25 scale-110 hover:opacity-95'
+                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+            }`}
+            disabled={!room}
+            title="Raise Hand"
+          >
             <span className="text-base">🖐️</span>
           </Button>
 
-          <Button size="icon" onClick={() => setShowReactionTray(!showReactionTray)} className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all ${showReactionTray ? 'bg-primary border-primary text-white' : 'bg-slate-855 border-slate-805 text-white hover:bg-slate-800'}`} disabled={!room} title="Send Reaction">
+          <Button
+            size="icon"
+            onClick={() => setShowReactionTray(!showReactionTray)}
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
+              showReactionTray
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/25 scale-110 hover:opacity-95'
+                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+            }`}
+            disabled={!room}
+            title="Send Reaction"
+          >
             <Heart className="h-4.5 w-4.5" />
           </Button>
 
-          <Button size="icon" onClick={() => setShowCaptions(!showCaptions)} className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all ${showCaptions ? 'bg-primary border-primary text-white' : 'bg-slate-855 border-slate-800 text-white hover:bg-slate-800'}`} title="Toggle Captions">
+          <Button
+            size="icon"
+            onClick={() => setShowCaptions(!showCaptions)}
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
+              showCaptions
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/25 scale-110 hover:opacity-95'
+                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+            }`}
+            title="Toggle Captions"
+          >
             <Subtitles className="h-4.5 w-4.5" />
           </Button>
         </div>
 
         {/* Right footer: Desktop utilities & call actions */}
         <div className="hidden md:flex items-center gap-2">
-          <div className="hidden lg:flex gap-1">
-            <Button size="icon" onClick={() => setIsOnToGoMode(true)} className="h-8 w-8 rounded bg-slate-855 border border-slate-800 text-slate-400 hover:text-white" title="On-the-Go Mode">
+          <div className="hidden lg:flex gap-1.5">
+            <Button size="icon" onClick={() => setIsOnToGoMode(true)} className="h-8 w-8 rounded bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all duration-300 hover:scale-105" title="On-the-Go Mode">
               🚶
             </Button>
-            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')} className={`h-8 w-8 rounded bg-slate-855 border border-slate-800 hover:bg-slate-800 ${activeSidebar === 'effects' ? 'text-primary' : 'text-slate-400'}`} title="Effects">
+            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'effects' ? 'text-primary bg-primary/10 border-primary/30' : 'bg-white/5 border-white/10 text-slate-400'}`} title="Effects">
               <User className="h-4 w-4" />
             </Button>
-            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'scheduler' ? null : 'scheduler')} className={`h-8 w-8 rounded bg-slate-855 border border-slate-800 hover:bg-slate-800 ${activeSidebar === 'scheduler' ? 'text-primary' : 'text-slate-400'}`} title="Schedule Follow-up">
+            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'scheduler' ? null : 'scheduler')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'scheduler' ? 'text-primary bg-primary/10 border-primary/30' : 'bg-white/5 border-white/10 text-slate-400'}`} title="Schedule Follow-up">
               <Calendar className="h-4 w-4" />
             </Button>
-            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse')} className={`h-8 w-8 rounded bg-slate-855 border border-slate-800 hover:bg-slate-800 ${activeSidebar === 'abuse' ? 'text-primary' : 'text-slate-400'}`} title="Report Abuse">
+            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'abuse' ? 'text-primary bg-primary/10 border-primary/30' : 'bg-white/5 border-white/10 text-slate-400'}`} title="Report Abuse">
               <Flag className="h-4 w-4" />
             </Button>
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={handleLeaveCall} variant="outline" className="h-10 sm:h-11 px-3 sm:px-4 rounded-full border-slate-800 hover:bg-slate-850 font-bold text-xs select-none">
+            <Button onClick={handleLeaveCall} variant="outline" className="h-10 sm:h-11 px-3 sm:px-4 rounded-full border-white/10 bg-white/5 text-slate-300 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-bold text-xs">
               Leave
             </Button>
             {user && user.id === meetingHostId && (
-              <Button onClick={handleEndMeetingForAll} className="h-10 sm:h-11 px-3 sm:px-4 rounded-full bg-red-600 hover:bg-red-700 font-bold text-xs border-none select-none">
+              <Button onClick={handleEndMeetingForAll} className="h-10 sm:h-11 px-3 sm:px-4 rounded-full bg-gradient-to-r from-rose-500 to-red-600 border-none text-white hover:opacity-90 shadow-lg shadow-red-500/25 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-bold text-xs">
                 <PhoneOff className="h-4 w-4 mr-1.5" /> End
               </Button>
             )}
