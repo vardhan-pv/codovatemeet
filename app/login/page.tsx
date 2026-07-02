@@ -121,8 +121,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex">
       {/* ── LEFT PANEL (Blue) ── */}
       <div className="hidden lg:flex lg:w-1/2 hero-gradient flex-col justify-between p-12 relative overflow-hidden">
-        <div className="orb w-96 h-96 bg-blue-300/20 top-[-60px] right-[-60px]" />
-        <div className="orb w-64 h-64 bg-indigo-500/20 bottom-10 left-0" />
+        <div className="absolute rounded-full blur-[100px] pointer-events-none w-96 h-96 bg-blue-300/20 top-[-60px] right-[-60px]" />
+        <div className="absolute rounded-full blur-[100px] pointer-events-none w-64 h-64 bg-indigo-500/20 bottom-10 left-0" />
 
         <Link href="/" className="relative z-10 flex items-center gap-2.5 group">
           <div className="w-9 h-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">

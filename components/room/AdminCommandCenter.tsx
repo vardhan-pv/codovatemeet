@@ -29,10 +29,12 @@ interface AdminCommandCenterProps {
   user: any
   metrics?: { codeEdits: number, chatMsgs: number, aiRequests: number }
   userRoles?: Record<string, string>
+  meetingType: string
+  setMeetingType: (type: string) => void
 }
 
 export function AdminCommandCenter({ 
-  room, participants, sendData, adminSettings, onClose, meetingHostId, user, metrics, userRoles = {} 
+  room, participants, sendData, adminSettings, onClose, meetingHostId, user, metrics, userRoles = {}, meetingType, setMeetingType 
 }: AdminCommandCenterProps) {
   const [activeTab, setActiveTab] = useState('meeting')
 
@@ -89,11 +91,50 @@ export function AdminCommandCenter({
       <motion.div 
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        className="premium-card w-full max-w-6xl h-[85vh] rounded-2xl flex overflow-hidden border border-white/10 shadow-2xl relative"
+        className="premium-card w-full max-w-6xl h-[85vh] rounded-2xl flex flex-col lg:flex-row overflow-hidden border border-white/10 shadow-2xl relative"
         style={{ zIndex: 10000 }}
       >
-        {/* Left Sidebar */}
-        <div className="w-64 bg-secondary/80 border-r border-white/5 flex flex-col shrink-0">
+        {/* Mobile Header & Tabs */}
+        <div className="lg:hidden w-full flex flex-col shrink-0 bg-secondary/80 border-b border-white/5">
+          <div className="p-4 flex items-center justify-between border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <ShieldAlert className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h2 className="font-bold text-white text-xs leading-tight">Command Center</h2>
+                <p className="text-[9px] text-muted-foreground">Admin Privileges</p>
+              </div>
+            </div>
+            <Button onClick={onClose} size="xs" variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+              <X className="h-3 w-3 mr-1" /> Close
+            </Button>
+          </div>
+          
+          <div className="flex overflow-x-auto p-2 gap-1.5 scrollbar-none scroll-smooth">
+            {tabs.map(tab => {
+              const Icon = tab.icon
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                    isActive 
+                      ? 'bg-primary text-white shadow-md shadow-primary/20' 
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Left Sidebar (Desktop) */}
+        <div className="hidden lg:flex w-64 bg-secondary/80 border-r border-white/5 flex-col shrink-0">
           <div className="p-5 border-b border-white/5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
               <ShieldAlert className="h-5 w-5 text-white" />
@@ -137,25 +178,25 @@ export function AdminCommandCenter({
         <div className="flex-1 bg-background/50 overflow-y-auto custom-scrollbar relative">
           
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-white/5 p-6 flex justify-between items-center">
-            <h3 className="text-2xl font-black text-white tracking-tight">
+          <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-white/5 p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between items-start sm:items-center">
+            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
               {tabs.find(t => t.id === activeTab)?.label}
             </h3>
             
             {/* Live Metrics Header */}
-            <div className="flex gap-4">
-              <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 flex items-center gap-3">
-                <Users className="h-4 w-4 text-emerald-400" />
+            <div className="flex gap-3 w-full sm:w-auto justify-between sm:justify-start">
+              <div className="flex-1 sm:flex-initial bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2.5 sm:gap-3">
+                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest leading-none">Participants</p>
-                  <p className="text-sm font-bold text-white leading-tight mt-1">{participants.length}</p>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold uppercase tracking-widest leading-none">Participants</p>
+                  <p className="text-xs sm:text-sm font-bold text-white leading-tight mt-1">{participants.length}</p>
                 </div>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 flex items-center gap-3">
-                <Code className="h-4 w-4 text-blue-400" />
+              <div className="flex-1 sm:flex-initial bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2.5 sm:gap-3">
+                <Code className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-400" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest leading-none">Status</p>
-                  <p className="text-sm font-bold text-white leading-tight mt-1">
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold uppercase tracking-widest leading-none">Status</p>
+                  <p className="text-xs sm:text-sm font-bold text-white leading-tight mt-1">
                     {adminSettings.isRoomLocked ? <span className="text-red-400">Locked</span> : <span className="text-emerald-400">Open</span>}
                   </p>
                 </div>
@@ -163,16 +204,33 @@ export function AdminCommandCenter({
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             
             {/* ── MEETING CONTROL ── */}
             {activeTab === 'meeting' && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                 
                 <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between col-span-1 md:col-span-2">
+                    <div>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Meeting Mode</h4>
+                      <p className="text-xs text-muted-foreground mt-1">Change the workspace layout dynamically based on meeting intent.</p>
+                    </div>
+                    <select
+                      className="bg-background border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none font-semibold focus:border-primary transition-colors cursor-pointer"
+                      value={meetingType}
+                      onChange={(e) => setMeetingType(e.target.value)}
+                    >
+                      <option value="technical">Technical / Code Review</option>
+                      <option value="interview">Technical Interview</option>
+                      <option value="business">Business / Standup</option>
+                      <option value="education">Classroom / Education</option>
+                    </select>
+                  </div>
+
                   <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-white">Lock Meeting</h4>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Lock Meeting</h4>
                       <p className="text-xs text-muted-foreground mt-1">Prevent new participants from joining</p>
                     </div>
                     <Switch 
@@ -183,7 +241,7 @@ export function AdminCommandCenter({
 
                   <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-white">End Meeting For All</h4>
+                      <h4 className="font-bold text-white text-sm sm:text-base">End Meeting For All</h4>
                       <p className="text-xs text-muted-foreground mt-1">Terminate session and disconnect everyone</p>
                     </div>
                     <Button onClick={() => broadcastAdminCommand('END_MEETING_ALL', 'ALL')} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 font-bold">
@@ -194,11 +252,11 @@ export function AdminCommandCenter({
 
                 <div>
                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Mass Actions</h4>
-                  <div className="flex gap-4">
-                    <Button onClick={handleForceMuteAll} className="bg-white/5 text-white hover:bg-white/10 border border-white/10">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button onClick={handleForceMuteAll} className="bg-white/5 text-white hover:bg-white/10 border border-white/10 w-full sm:w-auto justify-center">
                       <MicOff className="h-4 w-4 mr-2" /> Mute Everyone
                     </Button>
-                    <Button onClick={handleForceVideoOffAll} className="bg-white/5 text-white hover:bg-white/10 border border-white/10">
+                    <Button onClick={handleForceVideoOffAll} className="bg-white/5 text-white hover:bg-white/10 border border-white/10 w-full sm:w-auto justify-center">
                       <VideoOff className="h-4 w-4 mr-2" /> Turn Off All Cameras
                     </Button>
                   </div>
@@ -210,7 +268,58 @@ export function AdminCommandCenter({
             {/* ── PARTICIPANTS ── */}
             {activeTab === 'participants' && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                <div className="bg-secondary/40 border border-white/5 rounded-xl overflow-hidden">
+                {/* Mobile View: Cards */}
+                <div className="space-y-3 md:hidden">
+                  {participants.map(p => (
+                    <div key={p.sid || p.identity} className="bg-secondary/40 border border-white/5 rounded-xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                            {(p.identity || '?').charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-white text-sm truncate">{p.identity || 'Unknown'}</span>
+                            <span className="text-[10px] text-slate-400">
+                              Joined {p.joinedAt ? new Date(p.joinedAt).toLocaleTimeString() : 'Just now'}
+                            </span>
+                          </div>
+                        </div>
+                        {p.identity === meetingHostId && (
+                          <span className="text-[9px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20 uppercase font-bold shrink-0">Host</span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between gap-4 pt-2 border-t border-white/5">
+                        <div className="flex-1">
+                          <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Role</label>
+                          <select 
+                            className="w-full bg-background border border-white/10 rounded px-2 py-1.5 text-xs text-white outline-none"
+                            value={userRoles?.[p.identity] || 'Participant'}
+                            onChange={(e) => handleRoleChange(p.identity, e.target.value)}
+                          >
+                            <option value="Participant">Participant</option>
+                            <option value="Co-host">Co-host</option>
+                            <option value="Guest">Guest (View Only)</option>
+                          </select>
+                        </div>
+                        
+                        <div className="flex items-end gap-1.5 self-end">
+                          <Button size="icon" variant="ghost" onClick={() => handleForceMute(p.identity)} className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/10 shrink-0" title="Force Mute">
+                            <MicOff className="h-4 w-4" />
+                          </Button>
+                          {p.identity !== meetingHostId && (
+                            <Button size="icon" variant="ghost" onClick={() => handleKickParticipant(p.identity)} className="h-8 w-8 text-red-400 hover:text-white hover:bg-red-500/20 shrink-0" title="Remove User">
+                              <UserMinus className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop View: Table */}
+                <div className="hidden md:block bg-secondary/40 border border-white/5 rounded-xl overflow-hidden">
                   <table className="w-full text-left">
                     <thead className="bg-black/20 border-b border-white/5 text-xs text-slate-400 uppercase tracking-wider">
                       <tr>
@@ -222,13 +331,13 @@ export function AdminCommandCenter({
                     </thead>
                     <tbody className="divide-y divide-white/5">
                       {participants.map(p => (
-                        <tr key={p.identity} className="hover:bg-white/5 transition-colors">
+                        <tr key={p.sid || p.identity} className="hover:bg-white/5 transition-colors">
                           <td className="p-4">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-xs font-bold text-white">
-                                {p.identity.charAt(0).toUpperCase()}
+                                {(p.identity || '?').charAt(0).toUpperCase()}
                               </div>
-                              <span className="font-bold text-white text-sm">{p.identity}</span>
+                              <span className="font-bold text-white text-sm">{p.identity || 'Unknown'}</span>
                               {p.identity === meetingHostId && (
                                 <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20 uppercase font-bold">Host</span>
                               )}
@@ -272,7 +381,7 @@ export function AdminCommandCenter({
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-secondary/40 border border-emerald-500/20 rounded-xl p-5 flex items-center justify-between shadow-[0_0_15px_rgba(16,185,129,0.05)]">
                     <div>
-                      <h4 className="font-bold text-white">Lock Code Editor</h4>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Lock Code Editor</h4>
                       <p className="text-xs text-muted-foreground mt-1">Make code read-only for participants</p>
                     </div>
                     <Switch 
@@ -283,7 +392,7 @@ export function AdminCommandCenter({
                   
                   <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-white">Force Terminal Sync</h4>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Force Terminal Sync</h4>
                       <p className="text-xs text-muted-foreground mt-1">Sync everyone's terminal view to host</p>
                     </div>
                     <Button 
@@ -304,7 +413,7 @@ export function AdminCommandCenter({
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-secondary/40 border border-orange-500/20 rounded-xl p-5 flex items-center justify-between shadow-[0_0_15px_rgba(249,115,22,0.05)]">
                     <div>
-                      <h4 className="font-bold text-white">Lock Whiteboard</h4>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Lock Whiteboard</h4>
                       <p className="text-xs text-muted-foreground mt-1">Only host can draw</p>
                     </div>
                     <Switch 
@@ -315,7 +424,7 @@ export function AdminCommandCenter({
                   
                   <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-white">Clear Board for All</h4>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Clear Board for All</h4>
                       <p className="text-xs text-muted-foreground mt-1">Wipe canvas data permanently</p>
                     </div>
                     <Button 
@@ -336,7 +445,7 @@ export function AdminCommandCenter({
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-white">Disable Chat</h4>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Disable Chat</h4>
                       <p className="text-xs text-muted-foreground mt-1">Prevent users from sending messages</p>
                     </div>
                     <Switch 
@@ -347,7 +456,7 @@ export function AdminCommandCenter({
                   
                   <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-white">Disable AI Assistant</h4>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Disable AI Assistant</h4>
                       <p className="text-xs text-muted-foreground mt-1">Turn off AI context and commands</p>
                     </div>
                     <Switch 
@@ -358,7 +467,7 @@ export function AdminCommandCenter({
 
                   <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-white">Restrict Screen Share</h4>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Restrict Screen Share</h4>
                       <p className="text-xs text-muted-foreground mt-1">Only host can share screen</p>
                     </div>
                     <Switch 
@@ -380,10 +489,10 @@ export function AdminCommandCenter({
                     { label: 'AI Requests', val: metrics?.aiRequests || 0, icon: Terminal, color: 'text-purple-400' },
                     { label: 'Chat Msgs', val: metrics?.chatMsgs || 0, icon: MessageSquare, color: 'text-cyan-400' },
                   ].map((stat, i) => (
-                    <div key={i} className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex flex-col justify-center items-center text-center">
-                      <stat.icon className={`h-6 w-6 mb-2 ${stat.color}`} />
-                      <p className="text-2xl font-black text-white">{stat.val}</p>
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">{stat.label}</p>
+                    <div key={i} className="bg-secondary/40 border border-white/5 rounded-xl p-4 sm:p-5 flex flex-col justify-center items-center text-center">
+                      <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 mb-2 ${stat.color}`} />
+                      <p className="text-xl sm:text-2xl font-black text-white">{stat.val}</p>
+                      <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground font-bold">{stat.label}</p>
                     </div>
                   ))}
                 </div>

@@ -8,7 +8,7 @@ import { meetingService } from '@/services/meeting'
 import {
   LogOut, Plus, Video, Copy, Check, ArrowRight, Clock, Calendar,
   LayoutDashboard, Users, X, Globe, Tag, AlignLeft, Paperclip, Mail, Sparkles,
-  ShieldCheck, KeyRound, Lock, AlertTriangle
+  ShieldCheck, KeyRound, Lock, AlertTriangle, MonitorPlay, Briefcase, GraduationCap, Lightbulb, MessageSquare
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -39,6 +39,17 @@ export default function DashboardPage() {
   const [joinCode, setJoinCode] = useState('')
   const [isJoining, setIsJoining] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
+  const [meetingType, setMeetingType] = useState('technical')
+
+  // Meeting types definition
+  const meetingTypes = [
+    { id: 'technical', label: 'Technical', icon: MonitorPlay, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+    { id: 'business', label: 'Business', icon: Briefcase, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+    { id: 'education', label: 'Education', icon: GraduationCap, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { id: 'brainstorming', label: 'Brainstorm', icon: Lightbulb, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
+    { id: 'standup', label: 'Standup', icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    { id: 'interview', label: 'Interview', icon: MessageSquare, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+  ]
 
   // Advanced Calendar Scheduler Modal states
   const [showCalendarModal, setShowCalendarModal] = useState(false)
@@ -232,7 +243,7 @@ export default function DashboardPage() {
   const handleCreateMeeting = async () => {
     setIsCreating(true)
     try {
-      const data = await meetingService.createMeeting({ roomName, scheduledAt })
+      const data = await meetingService.createMeeting({ roomName, scheduledAt, type: meetingType })
       setCreatedCode(data.meetingId)
       const meetings = await meetingService.getRecentMeetings()
       setRecentMeetings(meetings)
@@ -426,6 +437,29 @@ export default function DashboardPage() {
                     <Input placeholder="e.g. Sprint Sync, Daily Standup"
                       value={roomName} onChange={(e) => setRoomName(e.target.value)}
                       className="bg-background border-border rounded-xl h-11" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" /> Meeting Type
+                    </label>
+                    <div className="grid grid-cols-3 gap-2 mt-1">
+                      {meetingTypes.map((type) => (
+                        <button
+                          key={type.id}
+                          onClick={() => setMeetingType(type.id)}
+                          className={`flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl border transition-all ${
+                            meetingType === type.id
+                              ? 'border-primary bg-primary/10 shadow-sm shadow-primary/20 scale-[1.02]'
+                              : 'border-border bg-background hover:bg-secondary/40 hover:border-primary/50'
+                          }`}
+                        >
+                          <div className={`p-1.5 rounded-lg ${type.bg}`}>
+                            <type.icon className={`h-4 w-4 ${type.color}`} />
+                          </div>
+                          <span className="text-[10px] font-bold text-foreground">{type.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">

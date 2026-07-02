@@ -28,6 +28,9 @@ export function Terminal({ onTerminalReady }: TerminalProps) {
     }
 
     const initTerminal = async () => {
+      const container = terminalRef.current
+      if (!container) return
+
       const { Terminal: XTermClass } = await import('xterm')
       const { FitAddon } = await import('xterm-addon-fit')
       
@@ -53,12 +56,13 @@ export function Terminal({ onTerminalReady }: TerminalProps) {
       let isRendered = false
 
       observerInstance = new ResizeObserver((entries) => {
-        if (!terminalRef.current) return
+        const currentContainer = terminalRef.current
+        if (!currentContainer) return
         
         const { width, height } = entries[0].contentRect
         if (width > 0 && height > 0) {
           if (!isRendered) {
-            term.open(terminalRef.current)
+            term.open(currentContainer)
             onTerminalReady(term)
             isRendered = true
           }
@@ -71,7 +75,7 @@ export function Terminal({ onTerminalReady }: TerminalProps) {
         }
       })
 
-      observerInstance.observe(terminalRef.current)
+      observerInstance.observe(container)
 
       xtermRef.current = term
       fitAddonRef.current = fitAddon

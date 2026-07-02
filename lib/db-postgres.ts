@@ -63,7 +63,8 @@ async function initDB() {
       await client.query(`
         ALTER TABLE meetings 
         ADD COLUMN IF NOT EXISTS room_name VARCHAR(255),
-        ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMP;
+        ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS type VARCHAR(50) DEFAULT 'technical';
       `)
 
       // Create Participants table

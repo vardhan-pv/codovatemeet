@@ -8,9 +8,14 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
 
-    // If code query param is provided, validate meeting existence
     if (code) {
-      const res = await query('SELECT * FROM meetings WHERE meeting_code = $1', [code.toUpperCase()])
+      const res = await query(
+        `SELECT m.*, u.name as host_name 
+         FROM meetings m 
+         JOIN users u ON m.host_id = u.id 
+         WHERE m.meeting_code = $1`,
+        [code.toUpperCase()]
+      )
       if (res.rows.length === 0) {
         return NextResponse.json({ error: 'Meeting not found' }, { status: 404 })
       }
@@ -59,6 +64,7 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}))
     const roomName = body.roomName || 'Untitled Meeting'
     const scheduledAt = body.scheduledAt ? new Date(body.scheduledAt) : new Date()
+    const meetingType = body.type || 'technical'
 
     // Generate CDV code: CDV-XXXX-XXXX
     const uuid = crypto.randomUUID().toUpperCase()
@@ -69,8 +75,8 @@ export async function POST(request: Request) {
 
     // Insert meeting into DB
     await query(
-      'INSERT INTO meetings (id, meeting_code, host_id, room_name, scheduled_at) VALUES ($1, $2, $3, $4, $5)',
-      [meetingId, meetingCode, decoded.id, roomName, scheduledAt]
+      'INSERT INTO meetings (id, meeting_code, host_id, room_name, scheduled_at, type) VALUES ($1, $2, $3, $4, $5, $6)',
+      [meetingId, meetingCode, decoded.id, roomName, scheduledAt, meetingType]
     )
 
     return NextResponse.json({ meetingId: meetingCode }, { status: 201 })

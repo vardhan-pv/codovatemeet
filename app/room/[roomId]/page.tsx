@@ -8,16 +8,27 @@ import { meetingService } from '@/services/meeting'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { AdminCommandCenter, AdminSettings } from '@/components/room/AdminCommandCenter'
+
+import { MobileToolSelect } from '@/components/room/MobileToolSelect'
+import { AgendaWorkspace } from '@/components/room/AgendaWorkspace'
+import { NotesWorkspace } from '@/components/room/NotesWorkspace'
+import { TasksSidebar } from '@/components/room/TasksSidebar'
+import { PollsSidebar } from '@/components/room/PollsSidebar'
+import { OnToGoOverlay } from '@/components/room/OnToGoOverlay'
 import {
   Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert,
   X, Maximize2, Minimize2, Subtitles, Expand, Shrink, Sparkles, Code, Paintbrush,
   BarChart2, ShieldCheck, Trophy, Crown, Flag, Calendar, Heart, Send, Clock,
-  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye
+  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const CodeEditor = dynamic(() => import('@/components/room/CodeEditor').then(m => ({ default: m.CodeEditor })), { ssr: false })
-import { Whiteboard } from '@/components/room/Whiteboard'
-import { AdminCommandCenter, AdminSettings } from '@/components/room/AdminCommandCenter'
+const Whiteboard = dynamic(() => import('@/components/room/Whiteboard').then(m => ({ default: m.Whiteboard })), { ssr: false })
+
+import { GitHubPanel } from '@/components/room/GitHubPanel'
+import { DeployPanel } from '@/components/room/DeployPanel'
+import { AIAssistantPanel } from '@/components/room/AIAssistantPanel'
 
 interface RoomPageProps {
   params: Promise<{
@@ -55,7 +66,8 @@ function VideoTile({
   reactions = [],
   filter = '',
   handRaised = false,
-  isCompanionMode = false
+  isCompanionMode = false,
+  isAdminFeatured = false
 }: {
   participant: any
   source: 'camera' | 'screen_share'
@@ -66,6 +78,7 @@ function VideoTile({
   filter?: string
   handRaised?: boolean
   isCompanionMode?: boolean
+  isAdminFeatured?: boolean
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -139,8 +152,13 @@ function VideoTile({
         }
       }
     }
-
     attachTracks()
+    
+    // Fallback: React 18 strict-mode can cause the track to detach and pause immediately after mounting.
+    // Re-attaching after a tiny delay ensures the browser kicks off the media pipeline properly.
+    const retryTimeout = setTimeout(() => {
+      attachTracks()
+    }, 200)
 
     participant.on('trackPublished', attachTracks)
     participant.on('trackUnpublished', attachTracks)
@@ -152,6 +170,7 @@ function VideoTile({
     participant.on('localTrackUnpublished', attachTracks)
 
     return () => {
+      clearTimeout(retryTimeout)
       if (videoTrack && videoRef.current) try { videoTrack.detach(videoRef.current) } catch (e) {}
       if (audioTrack && audioRef.current) try { audioTrack.detach(audioRef.current) } catch (e) {}
       participant.off('trackPublished', attachTracks)
@@ -173,7 +192,7 @@ function VideoTile({
       className={`relative bg-[#0d1022] overflow-hidden flex items-center justify-center shadow-lg group transition-all duration-300 ${
         isFullscreen 
           ? 'w-screen h-screen rounded-none border-none' 
-          : `border rounded-2xl ${participant.isSpeaking ? 'border-primary ring-2 ring-primary/40 shadow-lg shadow-primary/20 scale-[1.01]' : 'border-white/5'} ${isPinned ? 'w-full h-full' : 'w-full aspect-video'}`
+          : `border rounded-2xl ${participant.isSpeaking ? 'border-primary ring-2 ring-primary/40 shadow-lg shadow-primary/20 scale-[1.01]' : 'border-white/5'} ${isPinned ? 'w-full h-full' : 'w-full aspect-video'} ${isAdminFeatured ? 'border-amber-500/80 shadow-[0_0_30px_rgba(245,158,11,0.3)] ring-2 ring-amber-500/50' : ''}`
       }`}
     >
       <video
@@ -229,7 +248,8 @@ function VideoTile({
       <div className="absolute bottom-3 left-3 bg-black/60 px-3 py-1 rounded-md text-xs font-semibold backdrop-blur-xs flex flex-col gap-0.5 text-white z-10">
         <div className="flex items-center gap-1.5">
           <span>{getDisplayName(participant.identity)}</span>
-          {participant.isLocal && <span className="text-[10px] uppercase font-bold text-primary">(You)</span>}
+           {participant.isLocal && <span className="text-[10px] uppercase font-bold text-primary">(You)</span>}
+          {isAdminFeatured && source === 'camera' && <span className="text-[9px] uppercase font-extrabold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded-sm tracking-wider">Host</span>}
           {source === 'screen_share' && <span className="text-[10px] uppercase font-bold text-blue-400 border border-blue-400/50 px-1 rounded">Screen</span>}
           {audioMuted && source === 'camera' && <MicOff className="h-3 w-3 text-red-500 ml-1" />}
         </div>
@@ -872,6 +892,7 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [isScreenSharing, setIsScreenSharing] = useState(false)
   const [statusText, setStatusText] = useState('')
   const [meetingHostId, setMeetingHostId] = useState<string | null>(null)
+  const [meetingHostName, setMeetingHostName] = useState<string | null>(null)
   const [shareError, setShareError] = useState<string | null>(null)
   const [serverUrl, setServerUrl] = useState<string | null>(null)
 
@@ -897,10 +918,11 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [participantFilters, setParticipantFilters] = useState<Record<string, string>>({})
   const [aiFraming, setAiFraming] = useState(false)
 
-  // Workspace Split Layout: 'none' | 'code' | 'whiteboard' | 'uno'
-  const [activeWorkspace, setActiveWorkspace] = useState<'none' | 'code' | 'whiteboard' | 'uno'>('none')
+  // Workspace Split Layout: 'none' | 'code' | 'whiteboard' | 'uno' | 'agenda' | 'notes'
+  const [activeWorkspace, setActiveWorkspace] = useState<'none' | 'code' | 'whiteboard' | 'uno' | 'agenda' | 'notes'>('none')
   const [currentPage, setCurrentPage] = useState(0)
   const [isWorkspaceMaximized, setIsWorkspaceMaximized] = useState(false)
+  const [meetingType, setMeetingType] = useState('technical')
 
   // Admin Command Center State
   const [showAdminCenter, setShowAdminCenter] = useState(false)
@@ -1062,6 +1084,17 @@ export default function RoomPage({ params }: RoomPageProps) {
       try {
         const meetingData = await meetingService.validateMeeting(roomId)
         setMeetingHostId(meetingData.host_id)
+        setMeetingHostName(meetingData.host_name)
+        if (meetingData.type) {
+          setMeetingType(meetingData.type)
+          if (meetingData.type === 'technical' || meetingData.type === 'interview') {
+            setActiveWorkspace('code')
+          } else if (meetingData.type === 'education' || meetingData.type === 'brainstorming') {
+            setActiveWorkspace('whiteboard')
+          } else {
+            setActiveWorkspace('none')
+          }
+        }
       } catch (e) { console.error('Meeting not found', e) }
 
       if (useAuth.getState().token) {
@@ -1804,14 +1837,39 @@ export default function RoomPage({ params }: RoomPageProps) {
     }
   })
 
-  const pinnedTile = activeTiles.find(t => t.id === pinnedId)
-  const unpinnedTiles = activeTiles.filter(t => t.id !== pinnedId)
+  // Determine the main feature tile (Pinned, Screen Share OR Admin Camera)
+  let mainFeatureTile = pinnedId ? activeTiles.find(t => t.id === pinnedId) : null
+  if (!mainFeatureTile) {
+    mainFeatureTile = activeTiles.find(t => t.source === 'screen_share')
+  }
+  if (!mainFeatureTile && meetingHostName) {
+    mainFeatureTile = activeTiles.find(t => t.source === 'camera' && (t.participant.identity.startsWith(meetingHostName + '_') || t.participant.identity === meetingHostName))
+  }
 
   // Paginate activeTiles to resolve mixed/crowded layout
   const tilesPerPage = activeWorkspace !== 'none' ? 2 : 4
-  const totalPages = Math.ceil(activeTiles.length / tilesPerPage)
-  const activePage = Math.min(currentPage, Math.max(0, totalPages - 1))
-  const visibleTiles = activeTiles.slice(activePage * tilesPerPage, (activePage + 1) * tilesPerPage)
+  let displayTiles: any[] = []
+  let totalPages = 1
+  let activePage = 0
+  
+  if (mainFeatureTile) {
+    const otherTiles = activeTiles.filter(t => t.id !== mainFeatureTile!.id)
+    totalPages = 1 + Math.ceil(otherTiles.length / tilesPerPage)
+    activePage = Math.min(currentPage, Math.max(0, totalPages - 1))
+    
+    if (activePage === 0) {
+      displayTiles = [mainFeatureTile]
+    } else {
+      const offset = (activePage - 1) * tilesPerPage
+      displayTiles = otherTiles.slice(offset, offset + tilesPerPage)
+    }
+  } else {
+    totalPages = Math.ceil(activeTiles.length / tilesPerPage)
+    activePage = Math.min(currentPage, Math.max(0, totalPages - 1))
+    displayTiles = activeTiles.slice(activePage * tilesPerPage, (activePage + 1) * tilesPerPage)
+  }
+  
+  const isFeaturedPage = !!(mainFeatureTile && activePage === 0)
 
   // On-the-Go Mode Simplified Layout
   if (isOnToGoMode) {
@@ -1967,7 +2025,9 @@ export default function RoomPage({ params }: RoomPageProps) {
               <div className="space-y-2">
                 {participants.map(p => {
                   const pid = p.sid || p.identity
-                  const isHost = p.identity === meetingHostId || (!meetingHostId && p.isLocal)
+                  const isHost = meetingHostName 
+                    ? (p.identity.startsWith(meetingHostName + '_') || p.identity === meetingHostName) 
+                    : (!meetingHostId && p.isLocal)
                   const handRaised = raisedHands[pid]
                   const isUserMuted = p.isMicrophoneEnabled === false
 
@@ -2090,60 +2150,7 @@ export default function RoomPage({ params }: RoomPageProps) {
             </div>
           </div>
         )
-      case 'polls':
-        return (
-          <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-popover/50">
-            {isHostUser && (
-              <div className="bg-popover/40 border border-slate-850 rounded-[20px] p-4 space-y-3">
-                <h3 className="font-bold text-xs text-white">Create a Poll</h3>
-                <div className="space-y-2">
-                  <Input placeholder="Question" value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} className="bg-slate-800 border-slate-700 text-xs text-white" />
-                  <Input placeholder="Option A" value={pollOption1} onChange={(e) => setPollOption1(e.target.value)} className="bg-slate-800 border-slate-700 text-xs text-white" />
-                  <Input placeholder="Option B" value={pollOption2} onChange={(e) => setPollOption2(e.target.value)} className="bg-slate-800 border-slate-700 text-xs text-white" />
-                  <Button onClick={createPoll} className="w-full text-xs font-bold bg-primary hover:opacity-90 h-8 mt-1 border-none">Publish Poll</Button>
-                </div>
-              </div>
-            )}
 
-            {activePoll ? (
-              <div className="bg-blue-950/20 border border-blue-900/30 rounded-[20px] p-4 space-y-4">
-                <div className="space-y-1">
-                  <span className="text-[9px] text-primary uppercase font-bold tracking-wider">Active Poll</span>
-                  <h4 className="font-bold text-xs text-white leading-tight">{activePoll.question}</h4>
-                </div>
-                <div className="space-y-3">
-                  {activePoll.options.map((opt, i) => {
-                    const totalVotes = activePoll.votes.reduce((a, b) => a + b, 0)
-                    const votes = activePoll.votes[i] || 0
-                    const percent = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0
-                    
-                    return (
-                      <div key={i} className="space-y-1">
-                        <div className="flex justify-between text-[11px] font-semibold">
-                          <span className="text-slate-300">{opt}</span>
-                          <span className="text-primary font-bold">{votes} ({percent}%)</span>
-                        </div>
-                        <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-855">
-                          <div className="bg-primary h-full transition-all duration-500" style={{ width: `${percent}%` }} />
-                        </div>
-                        {activePoll.userVoted === undefined && (
-                          <button
-                            onClick={() => votePoll(i)}
-                            className="text-[9px] font-bold text-primary hover:underline mt-0.5"
-                          >
-                            Vote
-                          </button>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            ) : (
-              <p className="text-center text-slate-400 text-xs py-10 italic">No active polls. Hosts can create polls at any time.</p>
-            )}
-          </div>
-        )
       case 'effects':
         return (
           <div className="flex flex-col h-full p-4 space-y-5 overflow-y-auto bg-popover/50">
@@ -2396,6 +2403,16 @@ export default function RoomPage({ params }: RoomPageProps) {
             </div>
           </div>
         )
+      case 'github':
+        return <GitHubPanel />
+      case 'deploy':
+        return <DeployPanel />
+      case 'ai':
+        return <AIAssistantPanel />
+      case 'tasks':
+        return <TasksSidebar />
+      case 'polls':
+        return <PollsSidebar />
       default:
         return null
     }
@@ -2462,6 +2479,18 @@ export default function RoomPage({ params }: RoomPageProps) {
   return (
     <div className="relative h-[100dvh] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#111827] via-[#050816] to-[#050816] text-foreground flex flex-col justify-between overflow-hidden font-sans">
       
+      {/* On-the-Go Mode Overlay */}
+      {isOnToGoMode && (
+        <OnToGoOverlay 
+          isMuted={isMuted}
+          onToggleMute={handleMuteToggle}
+          onLeaveCall={handleLeaveCall}
+          onExitMode={() => setIsOnToGoMode(false)}
+          roomId={roomId}
+          participantsCount={participants.length}
+        />
+      )}
+
       {/* Floating level up alerts */}
       {showLevelUpCelebration && (
         <div className="absolute top-10 left-1/2 -translate-x-1/2 bg-amber-500 border border-amber-400 text-white font-extrabold px-6 py-3 rounded-2xl shadow-2xl shadow-amber-500/30 z-50 flex items-center gap-2 select-none animate-bounce">
@@ -2494,23 +2523,13 @@ export default function RoomPage({ params }: RoomPageProps) {
         
         {/* Navigation Sidebar selectors */}
         <div className="flex gap-2">
-          {/* Mobile Select Tool dropdown */}
-          <select
-            onChange={(e) => {
-              const val = e.target.value
-              setActiveSidebar(val ? val : null)
-            }}
-            value={activeSidebar || ''}
-            className="md:hidden bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg px-3 py-1 outline-none h-8 transition-all duration-300 shadow-sm"
-          >
-            <option value="">⚙️ Select Sidebar Tool</option>
-            <option value="chat">💬 Chat</option>
-            <option value="participants">👥 Participants ({participants.length})</option>
-            <option value="ai">✨ AI Notes</option>
-            <option value="timetravel">⏰ Timeline</option>
-            <option value="focus">⏱️ Focus</option>
-            <option value="interview">👑 Interview</option>
-          </select>
+          {/* Mobile Select Tool custom dropdown */}
+          <MobileToolSelect 
+            activeSidebar={activeSidebar} 
+            setActiveSidebar={setActiveSidebar} 
+            setIsOnToGoMode={setIsOnToGoMode} 
+            participantsCount={participants.length} 
+          />
 
           {/* Desktop selector buttons */}
           <div className="hidden md:flex gap-1.5 flex-wrap">
@@ -2547,6 +2566,57 @@ export default function RoomPage({ params }: RoomPageProps) {
             >
               <Sparkles className="h-4 w-4 mr-1 text-purple-500 animate-pulse" /> AI Notes
             </Button>
+            {(meetingType === 'technical' || meetingType === 'interview' || meetingType === 'hackathon') ? (
+              <>
+                <Button
+                  variant="ghost"
+                  onClick={() => setActiveSidebar(activeSidebar === 'github' ? null : 'github')}
+                  className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                    activeSidebar === 'github'
+                      ? 'bg-[#2ea043] text-white shadow-md shadow-[#2ea043]/20 scale-105 font-bold'
+                      : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                  }`}
+                >
+                  <GitBranch className="h-4 w-4 mr-1 text-[#2ea043]" /> GitHub
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setActiveSidebar(activeSidebar === 'deploy' ? null : 'deploy')}
+                  className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                    activeSidebar === 'deploy'
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 scale-105 font-bold'
+                      : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                  }`}
+                >
+                  <Rocket className="h-4 w-4 mr-1 text-indigo-400" /> Deploy
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
+                  className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                    activeSidebar === 'tasks'
+                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 scale-105 font-bold'
+                      : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                  }`}
+                >
+                  <Check className="h-4 w-4 mr-1 text-emerald-400" /> Tasks
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setActiveSidebar(activeSidebar === 'polls' ? null : 'polls')}
+                  className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                    activeSidebar === 'polls'
+                      ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 scale-105 font-bold'
+                      : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                  }`}
+                >
+                  <BarChart2 className="h-4 w-4 mr-1 text-purple-400" /> Polls
+                </Button>
+              </>
+            )}
             <Button
               variant="ghost"
               onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')}
@@ -2596,6 +2666,8 @@ export default function RoomPage({ params }: RoomPageProps) {
               {activeWorkspace === 'code' && <CodeEditor code={activeCode} onCodeChange={setActiveCode} room={room} lobbyName={lobbyName} sendData={sendData} readOnly={userRoles[lobbyName] === 'Guest' || (adminSettings.isCodeLocked && !isHostUser)} />}
               {activeWorkspace === 'whiteboard' && <Whiteboard room={room} lobbyName={lobbyName} sendData={sendData} readOnly={userRoles[lobbyName] === 'Guest' || (adminSettings.isWhiteboardLocked && !isHostUser)} />}
               {activeWorkspace === 'uno' && <UnoGameWorkspace room={room} lobbyName={lobbyName} sendData={sendData} setXp={setXp} />}
+              {activeWorkspace === 'agenda' && <AgendaWorkspace />}
+              {activeWorkspace === 'notes' && <NotesWorkspace />}
             </div>
           )}
 
@@ -2639,69 +2711,33 @@ export default function RoomPage({ params }: RoomPageProps) {
                   </div>
                 )}
 
-                {pinnedTile ? (
-                  <>
-                    <div className="flex-1 w-full rounded-[20px] overflow-hidden min-h-0 bg-black">
-                      <VideoTile
-                        participant={pinnedTile.participant}
-                        source={pinnedTile.source}
-                        isPinned={true}
-                        onTogglePin={() => setPinnedId(null)}
-                        trackPub={pinnedTile.trackPub}
-                        reactions={reactions.filter(r => r.participantSid === pinnedTile.id.split(':')[0])}
-                        filter={participantFilters[pinnedTile.id.split(':')[0]]}
-                        handRaised={raisedHands[pinnedTile.id.split(':')[0]]}
-                        isCompanionMode={isCompanionMode}
-                      />
-                    </div>
-                    {unpinnedTiles.length > 0 && (
-                      <div className="h-28 shrink-0 flex gap-3 overflow-x-auto pb-1 px-1 snap-x">
-                        {unpinnedTiles.map(tile => {
-                          const pid = tile.id.split(':')[0]
-                          return (
-                            <div key={tile.id} className="h-full aspect-video shrink-0 snap-start">
-                              <VideoTile
-                                participant={tile.participant}
-                                source={tile.source}
-                                isPinned={false}
-                                onTogglePin={() => setPinnedId(tile.id)}
-                                trackPub={tile.trackPub}
-                                reactions={reactions.filter(r => r.participantSid === pid)}
-                                filter={participantFilters[pid]}
-                                handRaised={raisedHands[pid]}
-                                isCompanionMode={isCompanionMode}
-                              />
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="flex flex-col h-full justify-center">
-                    <div className={`grid gap-4 w-full h-full content-center ${
-                      visibleTiles.length <= 1 ? 'grid-cols-1 max-w-2xl mx-auto' :
-                      visibleTiles.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto' :
-                      'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto'
-                    }`}>
-                      {visibleTiles.map(tile => {
-                        const pid = tile.id.split(':')[0]
-                        return (
+                <div className="flex flex-col h-full justify-center">
+                  <div className={`grid gap-4 w-full h-full content-center ${
+                    isFeaturedPage ? 'grid-cols-1 grid-rows-1 w-full h-full mx-auto' :
+                    displayTiles.length <= 1 ? 'grid-cols-1 max-w-2xl mx-auto' :
+                    displayTiles.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto' :
+                    'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto'
+                  }`}>
+                    {displayTiles.map(tile => {
+                      const pid = tile.id.split(':')[0]
+                      return (
+                        <div key={tile.id} className={isFeaturedPage ? 'w-full h-full rounded-[20px] overflow-hidden min-h-0 bg-black' : ''}>
                           <VideoTile
-                            key={tile.id}
                             participant={tile.participant}
                             source={tile.source}
-                            isPinned={false}
-                            onTogglePin={() => setPinnedId(tile.id)}
+                            isPinned={isFeaturedPage} // Treat as pinned when featured
+                            onTogglePin={() => setPinnedId(isFeaturedPage ? null : tile.id)}
                             trackPub={tile.trackPub}
                             reactions={reactions.filter(r => r.participantSid === pid)}
                             filter={participantFilters[pid]}
                             handRaised={raisedHands[pid]}
                             isCompanionMode={isCompanionMode}
+                            isAdminFeatured={!!(meetingHostName && (tile.participant.identity.startsWith(meetingHostName + '_') || tile.participant.identity === meetingHostName))}
                           />
-                        )
-                      })}
-                    </div>
+                        </div>
+                      )
+                    })}
+                  </div>
 
                     {/* Pagination Controls */}
                     {totalPages > 1 && (
@@ -2730,7 +2766,6 @@ export default function RoomPage({ params }: RoomPageProps) {
                       </div>
                     )}
                   </div>
-                )}
               </div>
             )}
           </div>
@@ -2807,20 +2842,39 @@ export default function RoomPage({ params }: RoomPageProps) {
       )}
 
       {/* Bottom Floating Control Dock */}
-      <footer className="px-4 py-3 bg-background/80 backdrop-blur-xl border-t border-white/5 flex flex-col md:flex-row items-center justify-between shrink-0 shadow-lg gap-3">
+      <footer className="px-2 lg:px-4 py-2 lg:py-3 bg-background/80 backdrop-blur-xl border-t border-white/5 flex flex-col lg:flex-row lg:flex-wrap items-center justify-center lg:justify-between shrink-0 shadow-lg gap-2 lg:gap-3">
         
         {/* Left footer: workspaces triggers */}
-        <div className="w-full md:w-auto flex justify-between md:justify-start items-center gap-2">
+        <div className="w-full lg:w-auto flex justify-between lg:justify-start items-center gap-1.5 lg:gap-2 flex-nowrap lg:flex-wrap order-2 lg:order-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-1">
           {/* Mobile view (Icons only) */}
-          <div className="flex md:hidden gap-1.5">
-            <Button
-              size="icon"
-              onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
-              className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'code' ? 'bg-gradient-to-r from-emerald-500 to-green-600 border-none text-white shadow-md shadow-emerald-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
-              title="Code Workspace"
-            >
-              <Code className="h-4.5 w-4.5" />
-            </Button>
+          <div className="flex lg:hidden gap-1.5">
+            {(meetingType === 'technical' || meetingType === 'interview' || meetingType === 'hackathon') ? (
+              <Button
+                size="icon"
+                onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
+                className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'code' ? 'bg-gradient-to-r from-emerald-500 to-green-600 border-none text-white shadow-md shadow-emerald-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                title="Code Workspace"
+              >
+                <Code className="h-4.5 w-4.5" />
+              </Button>
+            ) : (
+              <>
+                <Button
+                  size="icon"
+                  onClick={() => setActiveWorkspace(activeWorkspace === 'agenda' ? 'none' : 'agenda')}
+                  className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'agenda' ? 'bg-gradient-to-r from-emerald-500 to-green-600 border-none text-white shadow-md shadow-emerald-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                >
+                  <Target className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
+                  className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'notes' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-md shadow-blue-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                >
+                  <FileText className="h-4 w-4" />
+                </Button>
+              </>
+            )}
             <Button
               size="icon"
               onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
@@ -2850,41 +2904,64 @@ export default function RoomPage({ params }: RoomPageProps) {
           </div>
 
           {/* Desktop view (Text + Icons) */}
-          <div className="hidden md:flex gap-1.5">
-            <Button
-              size="sm"
-              onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
-              className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'code' ? 'bg-gradient-to-r from-emerald-500 to-green-600 border-none text-white shadow-md shadow-emerald-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
-            >
-              <Code className="h-4 w-4 mr-1.5" /> Code Workspace
-            </Button>
+          <div className="hidden lg:flex gap-1.5 flex-wrap justify-center">
+            {(meetingType === 'technical' || meetingType === 'interview' || meetingType === 'hackathon') ? (
+              <Button
+                size="sm"
+                onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
+                className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'code' ? 'bg-gradient-to-r from-emerald-500 to-green-600 border-none text-white shadow-md shadow-emerald-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+                title="Code Workspace"
+              >
+                <Code className="h-4 w-4 xl:mr-1.5" /> <span className="hidden xl:inline">Code Workspace</span>
+              </Button>
+            ) : (
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => setActiveWorkspace(activeWorkspace === 'agenda' ? 'none' : 'agenda')}
+                  className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'agenda' ? 'bg-gradient-to-r from-emerald-500 to-green-600 border-none text-white shadow-md shadow-emerald-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+                >
+                  <Target className="h-4 w-4 xl:mr-1.5" /> <span className="hidden xl:inline">Agenda</span>
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
+                  className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'notes' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-md shadow-blue-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+                >
+                  <FileText className="h-4 w-4 xl:mr-1.5" /> <span className="hidden xl:inline">Shared Notes</span>
+                </Button>
+              </>
+            )}
             <Button
               size="sm"
               onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
               className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'whiteboard' ? 'bg-gradient-to-r from-orange-500 to-amber-600 border-none text-white shadow-md shadow-orange-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+              title="Whiteboard"
             >
-              <Paintbrush className="h-4 w-4 mr-1.5" /> Whiteboard
+              <Paintbrush className="h-4 w-4 xl:mr-1.5" /> <span className="hidden xl:inline">Whiteboard</span>
             </Button>
             <Button
               size="sm"
               onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
               className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${activeWorkspace === 'uno' ? 'bg-gradient-to-r from-amber-500 to-orange-600 border-none text-white shadow-md shadow-amber-500/20 scale-105 font-bold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+              title="UNO! Game"
             >
-              🃏 UNO! Game
+              <span className="text-sm xl:mr-1.5">🃏</span> <span className="hidden xl:inline">UNO! Game</span>
             </Button>
             {activeWorkspace !== 'none' && (
               <Button
                 size="sm"
                 onClick={() => setIsWorkspaceMaximized(!isWorkspaceMaximized)}
                 className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${isWorkspaceMaximized ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                title={isWorkspaceMaximized ? "Restore Screen" : "Enlarge Workspace"}
               >
-                {isWorkspaceMaximized ? "🔍 Show Videos" : "🖥️ Enlarge Workspace"}
+                {isWorkspaceMaximized ? "🔍" : "🖥️"} <span className="hidden xl:inline">{isWorkspaceMaximized ? " Show Videos" : " Enlarge Workspace"}</span>
               </Button>
             )}
           </div>
 
           {/* Mobile Leave actions */}
-          <div className="flex md:hidden gap-1.5">
+          <div className="flex lg:hidden gap-1.5">
             <Button onClick={handleLeaveCall} className="h-9 px-3.5 rounded-lg bg-gradient-to-r from-red-500 to-rose-600 border-none text-white font-bold text-xs select-none shadow-md shadow-red-500/10 hover:opacity-90 active:scale-95 transition-all duration-300">
               Leave
             </Button>
@@ -2901,7 +2978,7 @@ export default function RoomPage({ params }: RoomPageProps) {
           </div>
         </div>
                {/* Center footer: media controls */}
-        <div className="flex items-center justify-center gap-2 sm:gap-3.5 w-full md:w-auto">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-3.5 w-full lg:w-auto flex-nowrap lg:flex-wrap order-1 lg:order-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-1">
           <Button
             size="icon"
             onClick={handleMuteToggle}
@@ -2984,7 +3061,7 @@ export default function RoomPage({ params }: RoomPageProps) {
         </div>
 
         {/* Right footer: Desktop utilities & call actions */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-2 flex-shrink-0 order-3">
           <div className="hidden lg:flex gap-1.5">
             <Button size="icon" onClick={() => setIsOnToGoMode(true)} className="h-8 w-8 rounded bg-popover border border-border text-slate-400 hover:text-white hover:bg-slate-800 transition-all duration-300 hover:scale-105" title="On-the-Go Mode">
               🚶
@@ -3036,6 +3113,8 @@ export default function RoomPage({ params }: RoomPageProps) {
           user={user}
           metrics={metrics}
           userRoles={userRoles}
+          meetingType={meetingType}
+          setMeetingType={setMeetingType}
         />
       )}
 

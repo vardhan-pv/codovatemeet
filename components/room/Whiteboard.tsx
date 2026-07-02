@@ -25,6 +25,12 @@ export function Whiteboard({ room, lobbyName, sendData, readOnly = false }: Whit
     return () => window.removeEventListener('wb_clear', handleClear)
   }, [editor])
 
+  useEffect(() => {
+    if (editor) {
+      editor.updateInstanceState({ isReadonly: readOnly })
+    }
+  }, [editor, readOnly])
+
   return (
     <div className="flex flex-col h-full bg-[#0B1120] rounded-xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
       <div className="h-12 bg-slate-900/80 border-b border-white/5 flex items-center justify-between px-4 shrink-0">
@@ -39,8 +45,6 @@ export function Whiteboard({ room, lobbyName, sendData, readOnly = false }: Whit
       
       <div className="flex-1 w-full h-full relative" style={{ isolation: 'isolate' }}>
         <Tldraw 
-          inferDarkMode={true}
-          isReadonly={readOnly}
           className="tldraw-container"
           onMount={(e) => setEditor(e)}
         />
