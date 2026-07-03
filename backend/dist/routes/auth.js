@@ -11,6 +11,7 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const google_auth_library_1 = require("google-auth-library");
 const crypto_1 = __importDefault(require("crypto"));
+const livekit_server_sdk_1 = require("livekit-server-sdk");
 const router = (0, express_1.Router)();
 const googleClient = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // Authentication Middleware
@@ -415,6 +416,39 @@ router.get('/security-logs', authenticateToken, async (req, res) => {
     catch (error) {
         console.error('Security logs API error:', error);
         return res.status(500).json({ error: 'Server error retrieving security logs' });
+    }
+});
+// 11. GET /livekit/token - generates room join token for WebRTC client
+router.get('/livekit/token', async (req, res) => {
+    try {
+        const room = req.query.room;
+        const identity = req.query.identity;
+        if (!room || !identity) {
+            return res.status(400).json({ error: 'Missing room or identity' });
+        }
+        const apiKey = process.env.LIVEKIT_API_KEY;
+        const apiSecret = process.env.LIVEKIT_API_SECRET;
+        const wsUrl = process.env.LIVEKIT_URL;
+        if (!apiKey || !apiSecret) {
+            console.error('LiveKit credentials are not defined in backend .env');
+            return res.status(500).json({ error: 'LiveKit server credentials not configured' });
+        }
+        const at = new livekit_server_sdk_1.AccessToken(apiKey, apiSecret, {
+            identity: identity
+        });
+        at.addGrant({
+            roomJoin: true,
+            room: room,
+            canPublish: true,
+            canSubscribe: true,
+            canPublishData: true
+        });
+        const token = await at.toJwt();
+        return res.status(200).json({ token, serverUrl: wsUrl });
+    }
+    catch (error) {
+        console.error('LiveKit token generation error:', error);
+        return res.status(500).json({ error: 'Token generation failed' });
     }
 });
 exports.default = router;

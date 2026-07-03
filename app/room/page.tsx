@@ -21,7 +21,7 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert,
   X, Maximize2, Minimize2, Subtitles, Expand, Shrink, Sparkles, Code, Paintbrush,
   BarChart2, ShieldCheck, Trophy, Crown, Flag, Calendar, Heart, Send, Clock,
-  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText
+  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const CodeEditor = dynamic(() => import('@/components/room/CodeEditor').then(m => ({ default: m.CodeEditor })), { ssr: false })
@@ -29,7 +29,6 @@ const Whiteboard = dynamic(() => import('@/components/room/Whiteboard').then(m =
 
 import { GitHubPanel } from '@/components/room/GitHubPanel'
 import { DeployPanel } from '@/components/room/DeployPanel'
-import { AIAssistantPanel } from '@/components/room/AIAssistantPanel'
 
 interface RoomPageProps {
   params: Promise<{
@@ -190,10 +189,10 @@ function VideoTile({
   return (
     <div
       ref={containerRef}
-      className={`relative bg-[#0d1022] overflow-hidden flex items-center justify-center shadow-lg group transition-all duration-300 ${
+      className={`relative bg-[#0d1022] overflow-hidden flex items-center justify-center shadow-lg group transition-all duration-300 w-full h-full ${
         isFullscreen 
           ? 'w-screen h-screen rounded-none border-none' 
-          : `border rounded-2xl ${participant.isSpeaking ? 'border-primary ring-2 ring-primary/40 shadow-lg shadow-primary/20 scale-[1.01]' : 'border-white/5'} ${isPinned ? 'w-full h-full' : 'w-full aspect-video'} ${isAdminFeatured ? 'border-amber-500/80 shadow-[0_0_30px_rgba(245,158,11,0.3)] ring-2 ring-amber-500/50' : ''}`
+          : `border rounded-2xl ${participant.isSpeaking ? 'border-primary ring-2 ring-primary/40 shadow-lg shadow-primary/20 scale-[1.01]' : 'border-white/5'} ${isAdminFeatured ? 'border-amber-500/80 shadow-[0_0_30px_rgba(245,158,11,0.3)] ring-2 ring-amber-500/50' : ''}`
       }`}
     >
       <video
@@ -905,6 +904,7 @@ function RoomPageContent() {
   // Lobby States
   const [hasJoined, setHasJoined] = useState(false)
   const [lobbyName, setLobbyName] = useState('')
+  const [lobbyEmail, setLobbyEmail] = useState('')
   const [previewVideoTrack, setPreviewVideoTrack] = useState<LocalVideoTrack | null>(null)
   const previewVideoRef = useRef<HTMLVideoElement>(null)
   const [isCompanionMode, setIsCompanionMode] = useState(false)
@@ -923,6 +923,9 @@ function RoomPageContent() {
   const [shareError, setShareError] = useState<string | null>(null)
   const [serverUrl, setServerUrl] = useState<string | null>(null)
   const [meetingTitle, setMeetingTitle] = useState<string | null>(null)
+  const [polls, setPolls] = useState<any[]>([])
+  const [tasks, setTasks] = useState<any[]>([])
+  const [agenda, setAgenda] = useState<any[]>([])
   const [meetingDescription, setMeetingDescription] = useState<string | null>(null)
   const [meetingDuration, setMeetingDuration] = useState<number | null>(null)
 
@@ -1007,9 +1010,7 @@ function RoomPageContent() {
 
   // Time Travel states
   const [timeTravelSearch, setTimeTravelSearch] = useState('')
-  const [timelineSnapshots, setTimelineSnapshots] = useState<{ time: string; title: string; chat: any[]; code: string }[]>([
-    { time: '12:00', title: 'Meeting started', chat: [], code: '// Collaborative Session Initialized' }
-  ])
+  const [timelineSnapshots, setTimelineSnapshots] = useState<{ time: string; title: string; chat: any[]; code: string }[]>([])
 
   // Dev Dashboard state simulation
   const [cpuUsage, setCpuUsage] = useState(25)
@@ -1020,13 +1021,25 @@ function RoomPageContent() {
     { name: 'postgres-db', status: 'running', port: '5432:5432' }
   ])
 
-  // Interview candidate scorecard
+  // Interview candidate scorecard & dynamic data
   const [interviewScorecard, setInterviewScorecard] = useState({
-    coding: 85,
-    plagiarism: 4,
-    confidence: 90,
-    comms: 88
+    coding: 50,
+    plagiarism: 0,
+    confidence: 85,
+    comms: 80
   })
+  const [plagiarismRisk, setPlagiarismRisk] = useState(0)
+  const [interviewObjectives, setInterviewObjectives] = useState('Verify core JS concepts, problem-solving, and clean coding practices.')
+  const [interviewPurpose, setInterviewPurpose] = useState('Senior Frontend Developer Role')
+  const [isEditingObjectives, setIsEditingObjectives] = useState(false)
+
+  // Smart Scheduler states
+  const [schedTitle, setSchedTitle] = useState('')
+  const [schedDateTime, setSchedDateTime] = useState('')
+  const [schedAgenda, setSchedAgenda] = useState('')
+  const [schedResultCode, setSchedResultCode] = useState<string | null>(null)
+  const [schedLoading, setSchedLoading] = useState(false)
+  const [schedCopied, setSchedCopied] = useState(false)
 
   // Pomodoro focus timer
   const [pomodoroSecs, setPomodoroSecs] = useState(25 * 60)
@@ -1077,13 +1090,33 @@ function RoomPageContent() {
         else if (command === 'TOGGLE_AI_LOCK') setAdminSettings(prev => ({ ...prev, isAiDisabled: value }))
         else if (command === 'TOGGLE_SCREENSHARE_LOCK') setAdminSettings(prev => ({ ...prev, isScreenShareLocked: value }))
         else if (command === 'SYNC_TERMINAL') window.dispatchEvent(new CustomEvent('sync_terminal'))
-        else if (command === 'SET_ROLE') setUserRoles(prev => ({ ...prev, [targetId]: value }))
+        else if (command === 'SET_MEETING_TYPE') {
+          setMeetingType(value)
+          if (value === 'interview') setActiveSidebar('interview')
+          else if (value === 'focus') setActiveSidebar('focus')
+        }
       } else if (type === 'WHITEBOARD_CLEAR') {
         window.dispatchEvent(new CustomEvent('wb_clear'))
       }
 
     } catch (e) {
       console.warn("Failed to publish peer state:", e)
+    }
+  }
+
+  const changeMeetingType = (newType: string) => {
+    setMeetingType(newType)
+    if (newType === 'interview') {
+      setActiveSidebar('interview')
+    } else if (newType === 'focus') {
+      setActiveSidebar('focus')
+    }
+    if (isHostUser) {
+      sendData('ADMIN_COMMAND', {
+        command: 'SET_MEETING_TYPE',
+        value: newType,
+        targetId: 'ALL'
+      })
     }
   }
 
@@ -1111,6 +1144,15 @@ function RoomPageContent() {
       }
       setLobbyName(identity)
 
+      let email = ''
+      const storedJoinEmail = localStorage.getItem('joinEmail')
+      if (storedJoinEmail) {
+        email = storedJoinEmail
+      } else if (activeUser) {
+        email = activeUser.email || ''
+      }
+      setLobbyEmail(email)
+
       try {
         const meetingData = await meetingService.validateMeeting(roomId)
         setMeetingHostId(meetingData.host_id)
@@ -1129,8 +1171,16 @@ function RoomPageContent() {
         setMeetingDescription(desc)
         setMeetingDuration(meetingData.duration_minutes || 60)
 
+        if (title) setInterviewPurpose(title)
+        if (desc) setInterviewObjectives(desc)
+
         if (meetingData.type) {
           setMeetingType(meetingData.type)
+          if (meetingData.type === 'interview') {
+            setActiveSidebar('interview')
+          } else if (meetingData.type === 'focus') {
+            setActiveSidebar('focus')
+          }
           if (meetingData.type === 'technical' || meetingData.type === 'interview') {
             setActiveWorkspace('code')
           } else if (meetingData.type === 'education' || meetingData.type === 'brainstorming') {
@@ -1179,9 +1229,10 @@ function RoomPageContent() {
 
   const handleJoinClick = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!lobbyName.trim()) return
+    if (!lobbyName.trim() || !lobbyEmail.trim()) return
 
     localStorage.setItem('joinName', lobbyName.trim())
+    localStorage.setItem('joinEmail', lobbyEmail.trim())
     
     if (previewVideoTrack) {
       previewVideoTrack.stop()
@@ -1243,6 +1294,92 @@ function RoomPageContent() {
 
     return () => clearInterval(interval)
   }, [room, hasJoined, level, isMuted, isCompanionMode])
+
+  // Paste Event Listener for Plagiarism Risk checking
+  useEffect(() => {
+    const handlePaste = () => {
+      if (meetingType !== 'interview') return
+      setPlagiarismRisk(prev => {
+        const newRisk = Math.min(95, prev + 25)
+        const updated = {
+          coding: Math.min(100, 50 + Math.floor(metrics.codeEdits / 2) * 5),
+          plagiarism: newRisk,
+          confidence: interviewScorecard.confidence,
+          comms: interviewScorecard.comms
+        }
+        sendData('INTERVIEW_SCORE_UPDATE', updated)
+        setInterviewScorecard(updated)
+        return newRisk
+      })
+    }
+    window.addEventListener('paste', handlePaste)
+    return () => window.removeEventListener('paste', handlePaste)
+  }, [meetingType, metrics.codeEdits, interviewScorecard])
+
+  // Coding Score Real-time Update Hook
+  useEffect(() => {
+    if (meetingType !== 'interview') return
+    const codingScore = Math.min(100, 50 + Math.floor(metrics.codeEdits / 2) * 5)
+    setInterviewScorecard(prev => {
+      const updated = { ...prev, coding: codingScore }
+      sendData('INTERVIEW_SCORE_UPDATE', updated)
+      return updated
+    })
+  }, [metrics.codeEdits, meetingType])
+
+  // Initialize Timeline on join
+  useEffect(() => {
+    if (hasJoined) {
+      setTimelineSnapshots([
+        {
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          title: 'Meeting started',
+          chat: [],
+          code: activeCode
+        }
+      ])
+    }
+  }, [hasJoined])
+
+  // Chronological timeline snapshot updates from message history
+  useEffect(() => {
+    if (messages.length === 0) return
+    const lastMsg = messages[messages.length - 1]
+    setTimelineSnapshots(prev => {
+      const snapshotTitle = `Message from ${lastMsg.sender}: "${lastMsg.text.slice(0, 30)}${lastMsg.text.length > 30 ? '...' : ''}"`
+      if (prev.length > 0 && prev[prev.length - 1].title === snapshotTitle) return prev
+      return [
+        ...prev,
+        {
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          title: snapshotTitle,
+          chat: messages,
+          code: activeCode
+        }
+      ]
+    })
+  }, [messages, activeCode])
+
+  // Chronological timeline snapshot updates from code history
+  useEffect(() => {
+    if (!activeCode.trim() || activeCode === '// Write live collaborative code here\nconsole.log("Welcome developers!");') return
+    const timer = setTimeout(() => {
+      setTimelineSnapshots(prev => {
+        const title = 'Code Workspace Updated'
+        if (prev.length > 0 && prev[prev.length - 1].title === title) return prev
+        return [
+          ...prev,
+          {
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            title: title,
+            chat: messages,
+            code: activeCode
+          }
+        ]
+      })
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [activeCode, messages])
 
   // Broadcast local XP values for leaderboard ranking
   useEffect(() => {
@@ -1339,7 +1476,18 @@ function RoomPageContent() {
       ])
     }
 
-    activeRoom.on(RoomEvent.Connected, () => setStatusText(''))
+    activeRoom.on(RoomEvent.Connected, () => {
+      setStatusText('')
+      const sid = activeRoom.localParticipant.sid
+      const identity = activeRoom.localParticipant.identity
+      if (localVideoFilter !== 'none') {
+        setParticipantFilters(prev => ({
+          ...prev,
+          [sid]: localVideoFilter,
+          [identity]: localVideoFilter
+        }))
+      }
+    })
     activeRoom.on(RoomEvent.ParticipantConnected, updateParticipantList)
     activeRoom.on(RoomEvent.ParticipantDisconnected, (p) => {
       updateParticipantList()
@@ -1407,6 +1555,13 @@ function RoomPageContent() {
             if (parsed.targetId === activeRoom.localParticipant.identity) {
               displayCaption('System', `Your role has been changed to ${parsed.value}`)
             }
+          } else if (parsed.command === 'SET_MEETING_TYPE') {
+            setMeetingType(parsed.value)
+            if (parsed.value === 'interview') {
+              setActiveSidebar('interview')
+            } else if (parsed.value === 'focus') {
+              setActiveSidebar('focus')
+            }
           }
           return
         }
@@ -1417,6 +1572,72 @@ function RoomPageContent() {
         if (parsed.type === 'CHAT_MESSAGE') {
           setMessages(prev => [...prev, { sender, text: parsed.text, time: new Date() }])
           setMetrics(prev => ({ ...prev, chatMsgs: prev.chatMsgs + 1 }))
+          return
+        }
+        if (parsed.type === 'NEW_POLL') {
+          setPolls(prev => {
+            if (prev.some(p => p.id === parsed.poll.id)) return prev
+            return [...prev, parsed.poll]
+          })
+          displayCaption('System', `📊 New Poll Created: "${parsed.poll.question}"`)
+          return
+        }
+        if (parsed.type === 'POLL_VOTE') {
+          setPolls(prev => prev.map(p => {
+            if (p.id !== parsed.pollId) return p
+            
+            // Check if user already voted in this poll
+            const alreadyVoted = p.options.some((o: any) => o.voters.includes(parsed.voter))
+            if (alreadyVoted) return p
+            
+            return {
+              ...p,
+              options: p.options.map((opt: any, idx: number) => {
+                if (idx !== parsed.optionIndex) return opt
+                return {
+                  ...opt,
+                  votes: opt.votes + 1,
+                  voters: [...opt.voters, parsed.voter]
+                }
+              })
+            }
+          }))
+          return
+        }
+        if (parsed.type === 'INTERVIEW_SCORE_UPDATE') {
+          setInterviewScorecard({
+            coding: parsed.coding,
+            plagiarism: parsed.plagiarism,
+            confidence: parsed.confidence,
+            comms: parsed.comms
+          })
+          return
+        }
+        if (parsed.type === 'INTERVIEW_INFO_CHANGE') {
+          setInterviewObjectives(parsed.objectives)
+          setInterviewPurpose(parsed.purpose)
+          return
+        }
+        if (parsed.type === 'NEW_TASK') {
+          setTasks(prev => {
+            if (prev.some(t => t.id === parsed.task.id)) return prev
+            return [...prev, parsed.task]
+          })
+          return
+        }
+        if (parsed.type === 'TOGGLE_TASK') {
+          setTasks(prev => prev.map(t => t.id === parsed.taskId ? { ...t, completed: parsed.completed } : t))
+          return
+        }
+        if (parsed.type === 'NEW_AGENDA_ITEM') {
+          setAgenda(prev => {
+            if (prev.some(a => a.id === parsed.item.id)) return prev
+            return [...prev, parsed.item]
+          })
+          return
+        }
+        if (parsed.type === 'TOGGLE_AGENDA_ITEM') {
+          setAgenda(prev => prev.map(a => a.id === parsed.itemId ? { ...a, completed: parsed.completed } : a))
           return
         }
         if (parsed.type === 'RAISE_HAND') {
@@ -1505,16 +1726,30 @@ function RoomPageContent() {
       }
     })
 
+    let isCleanedUp = false
+
     const connectToRoom = async () => {
       try {
         const wsUrl = serverUrl || process.env.NEXT_PUBLIC_LIVEKIT_URL || 'ws://localhost:7800'
+        if (isCleanedUp) return
+
         await activeRoom.connect(wsUrl, token)
+        if (isCleanedUp) {
+          activeRoom.disconnect()
+          return
+        }
+
         setRoom(activeRoom)
         updateParticipantList()
 
         try {
+          if (isCleanedUp) return
           if (!isCompanionMode) {
             await activeRoom.localParticipant.enableCameraAndMicrophone()
+            if (isCleanedUp) {
+              activeRoom.disconnect()
+              return
+            }
             if (isVideoOff) await activeRoom.localParticipant.setCameraEnabled(false)
             if (isMuted) await activeRoom.localParticipant.setMicrophoneEnabled(false)
           } else {
@@ -1524,21 +1759,41 @@ function RoomPageContent() {
             setIsVideoOff(true)
           }
         } catch (deviceErr) {
-          try { await activeRoom.localParticipant.setMicrophoneEnabled(!isMuted) } catch (e) {}
+          try {
+            if (!isCleanedUp) {
+              await activeRoom.localParticipant.setMicrophoneEnabled(!isMuted)
+            }
+          } catch (e) {}
         }
       } catch (err) {
-        setStatusText('Failed to connect to the video session.')
+        if (!isCleanedUp) {
+          setStatusText('Failed to connect to the video session.')
+        }
       }
     }
     connectToRoom()
 
     return () => {
+      isCleanedUp = true
       if (activeRoom.unregisterTextStreamHandler) {
-        activeRoom.unregisterTextStreamHandler('lk.transcription')
+        try {
+          activeRoom.unregisterTextStreamHandler('lk.transcription')
+        } catch (e) {}
       }
-      activeRoom.disconnect()
+      try {
+        activeRoom.disconnect()
+      } catch (e) {}
     }
   }, [token, hasJoined, serverUrl, isCompanionMode])
+
+  // Toggle AI Assistant sidebar listener
+  useEffect(() => {
+    const handleToggleAi = () => {
+      setActiveSidebar(prev => prev === 'ai' ? null : 'ai')
+    }
+    window.addEventListener('toggle_ai_sidebar', handleToggleAi)
+    return () => window.removeEventListener('toggle_ai_sidebar', handleToggleAi)
+  }, [])
 
   // Client-side speech recognition for captions & voice commands
   useEffect(() => {
@@ -1600,6 +1855,28 @@ function RoomPageContent() {
           window.dispatchEvent(new CustomEvent('voice_code_template', { detail: { template: reactTemplate } }))
           displayCaption('System AI', "✓ Template 'React Login' generated from voice.")
           return
+        }
+        
+        // Speech analytics for Technical Interview dashboard
+        if (meetingType === 'interview') {
+          const words = textLower.split(/\s+/).length
+          const fillers = (textLower.match(/\b(um|uh|like|ah|so|eh|basically)\b/gi) || []).length
+          const fillerRatio = fillers / (words || 1)
+          
+          const confidenceScore = Math.max(35, Math.min(100, 95 - Math.floor(fillerRatio * 160) + Math.min(5, Math.floor(words / 20))))
+          const commsScore = Math.max(45, Math.min(100, 90 - Math.floor(fillerRatio * 120) + Math.min(10, Math.floor(words / 30))))
+          const codingScore = Math.min(100, 50 + Math.floor(metrics.codeEdits / 2) * 5)
+          
+          setInterviewScorecard(prev => {
+            const updated = {
+              coding: codingScore,
+              plagiarism: plagiarismRisk,
+              confidence: confidenceScore,
+              comms: commsScore
+            }
+            sendData('INTERVIEW_SCORE_UPDATE', updated)
+            return updated
+          })
         }
 
         // Standard captions publishing
@@ -2125,23 +2402,51 @@ function RoomPageContent() {
         return (
           <div className="flex flex-col h-full bg-popover/50">
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <div className="flex gap-2">
-                <Button 
-                  onClick={() => askAI("Generate meeting summary notes.")} 
-                  variant="outline" 
-                  className="flex-1 text-xs py-1.5 h-auto font-semibold border-border hover:bg-slate-800"
-                  disabled={adminSettings.isAiDisabled && !isHostUser}
-                >
-                  Meeting Notes
-                </Button>
-                <Button 
-                  onClick={() => askAI("Extract checklist tasks.")} 
-                  variant="outline" 
-                  className="flex-1 text-xs py-1.5 h-auto font-semibold border-border hover:bg-slate-800"
-                  disabled={adminSettings.isAiDisabled && !isHostUser}
-                >
-                  Extract Tasks
-                </Button>
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => askAI("Generate meeting summary notes.")} 
+                    variant="outline" 
+                    className="flex-1 text-[10px] py-1.5 h-auto font-semibold border-border hover:bg-slate-800"
+                    disabled={adminSettings.isAiDisabled && !isHostUser}
+                  >
+                    Meeting Notes
+                  </Button>
+                  <Button 
+                    onClick={() => askAI("Extract checklist tasks.")} 
+                    variant="outline" 
+                    className="flex-1 text-[10px] py-1.5 h-auto font-semibold border-border hover:bg-slate-800"
+                    disabled={adminSettings.isAiDisabled && !isHostUser}
+                  >
+                    Extract Tasks
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => askAI("Review the active code snippet, identify any syntax/logic bugs, and write a fixed version of the code inside a standard markdown code block.")} 
+                    variant="outline" 
+                    className="flex-1 text-[10px] py-1.5 h-auto font-semibold border-border hover:bg-slate-800"
+                    disabled={adminSettings.isAiDisabled && !isHostUser}
+                  >
+                    Fix Bug
+                  </Button>
+                  <Button 
+                    onClick={() => askAI("Explain the active code block line-by-line, detailing key variables, functions, and logic loops.")} 
+                    variant="outline" 
+                    className="flex-1 text-[10px] py-1.5 h-auto font-semibold border-border hover:bg-slate-800"
+                    disabled={adminSettings.isAiDisabled && !isHostUser}
+                  >
+                    Explain Code
+                  </Button>
+                  <Button 
+                    onClick={() => askAI("Generate comprehensive automated unit tests for the active code block and output them in a markdown code block.")} 
+                    variant="outline" 
+                    className="flex-1 text-[10px] py-1.5 h-auto font-semibold border-border hover:bg-slate-800"
+                    disabled={adminSettings.isAiDisabled && !isHostUser}
+                  >
+                    Generate Tests
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-3 mt-4">
@@ -2165,8 +2470,22 @@ function RoomPageContent() {
                                         size="sm" 
                                         className="h-6 text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white border-none font-bold px-2 py-0"
                                         onClick={() => {
-                                          setActiveCode(codeContent)
-                                          sendData('code_update', { code: codeContent })
+                                          let updatedCode = codeContent
+                                          if (activeCode.trim().startsWith('{')) {
+                                            try {
+                                              const files = JSON.parse(activeCode)
+                                              const firstFile = Object.keys(files)[0] || 'index.html'
+                                              files[firstFile] = {
+                                                ...files[firstFile],
+                                                code: codeContent
+                                              }
+                                              updatedCode = JSON.stringify(files)
+                                            } catch (e) {
+                                              // fallback
+                                            }
+                                          }
+                                          setActiveCode(updatedCode)
+                                          sendData('CODE_EDIT', { code: updatedCode })
                                         }}
                                       >
                                         Apply to Editor
@@ -2229,7 +2548,14 @@ function RoomPageContent() {
                     onClick={() => {
                       setLocalVideoFilter(f.value)
                       sendData('FILTER_CHANGE', { filter: f.value })
-                      setParticipantFilters(prev => ({ ...prev, [room?.localParticipant.sid || 'local']: f.value }))
+                      const localSid = room?.localParticipant?.sid
+                      const localIdentity = room?.localParticipant?.identity
+                      setParticipantFilters(prev => {
+                        const updated = { ...prev }
+                        if (localSid) updated[localSid] = f.value
+                        if (localIdentity) updated[localIdentity] = f.value
+                        return updated
+                      })
                     }}
                     className={`p-2 text-[10px] rounded-[20px] font-bold border transition ${localVideoFilter === f.value ? 'bg-primary text-white border-primary' : 'bg-slate-850 border-border text-slate-300 hover:bg-slate-800'}`}
                   >
@@ -2335,6 +2661,7 @@ function RoomPageContent() {
           </div>
         )
       case 'interview':
+        const isHost = lobbyName === meetingHostName || lobbyName === 'Host'
         return (
           <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-popover/50">
             <div className="space-y-1 select-none">
@@ -2342,6 +2669,57 @@ function RoomPageContent() {
                 <Crown className="h-4 w-4 text-amber-400" /> Candidate Interview Dashboard
               </h3>
               <p className="text-[9px] text-slate-400 leading-tight">Monitor live structural analytics and security reviews during technical hiring rounds.</p>
+            </div>
+
+            {/* Scope & Objectives panel */}
+            <div className="bg-card/40 p-3 rounded-[20px] border border-border space-y-2 text-slate-200">
+              <div className="flex justify-between items-center select-none">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Objectives & Scope</span>
+                {isHost && (
+                  <button
+                    onClick={() => setIsEditingObjectives(!isEditingObjectives)}
+                    className="text-[9px] font-bold text-indigo-400 hover:text-indigo-300 border-none bg-transparent cursor-pointer"
+                  >
+                    {isEditingObjectives ? 'Cancel' : 'Edit'}
+                  </button>
+                )}
+              </div>
+              {isEditingObjectives && isHost ? (
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Position / Purpose</label>
+                    <Input
+                      value={interviewPurpose}
+                      onChange={e => setInterviewPurpose(e.target.value)}
+                      placeholder="e.g. Senior Frontend Developer"
+                      className="bg-slate-850 border-slate-700 h-8 text-xs text-white rounded-lg px-2"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Objectives</label>
+                    <textarea
+                      value={interviewObjectives}
+                      onChange={e => setInterviewObjectives(e.target.value)}
+                      placeholder="Verify core JS closures, async coding..."
+                      className="w-full p-2 bg-slate-850 border border-slate-700 rounded-lg text-xs text-white h-16 outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setIsEditingObjectives(false)
+                      sendData('INTERVIEW_INFO_CHANGE', { objectives: interviewObjectives, purpose: interviewPurpose })
+                    }}
+                    className="w-full h-8 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg border-none"
+                  >
+                    Save & Broadcast
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-[11px] space-y-1">
+                  <p className="text-slate-300 leading-snug"><strong className="text-slate-400 uppercase tracking-wider text-[8px] block mt-0.5">Role/Purpose</strong> {interviewPurpose || 'Not Defined'}</p>
+                  <p className="text-slate-300 leading-snug"><strong className="text-slate-400 uppercase tracking-wider text-[8px] block mt-0.5">Objectives</strong> {interviewObjectives || 'Not Defined'}</p>
+                </div>
+              )}
             </div>
 
             {/* Scorecard visual progress bars */}
@@ -2389,40 +2767,116 @@ function RoomPageContent() {
 
             <Button
               onClick={() => {
-                const reportContent = `# Candidate Interview Report\n\n- Candidate Name: Sarah (Guest)\n- Overall Coding Score: ${interviewScorecard.coding}%\n- Plagiarism Risk: ${interviewScorecard.plagiarism}%\n- Confidence Index: ${interviewScorecard.confidence}%\n\n*Verified securely by Codovate AI Proctoring.*`
+                const candidate = participants.find(p => p.identity !== meetingHostName)
+                const candidateName = candidate ? getDisplayName(candidate.identity) : lobbyName
+                const reportContent = `# Candidate Interview Report\n\n- Candidate Name: ${candidateName}\n- Overall Coding Score: ${interviewScorecard.coding}%\n- Plagiarism Risk: ${interviewScorecard.plagiarism}%\n- Confidence Index: ${interviewScorecard.confidence}%\n\n*Verified securely by Codovate AI Proctoring.*`
                 const blob = new Blob([reportContent], { type: 'text/markdown' })
                 const url = URL.createObjectURL(blob)
                 const a = document.createElement('a')
                 a.href = url
-                a.download = `interview_report_sarah.md`
+                a.download = `interview_report_${candidateName.toLowerCase().replace(/\s+/g, '_')}.md`
                 a.click()
                 alert("Candidate PDF/Markdown Interview Report downloaded successfully!")
               }}
-              className="w-full text-xs font-bold bg-primary hover:opacity-90 h-9 border-none text-white cursor-pointer"
+              className="w-full text-xs font-bold bg-primary hover:opacity-90 h-9 border-none text-white cursor-pointer rounded-xl"
             >
               Export Candidate Report
             </Button>
           </div>
         )
       case 'scheduler':
+        if (schedResultCode) {
+          const shareLink = `${window.location.origin}/room?id=${schedResultCode}`
+          const handleCopyLink = () => {
+            navigator.clipboard.writeText(shareLink)
+            setSchedCopied(true)
+            setTimeout(() => setSchedCopied(false), 2000)
+          }
+          const handleShareWhatsApp = () => {
+            const text = `🚀 You're invited to a collaborative session on Codovate Meet!\n\nLet's connect, communicate, and build together in real-time.\n\n📌 *Topic:* *${schedTitle.trim() || 'Follow-up Session'}*\n\n🔗 *Join the workspace:* \n${shareLink}\n\n🔑 *Or enter this meeting code:* \n*${schedResultCode}*\n\nPowered by Codovate Meet 💻`
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank')
+          }
+          return (
+            <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-popover/50 text-slate-200">
+              <h3 className="font-bold text-xs text-white">Smart Scheduler</h3>
+              
+              <div className="bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-[20px] text-center space-y-3">
+                <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">Meeting Scheduled Successfully!</span>
+                <p className="text-xs text-slate-300">Share this code with your team to connect and communicate.</p>
+                
+                <div className="bg-popover border border-border py-2.5 px-4 rounded-[20px] font-mono text-sm font-extrabold text-white tracking-widest select-all">
+                  {schedResultCode}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleCopyLink}
+                    className="flex-1 h-9 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-750"
+                  >
+                    {schedCopied ? 'Copied!' : 'Copy Link'}
+                  </Button>
+                  
+                  <Button
+                    onClick={handleShareWhatsApp}
+                    className="flex-1 h-9 rounded-xl text-xs font-bold bg-green-600 hover:bg-green-500 text-white flex items-center justify-center gap-1 border-none"
+                  >
+                    WhatsApp
+                  </Button>
+                </div>
+              </div>
+
+              <Button
+                onClick={() => {
+                  setSchedResultCode(null)
+                  setSchedTitle('')
+                  setSchedDateTime('')
+                  setSchedAgenda('')
+                }}
+                className="w-full text-xs font-bold bg-primary hover:opacity-90 h-9 rounded-xl border-none"
+              >
+                Schedule Another
+              </Button>
+            </div>
+          )
+        }
+
         return (
           <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto bg-popover/50">
             <h3 className="font-bold text-xs text-white">Smart Scheduler</h3>
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="text-[9px] font-bold text-slate-400 uppercase">Follow-up Title</label>
-                <Input placeholder="Tech Architecture Review..." className="bg-slate-850 border-slate-700 text-xs text-white" />
+                <Input
+                  placeholder="Tech Architecture Review..."
+                  value={schedTitle}
+                  onChange={e => setSchedTitle(e.target.value)}
+                  className="bg-slate-850 border-slate-700 text-xs text-white"
+                />
               </div>
               <div className="space-y-1">
                 <label className="text-[9px] font-bold text-slate-400 uppercase">Date & Time</label>
-                <Input type="datetime-local" className="bg-slate-850 border-slate-700 text-xs text-white" />
+                <Input
+                  type="datetime-local"
+                  value={schedDateTime}
+                  onChange={e => setSchedDateTime(e.target.value)}
+                  className="bg-slate-850 border-slate-700 text-xs text-white"
+                />
               </div>
               <div className="space-y-1">
                 <label className="text-[9px] font-bold text-slate-400 uppercase">Agenda</label>
-                <textarea className="w-full p-2 bg-slate-850 border border-slate-700 rounded-lg text-xs text-white h-20 outline-none focus:border-primary" placeholder="Define deliverables..." />
+                <textarea
+                  value={schedAgenda}
+                  onChange={e => setSchedAgenda(e.target.value)}
+                  className="w-full p-2 bg-slate-850 border border-slate-700 rounded-lg text-xs text-white h-20 outline-none focus:border-primary"
+                  placeholder="Define deliverables..."
+                />
               </div>
-              <Button onClick={() => alert("Follow-up meeting successfully scheduled. Invitation copied to clipboard.")} className="w-full text-xs font-bold bg-primary hover:opacity-90 h-9 border-none">
-                Schedule Meeting
+              <Button
+                onClick={handleScheduleMeeting}
+                disabled={schedLoading || !schedTitle.trim()}
+                className="w-full text-xs font-bold bg-primary hover:opacity-90 h-9 border-none rounded-xl"
+              >
+                {schedLoading ? 'Scheduling...' : 'Schedule Meeting'}
               </Button>
             </div>
           </div>
@@ -2464,12 +2918,10 @@ function RoomPageContent() {
         return <GitHubPanel />
       case 'deploy':
         return <DeployPanel />
-      case 'ai':
-        return <AIAssistantPanel />
       case 'tasks':
-        return <TasksSidebar />
+        return <TasksSidebar room={room} lobbyName={lobbyName} sendData={sendData} tasks={tasks} setTasks={setTasks} />
       case 'polls':
-        return <PollsSidebar />
+        return <PollsSidebar room={room} lobbyName={lobbyName} sendData={sendData} polls={polls} setPolls={setPolls} />
       default:
         return null
     }
@@ -2521,8 +2973,13 @@ function RoomPageContent() {
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 select-none">Your Name</label>
                 <Input value={lobbyName} onChange={(e) => setLobbyName(e.target.value)} required className="bg-popover border-border focus:border-indigo-500 text-slate-200 rounded-[20px] h-10 px-3 transition-colors text-xs font-semibold" />
               </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 select-none">Your Email</label>
+                <Input type="email" value={lobbyEmail} onChange={(e) => setLobbyEmail(e.target.value)} required className="bg-popover border-border focus:border-indigo-500 text-slate-200 rounded-[20px] h-10 px-3 transition-colors text-xs font-semibold" />
+              </div>
               
-              <div className="flex items-center gap-2.5 select-none border border-border p-3 rounded-[20px] bg-popover/50">
+              <div className="flex items-center gap-2.5 select-none border border-border p-3 rounded-[20px] bg-popover/50 flex-1">
                 <input
                   type="checkbox"
                   id="companion"
@@ -2638,23 +3095,15 @@ function RoomPageContent() {
               <>
                 <Button
                   variant="ghost"
-                  onClick={() => setActiveSidebar(activeSidebar === 'github' ? null : 'github')}
-                  className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
-                    activeSidebar === 'github'
-                      ? 'bg-[#2ea043] text-white shadow-md shadow-[#2ea043]/20 scale-105 font-bold'
-                      : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
-                  }`}
+                  onClick={() => window.open('https://github.com', '_blank')}
+                  className="h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 text-muted-foreground hover:bg-slate-100 hover:text-slate-800"
                 >
                   <GitBranch className="h-4 w-4 mr-1 text-[#2ea043]" /> GitHub
                 </Button>
                 <Button
                   variant="ghost"
-                  onClick={() => setActiveSidebar(activeSidebar === 'deploy' ? null : 'deploy')}
-                  className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
-                    activeSidebar === 'deploy'
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 scale-105 font-bold'
-                      : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
-                  }`}
+                  onClick={() => window.open('https://vercel.com', '_blank')}
+                  className="h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 text-muted-foreground hover:bg-slate-100 hover:text-slate-800"
                 >
                   <Rocket className="h-4 w-4 mr-1 text-indigo-400" /> Deploy
                 </Button>
@@ -2707,17 +3156,19 @@ function RoomPageContent() {
             >
               ⏱️ Focus
             </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')}
-              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
-                activeSidebar === 'interview'
-                  ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
-                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
-              }`}
-            >
-              <Crown className="h-4 w-4 mr-1 text-purple-500" /> Interview
-            </Button>
+            {meetingType === 'interview' && (
+              <Button
+                variant="ghost"
+                onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')}
+                className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                  activeSidebar === 'interview'
+                    ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
+                    : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                }`}
+              >
+                <Crown className="h-4 w-4 mr-1 text-purple-500" /> Interview
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -2726,7 +3177,9 @@ function RoomPageContent() {
       <div className="flex-1 flex overflow-hidden relative">
         
         {/* Workspaces & Grid Pane */}
-        <main className="flex-1 flex flex-col md:flex-row p-4 overflow-hidden relative bg-slate-100/50 gap-4">
+        <main className={`flex-1 flex flex-col md:flex-row overflow-hidden relative bg-transparent gap-4 ${
+          activeWorkspace === 'none' ? 'p-1 sm:p-2' : 'p-4'
+        }`}>
           
           {/* Left panel: Active workspace if set */}
           <div className={`flex-1 min-w-0 h-full relative ${activeWorkspace === 'none' ? 'hidden' : ''}`}>
@@ -2740,7 +3193,7 @@ function RoomPageContent() {
               <UnoGameWorkspace room={room} lobbyName={lobbyName} sendData={sendData} setXp={setXp} />
             </div>
             <div className={activeWorkspace === 'agenda' ? 'h-full w-full' : 'hidden'}>
-              <AgendaWorkspace />
+              <AgendaWorkspace room={room} lobbyName={lobbyName} sendData={sendData} agenda={agenda} setAgenda={setAgenda} />
             </div>
             <div className={activeWorkspace === 'notes' ? 'h-full w-full' : 'hidden'}>
               <NotesWorkspace />
@@ -2748,7 +3201,7 @@ function RoomPageContent() {
           </div>
 
           {/* Right panel: Video grid */}
-          <div className={`h-full overflow-y-auto transition-all ${isWorkspaceMaximized ? 'hidden' : activeWorkspace !== 'none' ? 'w-full md:w-80 shrink-0' : 'flex-1'}`}>
+          <div className={`h-full overflow-y-auto transition-all ${isWorkspaceMaximized ? 'hidden' : activeWorkspace !== 'none' ? 'hidden md:block w-full md:w-80 shrink-0' : 'flex-1'}`}>
             {statusText ? (
               <div className="h-full flex flex-col items-center justify-center gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -2770,13 +3223,13 @@ function RoomPageContent() {
                     <div className="flex gap-2">
                       <Input
                         readOnly
-                        value={typeof window !== 'undefined' ? `${window.location.origin}/room/${roomId}` : roomId}
-                        className="bg-card border-border text-[10px] text-primary h-8 font-mono select-all"
+                        value={typeof window !== 'undefined' ? `${window.location.origin}/room?id=${roomId}` : roomId}
+                        className="bg-card border-border text-[10px] text-primary h-8 font-mono select-all flex-1"
                       />
                       <Button
                         size="sm"
                         onClick={() => {
-                          navigator.clipboard.writeText(window.location.href)
+                          navigator.clipboard.writeText(typeof window !== 'undefined' ? `${window.location.origin}/room?id=${roomId}` : roomId)
                           alert("Invitation URL copied to clipboard!")
                         }}
                         className="h-8 text-xs font-bold px-3 shrink-0"
@@ -2784,20 +3237,34 @@ function RoomPageContent() {
                         Copy
                       </Button>
                     </div>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const link = typeof window !== 'undefined' ? `${window.location.origin}/room?id=${roomId}` : roomId
+                        const text = `🚀 You're invited to a live session on Codovate Meet!\n\nLet's connect, communicate, and build together in real-time.\n\n🔗 *Join the workspace:* \n${link}\n\n🔑 *Or enter this meeting code:* \n*${roomId}*\n\nPowered by Codovate Meet 💻`
+                        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank')
+                      }}
+                      className="w-full h-8 text-xs font-bold bg-[#25D366] hover:bg-[#20ba5a] text-white border-none flex items-center justify-center gap-1.5"
+                    >
+                      <svg viewBox="0 0 448 512" fill="currentColor" className="h-3.5 w-3.5">
+                        <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
+                      </svg>
+                      Share on WhatsApp
+                    </Button>
                   </div>
                 )}
 
                 <div className="flex flex-col h-full justify-center">
                   <div className={`grid gap-4 w-full h-full content-center ${
                     isFeaturedPage ? 'grid-cols-1 grid-rows-1 w-full h-full mx-auto' :
-                    displayTiles.length <= 1 ? 'grid-cols-1 max-w-2xl mx-auto' :
-                    displayTiles.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto' :
-                    'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto'
+                    displayTiles.length <= 1 ? 'grid-cols-1 w-full h-full mx-auto' :
+                    displayTiles.length === 2 ? 'grid-cols-1 md:grid-cols-2 w-full h-full mx-auto' :
+                    'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full h-full mx-auto'
                   }`}>
                     {displayTiles.map(tile => {
                       const pid = tile.id.split(':')[0]
                       return (
-                        <div key={tile.id} className={isFeaturedPage ? 'w-full h-full rounded-[20px] overflow-hidden min-h-0 bg-black' : ''}>
+                        <div key={tile.id} className="w-full h-full rounded-[20px] overflow-hidden min-h-0 bg-black">
                           <VideoTile
                             participant={tile.participant}
                             source={tile.source}
@@ -2877,23 +3344,34 @@ function RoomPageContent() {
             </div>
             
             {/* Quick switcher inside sidebar */}
-            <div className="grid grid-cols-4 border-b border-border bg-background p-1">
-              {[
+            {(() => {
+              const sidebarTabs = [
                 { tab: 'chat', label: 'Chat', icon: <MessageSquare className="h-3.5 w-3.5" /> },
                 { tab: 'participants', label: 'Users', icon: <Users className="h-3.5 w-3.5" /> },
                 { tab: 'ai', label: 'AI', icon: <Sparkles className="h-3.5 w-3.5" /> },
                 { tab: 'timetravel', label: 'Timeline', icon: <Clock className="h-3.5 w-3.5" /> }
-              ].map(item => (
-                <button
-                  key={item.tab}
-                  onClick={() => setActiveSidebar(item.tab)}
-                  title={item.label}
-                  className={`py-1.5 flex justify-center rounded transition ${activeSidebar === item.tab ? 'bg-slate-800 text-indigo-400 shadow-sm border border-slate-700/50 font-bold' : 'text-slate-500 hover:text-slate-300'}`}
-                >
-                  {item.icon}
-                </button>
-              ))}
-            </div>
+              ]
+              if (meetingType === 'interview') {
+                sidebarTabs.push({ tab: 'interview', label: 'Interview', icon: <Crown className="h-3.5 w-3.5" /> })
+              } else if (meetingType === 'focus') {
+                sidebarTabs.push({ tab: 'focus', label: 'Focus', icon: <Timer className="h-3.5 w-3.5" /> })
+              }
+              const gridCols = sidebarTabs.length === 5 ? 'grid-cols-5' : 'grid-cols-4'
+              return (
+                <div className={`grid ${gridCols} border-b border-border bg-background p-1`}>
+                  {sidebarTabs.map(item => (
+                    <button
+                      key={item.tab}
+                      onClick={() => setActiveSidebar(item.tab)}
+                      title={item.label}
+                      className={`py-1.5 flex justify-center rounded transition ${activeSidebar === item.tab ? 'bg-slate-800 text-indigo-400 shadow-sm border border-slate-700/50 font-bold' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                      {item.icon}
+                    </button>
+                  ))}
+                </div>
+              )
+            })()}
 
             <div className="flex-1 min-h-0 bg-background/50">
               {renderSidebarContent()}
@@ -3190,7 +3668,7 @@ function RoomPageContent() {
           metrics={metrics}
           userRoles={userRoles}
           meetingType={meetingType}
-          setMeetingType={setMeetingType}
+          setMeetingType={changeMeetingType}
         />
       )}
 

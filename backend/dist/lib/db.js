@@ -3,7 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.query = query;
 const pg_1 = require("pg");
 const pool = new pg_1.Pool({
-    connectionString: process.env.DATABASE_URL
+    connectionString: process.env.DATABASE_URL,
+    max: 5, // max connections in pool
+    idleTimeoutMillis: 30000, // close idle clients after 30s (less than Neon's 300s limit)
+    connectionTimeoutMillis: 10000, // fail fast if can't get a connection in 10s
+    ssl: { rejectUnauthorized: false }
+});
+pool.on('error', (err) => {
+    console.error('Unexpected error on idle pg client:', err);
 });
 // Initialize DB schema
 let isInitialized = false;
@@ -61,7 +68,8 @@ async function initDB() {
         ALTER TABLE meetings 
         ADD COLUMN IF NOT EXISTS room_name VARCHAR(255),
         ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMP,
-        ADD COLUMN IF NOT EXISTS type VARCHAR(50) DEFAULT 'technical';
+        ADD COLUMN IF NOT EXISTS type VARCHAR(50) DEFAULT 'technical',
+        ADD COLUMN IF NOT EXISTS duration_minutes INT DEFAULT 60;
       `);
             // Create Participants table
             await client.query(`

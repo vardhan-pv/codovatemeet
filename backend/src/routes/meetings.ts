@@ -37,9 +37,14 @@ router.get('/', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Unauthorized: Missing token' })
     }
 
-    const decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET || 'fallback_secret') as any
-    if (!decoded || !decoded.id) {
-      return res.status(401).json({ error: 'Unauthorized: Invalid token' })
+    let decoded;
+    try {
+      decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET || 'fallback_secret') as any
+      if (!decoded || !decoded.id) {
+        return res.status(401).json({ error: 'Unauthorized: Invalid token' })
+      }
+    } catch (jwtErr) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' })
     }
 
     const result = await query(
@@ -89,7 +94,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       } catch (_) {}
     }
 
-    // Send invitation emails to all guests
+    // Send invitation emails to all guests (done asynchronously in the background)
     if (guests && typeof guests === 'string') {
       const guestEmails = guests.split(',').map((e: string) => e.trim()).filter(Boolean)
       const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
@@ -99,7 +104,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
         hour: '2-digit', minute: '2-digit'
       })
 
-      for (const guestEmail of guestEmails) {
+      Promise.all(guestEmails.map(async (guestEmail) => {
         const html = `
 <!DOCTYPE html>
 <html>
@@ -183,7 +188,9 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
         } catch (emailErr) {
           console.error(`Failed to send invite to ${guestEmail}:`, emailErr)
         }
-      }
+      })).catch(err => {
+        console.error('Failed to send guest emails:', err)
+      })
     }
 
     return res.status(201).json({ meetingId: meetingCode })

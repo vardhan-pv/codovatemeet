@@ -72,7 +72,7 @@ export default function LandingPage() {
           <motion.div variants={fadeInUp}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/30 text-primary text-xs font-bold uppercase tracking-widest mb-8 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
               <Sparkles className="w-3.5 h-3.5" />
-              The AI-Powered Developer Platform
+              The Developer Communication & Collaboration Platform
             </div>
           </motion.div>
 
@@ -80,15 +80,15 @@ export default function LandingPage() {
             variants={fadeInUp}
             className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.05] tracking-tight mb-8"
           >
-            Meet. Code. <br className="hidden md:block" />
-            <span className="gradient-primary">Deploy Together.</span>
+            Meet. Connect. <br className="hidden md:block" />
+            <span className="gradient-primary">Build Together.</span>
           </motion.h1>
 
           <motion.p
             variants={fadeInUp}
             className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-12"
           >
-            Not just another video call. Codovate Meet combines HD video conferencing with a shared VS Code workspace, integrated terminal, and an AI Pair Programmer. Build software instantly during your meetings.
+            Not just another video call. Codovate Meet is the ultimate collaboration workspace where engineering teams connect, communicate, and build side-by-side in real-time. Brainstorm ideas, solve complex problems, and maintain daily developer closeness.
           </motion.p>
 
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -204,18 +204,7 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ── LOGOS ── */}
-      <section className="py-10 border-b border-white/5 bg-background">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col items-center">
-          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-6">Built for modern tech stacks</p>
-          <div className="flex flex-wrap justify-center gap-10 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-            {/* Simulated Logos */}
-            {['Next.js', 'React', 'Docker', 'GitHub', 'Vercel', 'PostgreSQL'].map(tech => (
-              <span key={tech} className="text-lg font-bold text-white font-mono tracking-tight">{tech}</span>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* ── DEVELOPER FEATURES ── */}
       <section id="features" className="py-32 px-6 max-w-7xl mx-auto">
@@ -227,10 +216,10 @@ export default function LandingPage() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
-            Everything a <span className="gradient-primary">developer needs.</span>
+            Everything your team needs to <span className="gradient-primary">stay connected.</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Stop switching between Zoom, VS Code, and Slack. Codovate Meet brings your entire engineering workflow into one powerful window.
+            Stop switching between Zoom, VS Code, and Slack. Codovate Meet combines video conferencing, team communication, and live coding workspaces into one cohesive platform.
           </p>
         </motion.div>
 
@@ -239,32 +228,32 @@ export default function LandingPage() {
             {
               icon: MessageSquareCode,
               title: 'Live Shared Editor',
-              desc: 'VS Code-like experience in the browser. See cursors, write code together, and resolve conflicts instantly.',
+              desc: 'Write and debug code side-by-side. See remote cursors, edit files in real-time, and resolve conflicts in the moment.',
             },
             {
-              icon: Sparkles,
-              title: 'AI Pair Programmer',
-              desc: 'Live bug fixing, code explanation, and auto-generated unit tests right inside your meeting workspace.',
+              icon: Video,
+              title: 'HD Video & Huddles',
+              desc: 'High-definition video huddles, crystal-clear audio, reactions, and screen-sharing tailored specifically for tech teams.',
             },
             {
               icon: Terminal,
               title: 'Integrated Terminal',
-              desc: 'Run commands, start servers, and view logs together. Fully synchronized sandboxed environments.',
+              desc: 'Run commands, boot dev servers, and review logs collaboratively. Fully synchronized sandbox shell.',
             },
             {
               icon: GitBranch,
               title: 'GitHub Integration',
-              desc: 'Pull repositories, create branches, review PRs, and commit changes without leaving the call.',
+              desc: 'Pull repositories, create branches, review pull requests, and commit updates without leaving the session.',
             },
             {
-              icon: Rocket,
-              title: 'One-Click Deploy',
-              desc: 'Deploy your workspace directly to Vercel, Netlify, or Docker containers instantly.',
+              icon: Sparkles,
+              title: 'AI pair programming',
+              desc: 'Draft unit tests, analyze code context, and resolve bugs instantly using our collaborative AI gateway.',
             },
             {
               icon: Layout,
               title: 'Advanced Whiteboard',
-              desc: 'Infinite canvas for architecture diagrams. Auto-generate UML or flowcharts using meeting context.',
+              desc: 'Infinite visual canvas for architecture design. Auto-generate flowcharts and UMLs to explain your ideas.',
             },
           ].map((f, i) => (
             <motion.div
@@ -388,20 +377,109 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-white/5 bg-secondary">
-        <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted-foreground">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-indigo-400 flex items-center justify-center">
-              <Video className="h-4 w-4 text-white" />
+      <footer className="border-t border-white/5 bg-[#0B0D19]/90 relative overflow-hidden">
+        {/* Glow highlight */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        
+        <div className="max-w-7xl mx-auto px-6 pt-20 pb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
+            
+            {/* Column 1: Branding & Tagline */}
+            <div className="lg:col-span-2 space-y-6">
+              <Link href="/" className="flex items-center gap-3 group">
+                <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-lg bg-white/10 border border-white/10">
+                  <img src="/logo.png" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
+                </div>
+                <span className="font-extrabold text-lg tracking-tight text-white group-hover:text-primary transition-colors">
+                  Codovate Meet
+                </span>
+              </Link>
+              
+              <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
+                The ultimate developer communication and collaboration workspace. Meet, connect, and build software side-by-side in real-time.
+              </p>
+              
+              {/* Social Icons */}
+              <div className="flex items-center gap-3">
+                {[
+                  { 
+                    svgPath: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z", 
+                    viewBox: "0 0 24 24", 
+                    href: 'https://twitter.com', 
+                    label: 'Twitter' 
+                  },
+                  { 
+                    svgPath: "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12", 
+                    viewBox: "0 0 24 24", 
+                    href: 'https://github.com', 
+                    label: 'GitHub' 
+                  },
+                  { 
+                    svgPath: "M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z", 
+                    viewBox: "0 0 24 24", 
+                    href: 'https://linkedin.com', 
+                    label: 'LinkedIn' 
+                  },
+                ].map((s, idx) => (
+                  <a
+                    key={idx}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg border border-white/5 bg-white/5 flex items-center justify-center text-muted-foreground hover:text-white hover:bg-primary/20 hover:border-primary/30 transition-all duration-300"
+                    aria-label={s.label}
+                  >
+                    <svg viewBox={s.viewBox} className="h-4 w-4" fill="currentColor">
+                      <path d={s.svgPath} />
+                    </svg>
+                  </a>
+                ))}
+              </div>
             </div>
-            <span className="font-bold text-white text-base">Codovate Meet</span>
-            <span className="opacity-50 ml-2">© 2026</span>
+            
+            {/* Column 2: Product */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">Product</h4>
+              <ul className="space-y-2.5 text-sm text-muted-foreground">
+                <li><Link href="#features" className="hover:text-white transition-colors">Shared Workspace</Link></li>
+                <li><Link href="#ai" className="hover:text-white transition-colors">AI pair programming</Link></li>
+                <li><Link href="#features" className="hover:text-white transition-colors">Interactive Whiteboard</Link></li>
+                <li><Link href="/dashboard" className="hover:text-white transition-colors">Dynamic Layouts</Link></li>
+              </ul>
+            </div>
+            
+            {/* Column 3: Resources */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">Resources</h4>
+              <ul className="space-y-2.5 text-sm text-muted-foreground">
+                <li><Link href="#" className="hover:text-white transition-colors">Documentation</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">API Reference</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">GitHub Sync</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">Security Audit</Link></li>
+              </ul>
+            </div>
+            
+            {/* Column 4: Company */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">Company</h4>
+              <ul className="space-y-2.5 text-sm text-muted-foreground">
+                <li><Link href="#" className="hover:text-white transition-colors">About Us</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">Blog</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">Enterprise</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">Contact Sales</Link></li>
+              </ul>
+            </div>
+            
           </div>
-          <div className="flex gap-8 font-medium">
-            <Link href="#" className="hover:text-white transition-colors">Documentation</Link>
-            <Link href="#" className="hover:text-white transition-colors">GitHub Sync</Link>
-            <Link href="#" className="hover:text-white transition-colors">Enterprise</Link>
-            <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
+          
+          {/* Bottom Divider */}
+          <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
+            <p>© 2026 Codovate Solutions. All rights reserved.</p>
+            <div className="flex gap-6">
+              <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
+              <Link href="#" className="hover:text-white transition-colors">Cookie settings</Link>
+            </div>
           </div>
         </div>
       </footer>

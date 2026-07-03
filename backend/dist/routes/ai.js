@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const auth_1 = require("./auth");
 const router = (0, express_1.Router)();
 const askGemini = async (contextPrompt, geminiKey) => {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
@@ -61,8 +60,19 @@ const askOpenRouter = async (contextPrompt, openrouterKey) => {
         throw new Error('OpenRouter returned empty response');
     return text;
 };
-// POST / - AI assistant gateway
-router.post('/', auth_1.authenticateToken, async (req, res) => {
+// POST / - AI assistant gateway (auth optional – guests are allowed)
+router.post('/', (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token) {
+        const jwt = require('jsonwebtoken');
+        try {
+            req.user = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        }
+        catch (_) { }
+    }
+    next();
+}, async (req, res) => {
     try {
         const { prompt, chatHistory = [], codeSnippet = '', transcript = [] } = req.body;
         if (!prompt) {
