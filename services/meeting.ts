@@ -1,7 +1,7 @@
 import api from '@/lib/api'
 
 export const meetingService = {
-  async createMeeting(data: { roomName: string; scheduledAt: string; type?: string }) {
+  async createMeeting(data: { roomName: string; scheduledAt: string; type?: string; durationMinutes?: number; guests?: string }) {
     const response = await api.post('/api/meetings', data)
     return response.data
   },

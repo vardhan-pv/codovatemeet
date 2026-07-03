@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Mail, Lock, ArrowLeft, Video, ArrowRight, ShieldCheck, KeyRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import Script from 'next/script'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -23,6 +24,54 @@ export default function LoginPage() {
   const [mfaCode, setMfaCode] = useState('')
   const [isVerifying, setIsVerifying] = useState(false)
 
+  const initializeGoogle = () => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    if (!clientId || clientId === 'your_google_client_id_here') {
+      console.warn('Google Client ID is not configured in environment variables.')
+      return
+    }
+
+    if (typeof window !== 'undefined' && (window as any).google) {
+      try {
+        (window as any).google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleLoginSuccess
+        });
+        (window as any).google.accounts.id.renderButton(
+          document.getElementById('google-signin-btn'),
+          { theme: 'filled_black', size: 'large', width: 384, text: 'signin_with', shape: 'pill' }
+        );
+      } catch (err) {
+        console.error('Error rendering Google sign in button:', err)
+      }
+    }
+  }
+
+  const handleGoogleLoginSuccess = async (googleResponse: any) => {
+    setIsLoading(true)
+    setFormError(null)
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${backendUrl}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: googleResponse.credential })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        localStorage.setItem('token', data.token)
+        useAuth.setState({ token: data.token, user: data.user })
+        window.location.href = '/dashboard'
+      } else {
+        setFormError(data.error || 'Google Authentication failed')
+        setIsLoading(false)
+      }
+    } catch {
+      setFormError('Failed to verify Google login')
+      setIsLoading(false)
+    }
+  }
+
   // Listen to URL parameters (redirect from registration)
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -34,8 +83,15 @@ export default function LoginPage() {
       if (rUserId) {
         setUnverifiedUserId(rUserId)
         if (rEmail) setEmail(rEmail)
-        if (isReg) setFormError('Account created successfully! Please enter the 6-digit code generated in your server console.')
+        if (isReg) setFormError('Account created successfully! Please enter the 6-digit verification code sent to your email.')
       }
+    }
+  }, [])
+
+  // Initialize Google if script already loaded
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).google) {
+      initializeGoogle()
     }
   }, [])
 
@@ -70,7 +126,8 @@ export default function LoginPage() {
     setIsVerifying(true)
     setFormError(null)
     try {
-      const response = await fetch('/api/verify', {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${backendUrl}/api/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: unverifiedUserId, code: verifyCode })
@@ -97,7 +154,8 @@ export default function LoginPage() {
     setIsVerifying(true)
     setFormError(null)
     try {
-      const response = await fetch('/api/mfa-verify', {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${backendUrl}/api/mfa-verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: mfaUserId, code: mfaCode })
@@ -327,6 +385,19 @@ export default function LoginPage() {
                 </Button>
               </form>
 
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border"></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-background px-3 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">Or continue with</span>
+                </div>
+              </div>
+
+              <div className="w-full flex justify-center">
+                <div id="google-signin-btn" className="w-full max-w-sm flex justify-center"></div>
+              </div>
+
               <div className="mt-8 pt-8 border-t border-border text-center">
                 <p className="text-sm text-muted-foreground">New to Codovate Meet? <Link href="/register" className="text-primary font-bold hover:underline">Create a free account →</Link></p>
               </div>
@@ -334,6 +405,11 @@ export default function LoginPage() {
           )}
         </motion.div>
       </div>
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        onLoad={initializeGoogle}
+        strategy="afterInteractive"
+      />
     </div>
   )
 }

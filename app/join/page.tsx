@@ -64,7 +64,7 @@ export default function JoinMeetingPage() {
       localStorage.setItem('joinName', userName.trim())
 
       // Redirect to the room
-      window.location.href = `/room/${cleanCode}`
+      window.location.href = `/room?id=${cleanCode}`
     } catch (err: any) {
       const msg = err.response?.data?.error || 'Invalid meeting code. Verify and try again.'
       setJoinError(msg)

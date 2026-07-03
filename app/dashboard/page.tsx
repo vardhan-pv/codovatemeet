@@ -26,6 +26,7 @@ interface MeetingRecord {
   room_name?: string
   scheduled_at?: string
   duration?: number
+  duration_minutes?: number
 }
 
 export default function DashboardPage() {
@@ -60,6 +61,7 @@ export default function DashboardPage() {
   const [calDesc, setCalDesc] = useState('')
   const [calGuests, setCalGuests] = useState('')
   const [calAttachment, setCalAttachment] = useState('')
+  const [calDuration, setCalDuration] = useState(60)
 
   // Floating AI Assistant states
   const [showFloatingAi, setShowFloatingAi] = useState(false)
@@ -87,7 +89,8 @@ export default function DashboardPage() {
     setFloatingAiLoading(true)
 
     try {
-      const response = await fetch('/api/ai', {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${backendUrl}/api/ai`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: userText, chatHistory: [] })
@@ -111,7 +114,8 @@ export default function DashboardPage() {
       if (!activeToken) return
 
       // Fetch profile details including mfa_enabled and role
-      const profRes = await fetch('/api/profile', {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const profRes = await fetch(`${backendUrl}/api/profile`, {
         headers: { 'Authorization': `Bearer ${activeToken}` }
       })
       if (profRes.ok) {
@@ -121,7 +125,7 @@ export default function DashboardPage() {
       }
 
       // Fetch security audit logs
-      const logsRes = await fetch('/api/security-logs', {
+      const logsRes = await fetch(`${backendUrl}/api/security-logs`, {
         headers: { 'Authorization': `Bearer ${activeToken}` }
       })
       if (logsRes.ok) {
@@ -139,7 +143,8 @@ export default function DashboardPage() {
 
     if (mfaEnabled) {
       try {
-        const res = await fetch('/api/mfa-setup', {
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+        const res = await fetch(`${backendUrl}/api/mfa-setup`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -158,7 +163,8 @@ export default function DashboardPage() {
       }
     } else {
       try {
-        const res = await fetch('/api/mfa-setup', {
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+        const res = await fetch(`${backendUrl}/api/mfa-setup`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -184,7 +190,8 @@ export default function DashboardPage() {
     if (!activeToken || !mfaSetupCode.trim()) return
 
     try {
-      const res = await fetch('/api/mfa-setup', {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const res = await fetch(`${backendUrl}/api/mfa-setup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -212,7 +219,8 @@ export default function DashboardPage() {
     if (!user || !user.email) return
     setPasswordResetStatus('Generating reset link...')
     try {
-      const res = await fetch('/api/forgot-password', {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const res = await fetch(`${backendUrl}/api/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user.email })
@@ -268,11 +276,16 @@ export default function DashboardPage() {
     })
 
     try {
-      const data = await meetingService.createMeeting({ roomName: serializedRoomName, scheduledAt: calDate })
+      const data = await meetingService.createMeeting({
+        roomName: serializedRoomName,
+        scheduledAt: calDate,
+        durationMinutes: calDuration,
+        guests: calGuests.trim()
+      })
       setCreatedCode(data.meetingId)
       
       // Reset forms and close modal
-      setCalTitle(''); setCalDate(''); setCalDesc(''); setCalGuests(''); setCalAttachment('')
+      setCalTitle(''); setCalDate(''); setCalDesc(''); setCalGuests(''); setCalAttachment(''); setCalDuration(60)
       setShowCalendarModal(false)
 
       const meetings = await meetingService.getRecentMeetings()
@@ -284,7 +297,7 @@ export default function DashboardPage() {
 
   const handleCopyLink = () => {
     if (!createdCode) return
-    navigator.clipboard.writeText(`${window.location.origin}/room/${createdCode}`)
+    navigator.clipboard.writeText(`${window.location.origin}/room?id=${createdCode}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -296,7 +309,7 @@ export default function DashboardPage() {
     try {
       const cleanCode = joinCode.trim().toUpperCase()
       await meetingService.validateMeeting(cleanCode)
-      window.location.href = `/room/${cleanCode}`
+      window.location.href = `/room?id=${cleanCode}`
     } catch (err: any) {
       setJoinError(err.response?.data?.error || 'Invalid meeting code')
       setIsJoining(false)
@@ -411,7 +424,7 @@ export default function DashboardPage() {
                   <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center select-none">
                     <p className="text-xs text-muted-foreground mb-1 font-medium uppercase tracking-wider">Your meeting link</p>
                     <p className="font-mono text-sm font-bold text-primary truncate select-all">
-                      {typeof window !== 'undefined' ? `${window.location.origin}/room/${createdCode}` : createdCode}
+                      {typeof window !== 'undefined' ? `${window.location.origin}/room?id=${createdCode}` : createdCode}
                     </p>
                   </div>
                   <div className="flex gap-3">
@@ -419,7 +432,7 @@ export default function DashboardPage() {
                       {copied ? <><Check className="h-4 w-4 mr-2 text-green-500" /> Copied!</> : <><Copy className="h-4 w-4 mr-2" /> Copy Link</>}
                     </Button>
                     <Button className="flex-1 btn-glow text-white font-bold rounded-xl"
-                      onClick={() => window.location.href = `/room/${createdCode}`}>
+                      onClick={() => window.location.href = `/room?id=${createdCode}`}>
                       Start Call <ArrowRight className="h-4 w-4 ml-1.5" />
                     </Button>
                   </div>
@@ -572,7 +585,7 @@ export default function DashboardPage() {
                             {calData.guests && <p className="text-[10px] truncate max-w-44 text-slate-400">{calData.guests}</p>}
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <Button size="sm" onClick={() => window.location.href = `/room/${m.meeting_code}`}
+                            <Button size="sm" onClick={() => window.location.href = `/room?id=${m.meeting_code}`}
                               className="bg-primary/10 text-primary hover:bg-primary hover:text-white border-0 font-semibold rounded-lg transition-all h-8">
                               Join →
                             </Button>

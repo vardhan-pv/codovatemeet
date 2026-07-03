@@ -104,7 +104,8 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     term.writeln('\x1b[38;5;240mCompiling and starting secure sandbox...\x1b[0m')
     
     try {
-      const response = await fetch('/api/run', {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${backendUrl}/api/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language, code })

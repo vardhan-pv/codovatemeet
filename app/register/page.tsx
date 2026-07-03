@@ -21,9 +21,9 @@ export default function RegisterPage() {
     setIsLoading(true)
     setFormError(null)
     try {
-      const success = await register(name, email, password)
-      if (success) {
-        window.location.href = '/dashboard'
+      const data = await register(name, email, password)
+      if (data && data.id) {
+        window.location.href = `/login?userId=${data.id}&email=${encodeURIComponent(data.email || email)}&registered=true`
       } else {
         setFormError('Registration failed. Email might already be in use.')
         setIsLoading(false)
