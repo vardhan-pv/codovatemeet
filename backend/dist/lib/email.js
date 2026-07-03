@@ -19,7 +19,45 @@ const transporter = (process.env.SMTP_HOST && process.env.SMTP_USER && process.e
 async function sendEmail({ to, subject, html, text }) {
     const brevoApiKey = process.env.BREVO_API_KEY;
     if (brevoApiKey && brevoApiKey !== 'your_brevo_api_key_here') {
-        // If it is an SMTP Master Key (starts with xsmtpsib-), use Brevo SMTP Relay
+        // Attempt Brevo Transactional Email HTTP API first (as port 443 HTTPS is never blocked by cloud hosts)
+        try {
+            const senderEmail = process.env.BREVO_SENDER_EMAIL || 'no-reply@codovate.com';
+            const senderName = process.env.BREVO_SENDER_NAME || 'CodovateMeet';
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'content-type': 'application/json',
+                    'api-key': brevoApiKey
+                },
+                body: JSON.stringify({
+                    sender: {
+                        name: senderName,
+                        email: senderEmail
+                    },
+                    to: [
+                        {
+                            email: to
+                        }
+                    ],
+                    subject: subject,
+                    htmlContent: html,
+                    textContent: text
+                })
+            });
+            if (response.ok) {
+                console.log(`[BREVO API SUCCESS] Email successfully dispatched to ${to}`);
+                return true;
+            }
+            else {
+                const errorData = await response.json();
+                console.warn(`[BREVO API WARNING] HTTP dispatch failed:`, JSON.stringify(errorData));
+            }
+        }
+        catch (err) {
+            console.error(`[BREVO API ERROR] HTTP dispatch error:`, err.message);
+        }
+        // Fallback: If it is an SMTP Master Key, attempt SMTP Relay as a backup
         if (brevoApiKey.startsWith('xsmtpsib-')) {
             try {
                 const senderEmail = process.env.BREVO_SENDER_EMAIL || 'no-reply@codovate.com';
@@ -44,45 +82,7 @@ async function sendEmail({ to, subject, html, text }) {
                 return true;
             }
             catch (err) {
-                console.error(`[BREVO SMTP ERROR] Failed to send email to ${to}:`, err.message);
-            }
-        }
-        else {
-            // Otherwise, use Brevo Transactional Email HTTP API (for keys starting with xkeysib- or similar)
-            try {
-                const senderEmail = process.env.BREVO_SENDER_EMAIL || 'no-reply@codovate.com';
-                const senderName = process.env.BREVO_SENDER_NAME || 'CodovateMeet';
-                const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-                    method: 'POST',
-                    headers: {
-                        'accept': 'application/json',
-                        'content-type': 'application/json',
-                        'api-key': brevoApiKey
-                    },
-                    body: JSON.stringify({
-                        sender: {
-                            name: senderName,
-                            email: senderEmail
-                        },
-                        to: [
-                            {
-                                email: to
-                            }
-                        ],
-                        subject: subject,
-                        htmlContent: html,
-                        textContent: text
-                    })
-                });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(JSON.stringify(errorData));
-                }
-                console.log(`[BREVO API SUCCESS] Email successfully dispatched to ${to}`);
-                return true;
-            }
-            catch (err) {
-                console.error(`[BREVO API ERROR] Failed to send email to ${to}:`, err.message);
+                console.error(`[BREVO SMTP ERROR] Failed to send email via SMTP to ${to}:`, err.message);
             }
         }
     }
