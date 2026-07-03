@@ -872,10 +872,17 @@ function UnoGameWorkspace({ room, lobbyName, sendData, setXp }: { room: any; lob
    ────────────────────────────────────────────────────────────────────────── */
 function RoomPageFallback() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-      <div className="text-center space-y-4">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-muted-foreground text-sm font-medium">Initializing Collaborative Workspace...</p>
+    <div className="min-h-screen bg-[#030712] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-6">
+        <div className="relative w-20 h-20 flex items-center justify-center">
+          {/* Spinning outer loader */}
+          <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-4 border-t-primary animate-spin" />
+          {/* Inner logo */}
+          <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shadow-lg bg-slate-900 border border-slate-800">
+            <img src="/logo.png" className="w-full h-full object-cover" alt="Codovate Logo" />
+          </div>
+        </div>
+        <p className="text-muted-foreground text-sm font-medium tracking-wide">Initializing Collaborative Workspace...</p>
       </div>
     </div>
   )
@@ -915,6 +922,9 @@ function RoomPageContent() {
   const [meetingHostName, setMeetingHostName] = useState<string | null>(null)
   const [shareError, setShareError] = useState<string | null>(null)
   const [serverUrl, setServerUrl] = useState<string | null>(null)
+  const [meetingTitle, setMeetingTitle] = useState<string | null>(null)
+  const [meetingDescription, setMeetingDescription] = useState<string | null>(null)
+  const [meetingDuration, setMeetingDuration] = useState<number | null>(null)
 
   // Live Data & Admin
   const [metrics, setMetrics] = useState({ codeEdits: 0, chatMsgs: 0, aiRequests: 0 })
@@ -1105,6 +1115,20 @@ function RoomPageContent() {
         const meetingData = await meetingService.validateMeeting(roomId)
         setMeetingHostId(meetingData.host_id)
         setMeetingHostName(meetingData.host_name)
+        
+        let title = meetingData.room_name || 'Untitled Meeting'
+        let desc = ''
+        if (meetingData.room_name && meetingData.room_name.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(meetingData.room_name)
+            title = parsed.name || title
+            desc = parsed.desc || ''
+          } catch (_) {}
+        }
+        setMeetingTitle(title)
+        setMeetingDescription(desc)
+        setMeetingDuration(meetingData.duration_minutes || 60)
+
         if (meetingData.type) {
           setMeetingType(meetingData.type)
           if (meetingData.type === 'technical' || meetingData.type === 'interview') {
@@ -2477,10 +2501,21 @@ function RoomPageContent() {
             </div>
           </div>
 
-          <div className="w-full md:w-80 bg-secondary p-6 rounded-2xl border border-border shadow-2xl">
-            <h2 className="text-lg font-extrabold mb-4 select-none text-slate-200">
-              Meeting: <span className="text-indigo-400 tracking-wider uppercase font-mono font-black">{roomId}</span>
-            </h2>
+          <div className="w-full md:w-80 bg-secondary p-6 rounded-2xl border border-border shadow-2xl space-y-4">
+            <div className="space-y-1">
+              <h2 className="text-lg font-extrabold select-none text-slate-200 leading-tight">
+                {meetingTitle || 'Meeting Lobby'}
+              </h2>
+              {meetingDescription && (
+                <p className="text-xs text-slate-400 mt-1 line-clamp-3">
+                  🎯 Purpose: {meetingDescription}
+                </p>
+              )}
+              <div className="flex items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1.5">
+                <span>Code: {roomId}</span>
+                {meetingDuration && <span>⏱️ {meetingDuration} mins</span>}
+              </div>
+            </div>
             <form onSubmit={handleJoinClick} className="space-y-4">
               <div>
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 select-none">Your Name</label>

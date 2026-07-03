@@ -183,8 +183,8 @@ export default function LoginPage() {
         <div className="absolute rounded-full blur-[100px] pointer-events-none w-64 h-64 bg-indigo-500/20 bottom-10 left-0" />
 
         <Link href="/" className="relative z-10 flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
-            <Video className="h-4 w-4 text-white" strokeWidth={2.5} />
+          <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border border-white/30">
+            <img src="/logo.png" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
           </div>
           <div className="flex flex-col leading-none">
             <span className="font-extrabold text-lg tracking-tight text-white">Codovate-Meet</span>

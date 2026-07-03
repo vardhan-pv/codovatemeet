@@ -26,8 +26,8 @@ export default function LandingPage() {
       <nav className="fixed top-0 inset-x-0 z-50 bg-background/60 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-indigo-400 flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
-                <Video className="h-4 w-4 text-white" strokeWidth={2.5} />
+              <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-105 bg-white/10 border border-white/10">
+                <img src="/logo.png" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
               </div>
               <div className="flex flex-col leading-none">
                 <span className="font-extrabold text-base tracking-tight text-white group-hover:text-primary transition-colors">

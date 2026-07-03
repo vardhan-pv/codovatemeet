@@ -337,10 +337,17 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-3 border-primary border-t-transparent animate-spin" />
-          <p className="text-muted-foreground text-sm font-medium">Loading your workspace...</p>
+      <div className="min-h-screen bg-[#030712] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative w-20 h-20 flex items-center justify-center">
+            {/* Spinning outer loader */}
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-4 border-t-primary animate-spin" />
+            {/* Inner logo */}
+            <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shadow-lg bg-slate-900 border border-slate-800">
+              <img src="/logo.png" className="w-full h-full object-cover" alt="Codovate Logo" />
+            </div>
+          </div>
+          <p className="text-muted-foreground text-sm font-medium tracking-wide">Loading your workspace...</p>
         </div>
       </div>
     )
@@ -360,8 +367,8 @@ export default function DashboardPage() {
       {/* ── HEADER ── */}
       <header className="bg-primary px-6 flex items-center justify-between z-50 h-16 shadow-lg shadow-primary/25" style={{ borderBottom: '2px solid rgba(147,210,255,0.55)' }}>
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-full premium-card/20 border border-white/30 flex items-center justify-center">
-            <Video className="h-4 w-4 text-white" strokeWidth={2.5} />
+          <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border border-white/30">
+            <img src="/logo.png" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
           </div>
           <span className="font-extrabold text-lg tracking-tight text-white select-none">Codovate-Meet</span>
         </Link>
@@ -553,6 +560,7 @@ export default function DashboardPage() {
                       <th className="text-left px-6 py-3.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Event</th>
                       <th className="text-left px-6 py-3.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Code</th>
                       <th className="text-left px-6 py-3.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Date & Time</th>
+                      <th className="text-left px-6 py-3.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Duration</th>
                       <th className="text-left px-6 py-3.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Timezone / Guests</th>
                       <th className="text-right px-6 py-3.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Action</th>
                     </tr>
@@ -579,6 +587,9 @@ export default function DashboardPage() {
                           </td>
                           <td className="px-6 py-4 text-muted-foreground text-sm">
                             {new Date(m.scheduled_at || m.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                          </td>
+                          <td className="px-6 py-4 text-slate-300 text-sm font-semibold">
+                            {m.duration_minutes || 60} mins
                           </td>
                           <td className="px-6 py-4 text-xs text-muted-foreground">
                             {calData.tz && <p className="font-semibold text-slate-500">{calData.tz}</p>}
@@ -815,9 +826,22 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-primary" /> Invite Guests (Emails)</label>
-                <Input placeholder="developer@company.com, designer@company.com" value={calGuests} onChange={(e) => setCalGuests(e.target.value)} className="h-10 border-border" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-primary" /> Duration</label>
+                  <select value={calDuration} onChange={(e) => setCalDuration(Number(e.target.value))} className="w-full h-10 bg-background border border-border rounded-xl px-3 text-sm text-foreground outline-none focus:border-primary">
+                    <option value="15">15 Minutes</option>
+                    <option value="30">30 Minutes</option>
+                    <option value="45">45 Minutes</option>
+                    <option value="60">1 Hour</option>
+                    <option value="90">1.5 Hours</option>
+                    <option value="120">2 Hours</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-primary" /> Invite Guests (Emails)</label>
+                  <Input placeholder="developer@company.com..." value={calGuests} onChange={(e) => setCalGuests(e.target.value)} className="h-10 border-border" />
+                </div>
               </div>
 
               <div className="space-y-1">
