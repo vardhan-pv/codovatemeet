@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { User, Mail, Lock, ArrowLeft, Video, ArrowRight } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import Script from 'next/script'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -33,6 +34,61 @@ export default function RegisterPage() {
       setIsLoading(false)
     }
   }
+
+  const initializeGoogle = () => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    if (!clientId || clientId === 'your_google_client_id_here') {
+      console.warn('Google Client ID is not configured in environment variables.')
+      return
+    }
+
+    if (typeof window !== 'undefined' && (window as any).google) {
+      try {
+        (window as any).google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleLoginSuccess
+        });
+        (window as any).google.accounts.id.renderButton(
+          document.getElementById('google-signin-btn'),
+          { theme: 'filled_black', size: 'large', width: 384, text: 'signup_with', shape: 'pill' }
+        );
+      } catch (err) {
+        console.error('Error rendering Google sign in button:', err)
+      }
+    }
+  }
+
+  const handleGoogleLoginSuccess = async (googleResponse: any) => {
+    setIsLoading(true)
+    setFormError(null)
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${backendUrl}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: googleResponse.credential })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        localStorage.setItem('token', data.token)
+        useAuth.setState({ token: data.token, user: data.user })
+        window.location.href = '/dashboard'
+      } else {
+        setFormError(data.error || 'Google Authentication failed')
+        setIsLoading(false)
+      }
+    } catch {
+      setFormError('Failed to verify Google login')
+      setIsLoading(false)
+    }
+  }
+
+  // Initialize Google if script already loaded
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).google) {
+      initializeGoogle()
+    }
+  }, [])
 
   return (
     <div className="min-h-screen flex">
@@ -144,6 +200,20 @@ export default function RegisterPage() {
               )}
             </Button>
           </form>
+
+          <div className="mt-8 flex items-center gap-4">
+            <div className="h-px bg-border flex-1" />
+            <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold">OR</span>
+            <div className="h-px bg-border flex-1" />
+          </div>
+
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <div id="google-signin-btn" className="w-full max-w-sm flex justify-center"></div>
+            <Script
+              src="https://accounts.google.com/gsi/client"
+              onLoad={initializeGoogle}
+            />
+          </div>
 
           <p className="text-xs text-muted-foreground text-center mt-6">
             By creating an account, you agree to our terms and privacy policy.
