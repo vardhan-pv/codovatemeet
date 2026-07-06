@@ -2376,17 +2376,24 @@ function RoomPageContent() {
     mainFeatureTile = activeTiles.find(t => t.source === 'camera' && (t.participant.identity.startsWith(meetingHostName + '_') || t.participant.identity === meetingHostName))
   }
 
-  // Paginate activeTiles to resolve mixed/crowded layout
-  const tilesPerPage = activeWorkspace !== 'none' ? 2 : 4
+  // ── GRID LAYOUT LOGIC ─────────────────────────────────────────────────────────────
+  // When workspace is open, show 2 tiles max in the side strip.
+  // In normal mode, show ALL tiles per page (up to a max of 9 before paginating).
+  const tilesPerPage = activeWorkspace !== 'none' ? 2 : 9
+
   let displayTiles: any[] = []
   let totalPages = 1
   let activePage = 0
-  
-  if (mainFeatureTile) {
+
+  // Only use the "featured" single-tile layout when someone is pinned or screen-sharing.
+  // For a normal <=4 participant call, show everyone in the grid together.
+  const hasPinnedOrScreen = !!pinnedId || activeTiles.some(t => t.source === 'screen_share')
+
+  if (mainFeatureTile && hasPinnedOrScreen) {
     const otherTiles = activeTiles.filter(t => t.id !== mainFeatureTile!.id)
     totalPages = 1 + Math.ceil(otherTiles.length / tilesPerPage)
     activePage = Math.min(currentPage, Math.max(0, totalPages - 1))
-    
+
     if (activePage === 0) {
       displayTiles = [mainFeatureTile]
     } else {
@@ -2394,12 +2401,13 @@ function RoomPageContent() {
       displayTiles = otherTiles.slice(offset, offset + tilesPerPage)
     }
   } else {
-    totalPages = Math.ceil(activeTiles.length / tilesPerPage)
+    // Show all tiles together — no single featured tile
+    totalPages = Math.max(1, Math.ceil(activeTiles.length / tilesPerPage))
     activePage = Math.min(currentPage, Math.max(0, totalPages - 1))
     displayTiles = activeTiles.slice(activePage * tilesPerPage, (activePage + 1) * tilesPerPage)
   }
-  
-  const isFeaturedPage = !!(mainFeatureTile && activePage === 0)
+
+  const isFeaturedPage = !!(mainFeatureTile && hasPinnedOrScreen && activePage === 0)
 
   // On-the-Go Mode Simplified Layout
   if (isOnToGoMode) {
@@ -3502,12 +3510,19 @@ function RoomPageContent() {
                 )}
 
                 <div className="flex flex-col h-full">
-                  <div className={`grid gap-4 w-full flex-1 min-h-0 auto-rows-fr ${
-                    isFeaturedPage ? 'grid-cols-1 grid-rows-1 mx-auto' :
-                    displayTiles.length <= 1 ? 'grid-cols-1 mx-auto' :
-                    displayTiles.length === 2 ? 'grid-cols-1 md:grid-cols-2 mx-auto' :
-                    'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mx-auto'
-                  }`}>
+                  <div className={`grid gap-3 w-full flex-1 min-h-0 ${
+                    isFeaturedPage
+                      ? 'grid-cols-1 grid-rows-1'
+                      : displayTiles.length === 1
+                        ? 'grid-cols-1'
+                        : displayTiles.length === 2
+                          ? 'grid-cols-2'
+                          : displayTiles.length <= 4
+                            ? 'grid-cols-2 grid-rows-2'
+                            : displayTiles.length <= 6
+                              ? 'grid-cols-3 grid-rows-2'
+                              : 'grid-cols-3 grid-rows-3'
+                  } auto-rows-fr`}>
                     {displayTiles.map(tile => {
                       const pid = tile.id.split(':')[0]
                       return (
