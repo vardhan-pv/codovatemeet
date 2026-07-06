@@ -1,7 +1,12 @@
 import { Pool } from 'pg'
 
+let connectionString = process.env.DATABASE_URL
+if (connectionString) {
+  connectionString = connectionString.replace(/([\?&])sslmode=[^&]*/, '$1').replace(/\?&/, '?').replace(/\?\?/, '?').replace(/\?$/, '')
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString,
   max: 5,                        // max connections in pool
   idleTimeoutMillis: 30000,      // close idle clients after 30s (less than Neon's 300s limit)
   connectionTimeoutMillis: 10000, // fail fast if can't get a connection in 10s

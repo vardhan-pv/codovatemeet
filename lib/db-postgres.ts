@@ -1,7 +1,13 @@
 import { Pool } from 'pg'
 
+let connectionString = process.env.DATABASE_URL
+if (connectionString) {
+  connectionString = connectionString.replace(/([\?&])sslmode=[^&]*/, '$1').replace(/\?&/, '?').replace(/\?\?/, '?').replace(/\?$/, '')
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString,
+  ssl: { rejectUnauthorized: false }
 })
 
 // Initialize DB schema
