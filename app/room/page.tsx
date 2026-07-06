@@ -3086,8 +3086,8 @@ function RoomPageContent() {
               onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'chat'
-                  ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
-                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100'
               }`}
             >
               <MessageSquare className="h-4 w-4 mr-1" /> Chat
@@ -3097,8 +3097,8 @@ function RoomPageContent() {
               onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'participants'
-                  ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
-                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100'
               }`}
             >
               <Users className="h-4 w-4 mr-1" /> {participants.length}
@@ -3108,19 +3108,19 @@ function RoomPageContent() {
               onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'ai'
-                  ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
-                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                  ? 'bg-[#8B5CF6] text-white shadow-sm shadow-[#8B5CF6]/20 font-bold'
+                  : 'text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100'
               }`}
             >
-              <Sparkles className="h-4 w-4 mr-1 text-purple-500 animate-pulse" /> AI Notes
+              <Sparkles className="h-4 w-4 mr-1 text-purple-300 animate-pulse" /> AI Notes
             </Button>
             <Button
               variant="ghost"
               onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'tasks'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 scale-105 font-bold'
-                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100'
               }`}
             >
               <Check className="h-4 w-4 mr-1 text-emerald-400" /> Tasks
@@ -3130,25 +3130,25 @@ function RoomPageContent() {
               onClick={() => setActiveSidebar(activeSidebar === 'polls' ? null : 'polls')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'polls'
-                  ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 scale-105 font-bold'
-                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100'
               }`}
             >
-              <BarChart2 className="h-4 w-4 mr-1 text-purple-400" /> Polls
+              <BarChart2 className="h-4 w-4 mr-1 text-indigo-400" /> Polls
             </Button>
             {(meetingType === 'technical' || meetingType === 'interview' || meetingType === 'hackathon') && (
               <>
                 <Button
                   variant="ghost"
                   onClick={() => window.open('https://github.com', '_blank')}
-                  className="h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 text-muted-foreground hover:bg-slate-100 hover:text-slate-800"
+                  className="h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100"
                 >
                   <GitBranch className="h-4 w-4 mr-1 text-[#2ea043]" /> GitHub
                 </Button>
                 <Button
                   variant="ghost"
                   onClick={() => window.open('https://vercel.com', '_blank')}
-                  className="h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 text-muted-foreground hover:bg-slate-100 hover:text-slate-800"
+                  className="h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100"
                 >
                   <Rocket className="h-4 w-4 mr-1 text-indigo-400" /> Deploy
                 </Button>
@@ -3156,22 +3156,29 @@ function RoomPageContent() {
             )}
             <Button
               variant="ghost"
+              onClick={() => window.open('https://github.com', '_blank')}
+              className="h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100 hidden"
+            >
+              <GitBranch className="h-4 w-4 mr-1 text-[#2ea043]" /> GitHub
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'timetravel'
-                  ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
-                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100'
               }`}
             >
-              <Clock className="h-4 w-4 mr-1 text-sky-500" /> Timeline
+              <Clock className="h-4 w-4 mr-1 text-sky-400" /> Timeline
             </Button>
             <Button
               variant="ghost"
               onClick={() => setActiveSidebar(activeSidebar === 'focus' ? null : 'focus')}
               className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                 activeSidebar === 'focus'
-                  ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
-                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100'
               }`}
             >
               ⏱️ Focus
@@ -3182,11 +3189,11 @@ function RoomPageContent() {
                 onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')}
                 className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                   activeSidebar === 'interview'
-                    ? 'bg-primary text-white shadow-md shadow-blue-500/20 scale-105 font-bold'
-                    : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100'
                 }`}
               >
-                <Crown className="h-4 w-4 mr-1 text-purple-500" /> Interview
+                <Crown className="h-4 w-4 mr-1 text-yellow-500" /> Interview
               </Button>
             )}
           </div>
@@ -3535,16 +3542,17 @@ function RoomPageContent() {
           </div>
 
           {/* Mobile Leave actions */}
+          {/* Mobile Leave actions */}
           <div className="flex lg:hidden gap-1.5">
-            <Button onClick={handleLeaveCall} className="h-9 px-3.5 rounded-lg bg-gradient-to-r from-red-500 to-rose-600 border-none text-white font-bold text-xs select-none shadow-md shadow-red-500/10 hover:opacity-90 active:scale-95 transition-all duration-300">
+            <Button onClick={handleLeaveCall} className="h-9 px-3.5 rounded-lg bg-zinc-850 border border-zinc-700 text-zinc-200 font-semibold text-xs select-none hover:bg-zinc-800 active:scale-95 transition-all duration-300">
               Leave
             </Button>
             {isHostUser && (
               <>
-                <Button onClick={() => setShowAdminCenter(true)} className="h-9 px-3 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 border-none text-white font-bold text-xs shadow-md shadow-indigo-500/20 hover:opacity-90 active:scale-95 transition-all duration-300">
+                <Button onClick={() => setShowAdminCenter(true)} className="h-9 px-3 rounded-lg bg-primary text-white font-semibold text-xs hover:bg-primary/95 active:scale-95 transition-all duration-300">
                   Admin
                 </Button>
-                <Button onClick={handleEndMeetingForAll} className="h-9 px-3 rounded-lg bg-gradient-to-r from-rose-500 to-red-600 border-none text-white hover:opacity-90 shadow-md shadow-red-500/25 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-bold text-xs">
+                <Button onClick={handleEndMeetingForAll} className="h-9 px-3 rounded-lg bg-destructive text-white hover:bg-destructive/95 active:scale-95 select-none font-semibold text-xs">
                   End
                 </Button>
               </>
@@ -3556,10 +3564,10 @@ function RoomPageContent() {
           <Button
             size="icon"
             onClick={handleMuteToggle}
-            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-105 active:scale-95 ${
               isMuted
-                ? 'bg-gradient-to-r from-rose-500 to-red-600 border-none text-white shadow-lg shadow-red-500/25 scale-110 hover:opacity-95'
-                : 'bg-popover border border-border text-slate-300 hover:bg-slate-800 hover:text-white'
+                ? 'bg-destructive border-transparent text-white'
+                : 'bg-zinc-900 border border-border text-zinc-300 hover:bg-zinc-800 hover:text-white'
             }`}
             disabled={!room}
           >
@@ -3569,10 +3577,10 @@ function RoomPageContent() {
           <Button
             size="icon"
             onClick={handleVideoToggle}
-            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-105 active:scale-95 ${
               isVideoOff
-                ? 'bg-gradient-to-r from-rose-500 to-red-600 border-none text-white shadow-lg shadow-red-500/25 scale-110 hover:opacity-95'
-                : 'bg-popover border border-border text-slate-300 hover:bg-slate-800 hover:text-white'
+                ? 'bg-destructive border-transparent text-white'
+                : 'bg-zinc-900 border border-border text-zinc-300 hover:bg-zinc-800 hover:text-white'
             }`}
             disabled={!room}
           >
@@ -3582,10 +3590,10 @@ function RoomPageContent() {
           <Button
             size="icon"
             onClick={handleScreenShareToggle}
-            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all hidden sm:inline-flex duration-300 hover:scale-110 active:scale-90 ${
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all hidden sm:inline-flex duration-300 hover:scale-105 active:scale-95 ${
               isScreenSharing
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/25 scale-110 hover:opacity-95'
-                : 'bg-popover border border-border text-slate-300 hover:bg-slate-800 hover:text-white'
+                ? 'bg-primary border-transparent text-white'
+                : 'bg-zinc-900 border border-border text-zinc-300 hover:bg-zinc-800 hover:text-white'
             }`}
             disabled={!room || (adminSettings.isScreenShareLocked && user?.id !== meetingHostId)}
           >
@@ -3595,10 +3603,10 @@ function RoomPageContent() {
           <Button
             size="icon"
             onClick={toggleHandRaise}
-            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-105 active:scale-95 ${
               isHandRaised
-                ? 'bg-gradient-to-r from-amber-400 to-orange-500 border-none text-white shadow-lg shadow-amber-500/25 scale-110 hover:opacity-95'
-                : 'bg-popover border border-border text-slate-300 hover:bg-slate-800 hover:text-white'
+                ? 'bg-amber-600 border-transparent text-white'
+                : 'bg-zinc-900 border border-border text-zinc-300 hover:bg-zinc-800 hover:text-white'
             }`}
             disabled={!room}
             title="Raise Hand"
@@ -3609,10 +3617,10 @@ function RoomPageContent() {
           <Button
             size="icon"
             onClick={() => setShowReactionTray(!showReactionTray)}
-            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-105 active:scale-95 ${
               showReactionTray
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/25 scale-110 hover:opacity-95'
-                : 'bg-popover border border-border text-slate-300 hover:bg-slate-800 hover:text-white'
+                ? 'bg-primary border-transparent text-white'
+                : 'bg-zinc-900 border border-border text-zinc-300 hover:bg-zinc-800 hover:text-white'
             }`}
             disabled={!room}
             title="Send Reaction"
@@ -3623,10 +3631,10 @@ function RoomPageContent() {
           <Button
             size="icon"
             onClick={() => setShowCaptions(!showCaptions)}
-            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-110 active:scale-90 ${
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-105 active:scale-95 ${
               showCaptions
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/25 scale-110 hover:opacity-95'
-                : 'bg-popover border border-border text-slate-300 hover:bg-slate-800 hover:text-white'
+                ? 'bg-primary border-transparent text-white'
+                : 'bg-zinc-900 border border-border text-zinc-300 hover:bg-zinc-800 hover:text-white'
             }`}
             title="Toggle Captions"
           >
@@ -3637,30 +3645,30 @@ function RoomPageContent() {
         {/* Right footer: Desktop utilities & call actions */}
         <div className="hidden md:flex items-center gap-2 flex-shrink-0 order-3">
           <div className="hidden lg:flex gap-1.5">
-            <Button size="icon" onClick={() => setIsOnToGoMode(true)} className="h-8 w-8 rounded bg-popover border border-border text-slate-400 hover:text-white hover:bg-slate-800 transition-all duration-300 hover:scale-105" title="On-the-Go Mode">
+            <Button size="icon" onClick={() => setIsOnToGoMode(true)} className="h-8 w-8 rounded bg-zinc-900 border border-border text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 hover:scale-105" title="On-the-Go Mode">
               🚶
             </Button>
-            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'effects' ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`} title="Effects">
+            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'effects' ? 'text-zinc-100 bg-zinc-800 border-zinc-700' : 'bg-zinc-900 border-border text-zinc-400 hover:text-white hover:bg-zinc-800'}`} title="Effects">
               <User className="h-4 w-4" />
             </Button>
-            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'scheduler' ? null : 'scheduler')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'scheduler' ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`} title="Schedule Follow-up">
+            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'scheduler' ? null : 'scheduler')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'scheduler' ? 'text-zinc-100 bg-zinc-800 border-zinc-700' : 'bg-zinc-900 border-border text-zinc-400 hover:text-white hover:bg-zinc-800'}`} title="Schedule Follow-up">
               <Calendar className="h-4 w-4" />
             </Button>
-            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'abuse' ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`} title="Report Abuse">
+            <Button size="icon" onClick={() => setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse')} className={`h-8 w-8 rounded border transition-all duration-300 hover:scale-105 ${activeSidebar === 'abuse' ? 'text-zinc-100 bg-zinc-800 border-zinc-700' : 'bg-zinc-900 border-border text-zinc-400 hover:text-white hover:bg-zinc-800'}`} title="Report Abuse">
               <Flag className="h-4 w-4" />
             </Button>
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={handleLeaveCall} className="h-10 sm:h-11 px-5 rounded-full bg-gradient-to-r from-red-500 to-rose-600 border-none text-white font-bold text-xs select-none shadow-md shadow-red-500/10 hover:opacity-90 active:scale-95 transition-all duration-300">
+            <Button onClick={handleLeaveCall} className="h-10 sm:h-11 px-5 rounded-full bg-zinc-850 border border-zinc-700 text-zinc-200 font-semibold text-xs select-none hover:bg-zinc-800 hover:opacity-90 active:scale-95 transition-all duration-300">
               Leave
             </Button>
             {isHostUser && (
               <>
-                <Button onClick={() => setShowAdminCenter(true)} className="h-10 sm:h-11 px-3 sm:px-4 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 border-none text-white hover:opacity-90 shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-bold text-xs flex items-center gap-1.5">
+                <Button onClick={() => setShowAdminCenter(true)} className="h-10 sm:h-11 px-3 sm:px-4 rounded-full bg-primary border-none text-white hover:bg-primary/95 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-semibold text-xs flex items-center gap-1.5">
                   <ShieldAlert className="h-4 w-4" /> Admin
                 </Button>
-                <Button onClick={handleEndMeetingForAll} className="h-10 sm:h-11 px-3 sm:px-4 rounded-full bg-gradient-to-r from-rose-500 to-red-600 border-none text-white hover:opacity-90 shadow-lg shadow-red-500/25 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-bold text-xs">
+                <Button onClick={handleEndMeetingForAll} className="h-10 sm:h-11 px-3 sm:px-4 rounded-full bg-destructive border-none text-white hover:bg-destructive/95 transition-all duration-300 hover:scale-105 active:scale-95 select-none font-semibold text-xs">
                   <PhoneOff className="h-4 w-4 mr-1.5" /> End
                 </Button>
               </>
