@@ -3052,7 +3052,7 @@ function RoomPageContent() {
       `}</style>
 
       {/* Meeting Room Header */}
-      <header className="px-4 sm:px-6 py-2.5 bg-background/80 backdrop-blur-xl flex items-center justify-between z-10 shrink-0 border-b border-white/5 shadow-sm select-none">
+      <header className="px-4 sm:px-6 py-2.5 bg-background/80 backdrop-blur-xl flex items-center justify-between z-40 shrink-0 border-b border-white/5 shadow-sm select-none">
         <div className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
             <Video className="h-4 w-4 text-indigo-400" strokeWidth={2.5} />
