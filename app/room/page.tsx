@@ -97,7 +97,6 @@ function VideoTile({
   isAdminFeatured?: boolean
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const audioRef = useRef<HTMLAudioElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [videoEnabled, setVideoEnabled] = useState(false)
   const [audioMuted, setAudioMuted] = useState(false)
@@ -157,13 +156,7 @@ function VideoTile({
         const audioPub = Array.from(participant.trackPublications.values()).find(
           (pub: any) => pub.kind === 'audio'
         ) as any
-        if (audioPub && audioPub.track && audioPub.isSubscribed) {
-          audioTrack = audioPub.track
-          if (audioRef.current) {
-            audioRef.current.muted = isCompanionMode || audioPub.isMuted
-            audioTrack.attach(audioRef.current)
-            audioRef.current.play().catch((e: any) => console.warn("audio play error:", e))
-          }
+        if (audioPub) {
           setAudioMuted(audioPub.isMuted)
         }
       }
@@ -188,7 +181,6 @@ function VideoTile({
     return () => {
       clearTimeout(retryTimeout)
       if (videoTrack && videoRef.current) try { videoTrack.detach(videoRef.current) } catch (e) {}
-      if (audioTrack && audioRef.current) try { audioTrack.detach(audioRef.current) } catch (e) {}
       participant.off('trackPublished', attachTracks)
       participant.off('trackUnpublished', attachTracks)
       participant.off('trackSubscribed', attachTracks)
@@ -258,7 +250,7 @@ function VideoTile({
         </div>
       )}
 
-      {!participant.isLocal && source === 'camera' && <audio ref={audioRef} autoPlay playsInline />}
+
 
       {/* Overlay Information */}
       <div className="absolute bottom-3 left-3 bg-black/60 px-3 py-1 rounded-md text-xs font-semibold backdrop-blur-xs flex flex-col gap-0.5 text-white z-10">
@@ -3516,7 +3508,7 @@ function RoomPageContent() {
                       : displayTiles.length === 1
                         ? 'grid-cols-1'
                         : displayTiles.length === 2
-                          ? 'grid-cols-2'
+                          ? 'grid-cols-2 grid-rows-1'
                           : displayTiles.length <= 4
                             ? 'grid-cols-2 grid-rows-2'
                             : displayTiles.length <= 6
