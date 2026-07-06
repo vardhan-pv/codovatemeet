@@ -258,7 +258,7 @@ function VideoTile({
         </div>
       )}
 
-      {!participant.isLocal && source === 'camera' && <audio ref={audioRef} autoPlay />}
+      {!participant.isLocal && source === 'camera' && <audio ref={audioRef} autoPlay playsInline />}
 
       {/* Overlay Information */}
       <div className="absolute bottom-3 left-3 bg-black/60 px-3 py-1 rounded-md text-xs font-semibold backdrop-blur-xs flex flex-col gap-0.5 text-white z-10">
@@ -282,6 +282,32 @@ function VideoTile({
       </div>
     </div>
   )
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   AUDIO PLAYER — Persistent component that stays mounted always so remote
+   participant audio plays even when the video grid is hidden by a workspace.
+   ────────────────────────────────────────────────────────────────────────── */
+function AudioPlayer({ track, muted }: { track: any; muted: boolean }) {
+  const audioRef = useRef<HTMLAudioElement>(null)
+
+  useEffect(() => {
+    if (!track || !audioRef.current) return
+    audioRef.current.muted = muted
+    try {
+      track.attach(audioRef.current)
+      audioRef.current.play().catch(() => {})
+    } catch (e) {}
+    return () => {
+      try { track.detach(audioRef.current!) } catch (e) {}
+    }
+  }, [track])
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.muted = muted
+  }, [muted])
+
+  return <audio ref={audioRef} autoPlay playsInline />
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -457,6 +483,47 @@ function WhiteboardWorkspace({ sendData }: { sendData: any }) {
     alert("AI Diagram parsed successfully! Shared architecture nodes with team.")
   }
 
+  // Mount canvas touch listeners with { passive: false } so preventDefault() works on mobile
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 0) return
+      e.preventDefault()
+      isDrawingRef.current = true
+      const touch = e.touches[0]
+      const { x, y } = getCanvasCoords(touch.clientX, touch.clientY)
+      lastPosRef.current = { x, y }
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDrawingRef.current || e.touches.length === 0) return
+      e.preventDefault()
+      const touch = e.touches[0]
+      const { x, y } = getCanvasCoords(touch.clientX, touch.clientY)
+      const strokeColor = tool === 'erase' ? '#0b0f19' : color
+      drawLocal(lastPosRef.current.x, lastPosRef.current.y, x, y, strokeColor, brushSize)
+      sendData('WHITEBOARD_DRAW', {
+        x0: lastPosRef.current.x, y0: lastPosRef.current.y,
+        x1: x, y1: y, color: strokeColor, size: brushSize
+      })
+      lastPosRef.current = { x, y }
+    }
+
+    const onTouchEnd = () => { isDrawingRef.current = false }
+
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false })
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false })
+    canvas.addEventListener('touchend', onTouchEnd)
+
+    return () => {
+      canvas.removeEventListener('touchstart', onTouchStart)
+      canvas.removeEventListener('touchmove', onTouchMove)
+      canvas.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [color, brushSize, tool, sendData])
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -545,10 +612,7 @@ function WhiteboardWorkspace({ sendData }: { sendData: any }) {
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={stopDrawing}
-          className="w-full h-full cursor-crosshair block bg-card"
+          className="w-full h-full cursor-crosshair block bg-card touch-none"
         />
       </div>
     </div>
@@ -1539,6 +1603,33 @@ function RoomPageContent() {
 
     return () => clearInterval(interval)
   }, [pomodoroActive])
+
+  // ── MOBILE AUDIO UNLOCK ──────────────────────────────────────────────────
+  // Browsers require a user gesture to start AudioContext. On mobile, the first
+  // tap after joining is enough — we resume any suspended AudioContext on it.
+  useEffect(() => {
+    if (!hasJoined) return
+    const unlockAudio = () => {
+      // Resume any suspended Web Audio contexts (including LiveKit's internal one)
+      if (typeof AudioContext !== 'undefined') {
+        const ctx = new AudioContext()
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {})
+        }
+        ctx.close().catch(() => {})
+      }
+      // Also try to play all existing <audio> elements
+      document.querySelectorAll('audio').forEach(a => {
+        if (a.paused) a.play().catch(() => {})
+      })
+    }
+    document.addEventListener('touchstart', unlockAudio, { once: true })
+    document.addEventListener('click', unlockAudio, { once: true })
+    return () => {
+      document.removeEventListener('touchstart', unlockAudio)
+      document.removeEventListener('click', unlockAudio)
+    }
+  }, [hasJoined])
 
   // LiveKit room connection
   useEffect(() => {
@@ -3307,7 +3398,29 @@ function RoomPageContent() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden relative">
-        
+
+        {/* ── GLOBAL HIDDEN AUDIO ELEMENTS ────────────────────────────────────────
+             These are rendered OUTSIDE the video grid so they always stay mounted.
+             This ensures audio keeps playing even when workspaces hide the grid.
+        ── */}
+        <div style={{ display: 'none' }} aria-hidden="true">
+          {participants
+            .filter(p => !p.isLocal)
+            .map(p => {
+              const audioPub = Array.from(p.trackPublications.values()).find(
+                (pub: any) => pub.kind === 'audio' && pub.isSubscribed && pub.track
+              ) as any
+              if (!audioPub) return null
+              return (
+                <AudioPlayer
+                  key={p.sid || p.identity}
+                  track={audioPub.track}
+                  muted={audioPub.isMuted || isCompanionMode}
+                />
+              )
+            })}
+        </div>
+
         {/* Workspaces & Grid Pane */}
         <main className={`flex-1 flex flex-col md:flex-row overflow-hidden relative bg-transparent gap-4 ${
           activeWorkspace === 'none' ? 'p-1 sm:p-2' : 'p-4'
