@@ -71,8 +71,7 @@ export default function DashboardPage() {
   ])
   const [floatingAiLoading, setFloatingAiLoading] = useState(false)
 
-  // Two-Factor Authentication & Audit Logging states
-  const [securityLogs, setSecurityLogs] = useState<any[]>([])
+  // Two-Factor Authentication states
   const [mfaEnabled, setMfaEnabled] = useState(false)
   const [mfaSecret, setMfaSecret] = useState<string | null>(null)
   const [mfaQr, setMfaQr] = useState<string | null>(null)
@@ -122,15 +121,6 @@ export default function DashboardPage() {
         const prof = await profRes.json()
         setMfaEnabled(prof.mfa_enabled || false)
         useAuth.setState({ user: prof })
-      }
-
-      // Fetch security audit logs
-      const logsRes = await fetch(`${backendUrl}/api/security-logs`, {
-        headers: { 'Authorization': `Bearer ${activeToken}` }
-      })
-      if (logsRes.ok) {
-        const logs = await logsRes.json()
-        setSecurityLogs(logs)
       }
     } catch (e) {
       console.error('Failed to load security configurations:', e)
@@ -629,8 +619,8 @@ export default function DashboardPage() {
           </div>
         </motion.section>
 
-        {/* ── SECURITY SETTINGS & AUDIT LOGS SECTION ── */}
-        <motion.section {...fadeInUp} className="grid md:grid-cols-2 gap-6 pt-4">
+        {/* ── SECURITY SETTINGS SECTION ── */}
+        <motion.section {...fadeInUp} className="max-w-2xl mx-auto w-full pt-4">
           {/* Security controls */}
           <div className="premium-card border border-border rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-6">
             <div>
@@ -728,51 +718,6 @@ export default function DashboardPage() {
                 <p className="text-[10px] font-semibold mt-2 text-center text-slate-500 leading-tight">
                   {passwordResetStatus}
                 </p>
-              )}
-            </div>
-          </div>
-
-          {/* Security Audit Timeline */}
-          <div className="premium-card border border-border rounded-2xl p-6 shadow-sm flex flex-col h-[380px]">
-            <div className="flex items-center justify-between border-b border-border pb-4 mb-4 select-none">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-amber-950/40 border border-amber-900/50 flex items-center justify-center text-amber-400">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-slate-100 text-sm leading-none">Audit Trail Log</h3>
-                  <p className="text-[10px] text-muted-foreground mt-1">Real-time record of authentication events</p>
-                </div>
-              </div>
-              <button onClick={fetchSecurityData} className="text-slate-400 hover:text-slate-600 transition bg-transparent border-none outline-none" title="Refresh audit log">
-                <Clock className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-1 select-text">
-              {securityLogs.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-xs text-muted-foreground italic select-none">
-                  No security audits logged.
-                </div>
-              ) : (
-                securityLogs.map((log, index) => (
-                  <div key={index} className="flex gap-3 text-xs leading-relaxed items-start border-b border-slate-50 pb-2.5">
-                    <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                      log.event_type.includes('SUCCESS') || log.event_type.includes('ENABLED') ? 'bg-emerald-500' :
-                      log.event_type.includes('FAIL') || log.event_type.includes('LOCKED') ? 'bg-red-950/400' : 'bg-indigo-950/400'
-                    }`} />
-                    <div className="flex-1">
-                      <p className="font-bold text-slate-200 text-xs leading-tight flex items-center gap-1.5 justify-between">
-                        <span>{log.event_type}</span>
-                        <span className="text-[9px] font-normal text-muted-foreground">IP: {log.ip_address}</span>
-                      </p>
-                      <p className="text-slate-500 text-[10px] mt-0.5 leading-tight">{log.details}</p>
-                      <span className="text-[8px] text-muted-foreground select-none block mt-1">
-                        {new Date(log.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })}
-                      </span>
-                    </div>
-                  </div>
-                ))
               )}
             </div>
           </div>
