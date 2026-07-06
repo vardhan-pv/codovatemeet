@@ -14,14 +14,19 @@ router.get('/', async (req, res) => {
     try {
         const code = req.query.code;
         if (code) {
-            const result = await (0, db_1.query)(`SELECT m.*, u.name as host_name 
+            const result = await (0, db_1.query)(`SELECT m.*, u.name as host_name, u.email as host_email 
          FROM meetings m 
          JOIN users u ON m.host_id = u.id 
          WHERE m.meeting_code = $1`, [code.toUpperCase()]);
             if (result.rows.length === 0) {
                 return res.status(404).json({ error: 'Meeting not found' });
             }
-            return res.status(200).json(result.rows[0]);
+            const meeting = result.rows[0];
+            const historyResult = await (0, db_1.query)('SELECT 1 FROM meeting_history WHERE meeting_id = $1', [meeting.id]);
+            if (historyResult.rows.length > 0) {
+                return res.status(410).json({ error: 'Meeting has expired' });
+            }
+            return res.status(200).json(meeting);
         }
         // Authenticated path: fetch recent meetings for host
         // Cast req to AuthRequest
@@ -83,7 +88,10 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
         // Send invitation emails to all guests (done asynchronously in the background)
         if (guests && typeof guests === 'string') {
             const guestEmails = guests.split(',').map((e) => e.trim()).filter(Boolean);
-            const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            let baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            if (baseUrl.includes('vercel.app')) {
+                baseUrl = 'https://meet.codovatesolutions.in';
+            }
             const joinLink = `${baseUrl}/room?id=${meetingCode}`;
             const scheduledDate = new Date(scheduledAt).toLocaleString('en-US', {
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
@@ -100,10 +108,7 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:32px 36px;">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-        <div style="width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;">
-          <span style="color:white;font-size:18px;">📹</span>
-        </div>
-        <span style="color:white;font-weight:800;font-size:20px;letter-spacing:-0.5px;">Codovate Meet</span>
+        <img src="https://meet.codovatesolutions.in/logo.png" alt="Codovate Meet Logo" style="height:32px;object-fit:contain;display:block;" />
       </div>
       <h1 style="color:white;margin:0;font-size:26px;font-weight:800;line-height:1.2;">You're Invited to a Meeting</h1>
       <p style="color:rgba(255,255,255,0.75);margin:8px 0 0;font-size:14px;">You've been added as a guest by <strong>${hostName}</strong></p>
@@ -122,7 +127,7 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
       <!-- Details Grid -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
         <div style="background:#242740;border:1px solid #2f3255;border-radius:10px;padding:16px;">
-          <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:#818cf8;text-transform:uppercase;">📅 Date & Time</p>
+          <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:#818cf8;text-transform:uppercase;">Date & Time</p>
           <p style="margin:0;font-size:13px;font-weight:600;color:#e2e8f0;line-height:1.4;">${scheduledDate}${meetingTz ? `<br><span style="font-size:11px;color:#64748b;">${meetingTz}</span>` : ''}</p>
         </div>
         <div style="background:#242740;border:1px solid #2f3255;border-radius:10px;padding:16px;">
@@ -167,7 +172,7 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
 </html>`;
                 const text = `You're invited to "${meetingTitle}" on ${scheduledDate} (${durationMinutes} min) hosted by ${hostName}. Join at: ${joinLink} or use code ${meetingCode}`;
                 try {
-                    await (0, email_1.sendEmail)({ to: guestEmail, subject: `📅 Meeting Invite: ${meetingTitle}`, html, text });
+                    await (0, email_1.sendEmail)({ to: guestEmail, subject: `Meeting Invite: ${meetingTitle}`, html, text });
                 }
                 catch (emailErr) {
                     console.error(`Failed to send invite to ${guestEmail}:`, emailErr);
