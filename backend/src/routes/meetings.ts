@@ -23,7 +23,12 @@ router.get('/', async (req: Request, res: Response) => {
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'Meeting not found' })
       }
-      return res.status(200).json(result.rows[0])
+      const meeting = result.rows[0]
+      const historyResult = await query('SELECT 1 FROM meeting_history WHERE meeting_id = $1', [meeting.id])
+      if (historyResult.rows.length > 0) {
+        return res.status(410).json({ error: 'Meeting has expired' })
+      }
+      return res.status(200).json(meeting)
     }
 
     // Authenticated path: fetch recent meetings for host

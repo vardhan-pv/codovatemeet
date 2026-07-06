@@ -45,6 +45,22 @@ const getDisplayName = (identity: string) => {
   return identity
 }
 
+const formatMeetingDate = (dateStr: string | null) => {
+  if (!dateStr) return ''
+  try {
+    return new Date(dateStr).toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch (_) {
+    return dateStr || ''
+  }
+}
+
 // Visual webcam filters map
 const filterMap: Record<string, string> = {
   none: '',
@@ -929,6 +945,8 @@ function RoomPageContent() {
   const [agenda, setAgenda] = useState<any[]>([])
   const [meetingDescription, setMeetingDescription] = useState<string | null>(null)
   const [meetingDuration, setMeetingDuration] = useState<number | null>(null)
+  const [meetingScheduledAt, setMeetingScheduledAt] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   // Live Data & Admin
   const [metrics, setMetrics] = useState({ codeEdits: 0, chatMsgs: 0, aiRequests: 0 })
@@ -1162,6 +1180,7 @@ function RoomPageContent() {
         setMeetingHostId(meetingData.host_id)
         setMeetingHostName(meetingData.host_name)
         setMeetingHostEmail(meetingData.host_email)
+        setMeetingScheduledAt(meetingData.scheduled_at)
         
         let title = meetingData.room_name || 'Untitled Meeting'
         let desc = ''
@@ -1190,7 +1209,11 @@ function RoomPageContent() {
             setActiveSidebar('focus')
           }
         }
-      } catch (e) { console.error('Meeting not found', e) }
+      } catch (e: any) { 
+        console.error('Meeting validation failed', e)
+        const errMsg = e.response?.data?.error || 'Meeting not found or expired.'
+        setValidationError(errMsg)
+      }
 
       if (useAuth.getState().token) {
         try {
@@ -2976,46 +2999,67 @@ function RoomPageContent() {
           </div>
 
           <div className="w-full md:w-80 bg-secondary p-6 rounded-2xl border border-border shadow-2xl space-y-4">
-            <div className="space-y-1">
-              <h2 className="text-lg font-extrabold select-none text-slate-200 leading-tight">
-                {meetingTitle || 'Meeting Lobby'}
-              </h2>
-              {meetingDescription && (
-                <p className="text-xs text-slate-400 mt-1 line-clamp-3">
-                  🎯 Purpose: {meetingDescription}
-                </p>
-              )}
-              <div className="flex items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1.5">
-                <span>Code: {roomId}</span>
-                {meetingDuration && <span>⏱️ {meetingDuration} mins</span>}
+            {validationError ? (
+              <div className="space-y-4 py-4 text-center">
+                <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto">
+                  <ShieldAlert className="h-6 w-6 text-red-500" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Cannot Join</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed px-1">
+                    {validationError === 'Meeting has expired' 
+                      ? 'This meeting has expired and cannot be rejoined.' 
+                      : 'This meeting code is invalid or does not exist.'}
+                  </p>
+                </div>
+                <Button onClick={() => window.location.href = '/dashboard'} className="w-full h-10 text-xs font-bold bg-zinc-800 hover:bg-zinc-700 text-white rounded-[20px] transition-all border border-zinc-700">
+                  Return to Dashboard
+                </Button>
               </div>
-            </div>
-            <form onSubmit={handleJoinClick} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 select-none">Your Name</label>
-                <Input value={lobbyName} onChange={(e) => setLobbyName(e.target.value)} required className="bg-popover border-border focus:border-indigo-500 text-slate-200 rounded-[20px] h-10 px-3 transition-colors text-xs font-semibold" />
-              </div>
+            ) : (
+              <>
+                <div className="space-y-1">
+                  <h2 className="text-lg font-extrabold select-none text-slate-200 leading-tight">
+                    {meetingTitle || 'Meeting Lobby'}
+                  </h2>
+                  {meetingDescription && (
+                    <p className="text-xs text-slate-400 mt-1 line-clamp-3">
+                      🎯 Purpose: {meetingDescription}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1.5">
+                    <span>Code: {roomId}</span>
+                    {meetingDuration && <span>⏱️ {meetingDuration} mins</span>}
+                  </div>
+                </div>
+                <form onSubmit={handleJoinClick} className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 select-none">Your Name</label>
+                    <Input value={lobbyName} onChange={(e) => setLobbyName(e.target.value)} required className="bg-popover border-border focus:border-indigo-500 text-slate-200 rounded-[20px] h-10 px-3 transition-colors text-xs font-semibold" />
+                  </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 select-none">Your Email</label>
-                <Input type="email" value={lobbyEmail} onChange={(e) => setLobbyEmail(e.target.value)} required className="bg-popover border-border focus:border-indigo-500 text-slate-200 rounded-[20px] h-10 px-3 transition-colors text-xs font-semibold" />
-              </div>
-              
-              <div className="flex items-center gap-2.5 select-none border border-border p-3 rounded-[20px] bg-popover/50 flex-1">
-                <input
-                  type="checkbox"
-                  id="companion"
-                  checked={isCompanionMode}
-                  onChange={(e) => setIsCompanionMode(e.target.checked)}
-                  className="rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 w-4.5 h-4.5 bg-slate-800 cursor-pointer transition-colors"
-                />
-                <label htmlFor="companion" className="text-[11px] text-slate-300 font-bold cursor-pointer uppercase tracking-wider">
-                  Companion Mode (Presenter) 💻
-                </label>
-              </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 select-none">Your Email</label>
+                    <Input type="email" value={lobbyEmail} onChange={(e) => setLobbyEmail(e.target.value)} required className="bg-popover border-border focus:border-indigo-500 text-slate-200 rounded-[20px] h-10 px-3 transition-colors text-xs font-semibold" />
+                  </div>
+                  
+                  <div className="flex items-center gap-2.5 select-none border border-border p-3 rounded-[20px] bg-popover/50 flex-1">
+                    <input
+                      type="checkbox"
+                      id="companion"
+                      checked={isCompanionMode}
+                      onChange={(e) => setIsCompanionMode(e.target.checked)}
+                      className="rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 w-4.5 h-4.5 bg-slate-800 cursor-pointer transition-colors"
+                    />
+                    <label htmlFor="companion" className="text-[11px] text-slate-300 font-bold cursor-pointer uppercase tracking-wider">
+                      Companion Mode (Presenter) 💻
+                    </label>
+                  </div>
 
-              <Button type="submit" size="lg" className="w-full font-black text-sm h-12 rounded-[20px] bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 border-none">Join Now</Button>
-            </form>
+                  <Button type="submit" size="lg" className="w-full font-black text-sm h-12 rounded-[20px] bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 border-none">Join Now</Button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -3268,7 +3312,9 @@ function RoomPageContent() {
                       size="sm"
                       onClick={() => {
                         const link = typeof window !== 'undefined' ? `${window.location.origin}/room?id=${roomId}` : roomId
-                        const text = `🚀 You're invited to a live session on Codovate Meet!\n\nLet's connect, communicate, and build together in real-time.\n\n🔗 *Join the workspace:* \n${link}\n\n🔑 *Or enter this meeting code:* \n*${roomId}*\n\nPowered by Codovate Meet 💻`
+                        const dateFormatted = formatMeetingDate(meetingScheduledAt)
+                        const dateTimeStr = dateFormatted ? `📅 *Date & Time:* \n${dateFormatted}\n\n` : ''
+                        const text = `🚀 You're invited to a live session on Codovate Meet!\n\nLet's connect, communicate, and build together in real-time.\n\n${dateTimeStr}🔗 *Join the workspace:* \n${link}\n\n🔑 *Or enter this meeting code:* \n*${roomId}*\n\nPowered by Codovate Meet 💻`
                         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank')
                       }}
                       className="w-full h-8 text-xs font-bold bg-[#25D366] hover:bg-[#20ba5a] text-white border-none flex items-center justify-center gap-1.5"
