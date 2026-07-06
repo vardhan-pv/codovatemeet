@@ -547,7 +547,7 @@ function WhiteboardWorkspace({ sendData }: { sendData: any }) {
           onMouseLeave={stopDrawing}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          onTouchEnd={stopDrawing}
           className="w-full h-full cursor-crosshair block bg-card"
         />
       </div>

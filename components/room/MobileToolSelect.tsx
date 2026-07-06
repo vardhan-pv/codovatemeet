@@ -15,7 +15,7 @@ export function MobileToolSelect({ activeSidebar, setActiveSidebar, setIsOnToGoM
     setIsOpen(false)
   }
 
-  const items = [
+  const items: any[] = [
     { value: 'chat', label: '💬 Chat' },
     { value: 'participants', label: `👥 Participants (${participantsCount})` },
     { value: 'ai', label: '✨ AI Notes' },
