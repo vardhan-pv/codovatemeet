@@ -54,6 +54,14 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
   const [sidebarTab, setSidebarTab] = useState<'explorer' | 'search' | 'comments'>('explorer')
   const [showPreview, setShowPreview] = useState(true)
   const [showTerminal, setShowTerminal] = useState(true)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setShowExplorer(false)
+      setShowPreview(false)
+      setShowTerminal(false)
+    }
+  }, [])
   const [isExecuting, setIsExecuting] = useState(false)
   const [previewContent, setPreviewContent] = useState('')
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving'>('saved')
@@ -398,18 +406,19 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
       {/* Editor Header */}
       <div className="h-12 bg-popover/80 border-b border-border flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="flex gap-1.5">
+          <div className="hidden sm:flex gap-1.5">
             <div className="w-3 h-3 rounded-full bg-red-500/80" />
             <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
             <div className="w-3 h-3 rounded-full bg-green-500/80" />
           </div>
           
-          <Button size="sm" variant="ghost" className={`h-7 text-xs rounded-md ml-4 ${showExplorer ? 'bg-primary/20 text-primary animate-pulse' : 'text-slate-400 hover:text-white hover:bg-white/5'}`} onClick={() => setShowExplorer(!showExplorer)}>
-            📂 Activity Bar
+          <Button size="sm" variant="ghost" className={`h-7 text-xs rounded-md ml-1 sm:ml-4 px-2 sm:px-3 ${showExplorer ? 'bg-primary/20 text-primary animate-pulse' : 'text-slate-400 hover:text-white hover:bg-white/5'}`} onClick={() => setShowExplorer(!showExplorer)}>
+            <span className="hidden sm:inline">📂 Activity Bar</span>
+            <span className="sm:hidden">📂</span>
           </Button>
 
           <select 
-            className="bg-slate-900 border border-slate-800 rounded px-1.5 py-0.5 text-xs text-slate-300 font-mono focus:ring-0 cursor-pointer outline-none ml-2"
+            className="bg-slate-900 border border-slate-800 rounded px-1.5 py-0.5 text-xs text-slate-300 font-mono focus:ring-0 cursor-pointer outline-none ml-1 sm:ml-2"
             value={activeFileInfo.language}
             onChange={(e) => {
               const updatedFiles = {
@@ -433,15 +442,16 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
           </select>
 
           {/* Auto Save Status Indicator */}
-          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold select-none ml-4">
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold select-none ml-1 sm:ml-4" title={autoSaveStatus === 'saved' ? 'Synced & Saved' : 'Saving...'}>
             <span className={`w-1.5 h-1.5 rounded-full ${autoSaveStatus === 'saved' ? 'bg-emerald-500' : 'bg-amber-500 animate-ping'}`} />
-            <span>{autoSaveStatus === 'saved' ? 'Synced & Saved' : 'Saving...'}</span>
+            <span className="hidden sm:inline">{autoSaveStatus === 'saved' ? 'Synced & Saved' : 'Saving...'}</span>
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="ghost" className={`h-7 text-xs rounded-md ${showPreview ? 'bg-primary/20 text-primary' : 'text-slate-400 hover:text-white'}`} onClick={() => setShowPreview(!showPreview)}>
-            👁️ Preview
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Button size="sm" variant="ghost" className={`h-7 text-xs rounded-md px-2 sm:px-3 ${showPreview ? 'bg-primary/20 text-primary' : 'text-slate-400 hover:text-white'}`} onClick={() => setShowPreview(!showPreview)}>
+            <span className="hidden sm:inline">👁️ Preview</span>
+            <span className="sm:hidden">👁️</span>
           </Button>
           <Button size="sm" variant="ghost" className="h-7 text-xs text-slate-400 hover:text-white hidden sm:flex" onClick={() => {
             const repo = prompt("Enter GitHub repository (e.g. facebook/react):")
@@ -451,21 +461,23 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
           }}>
             <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 mr-1" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg> GitHub
           </Button>
-          <Button size="sm" variant="ghost" className={`h-7 text-xs rounded-md ${showTerminal ? 'bg-primary/20 text-primary' : 'text-slate-400 hover:text-white hover:bg-white/5'}`} onClick={() => setShowTerminal(!showTerminal)}>
-            <TerminalSquare className="w-4 h-4 mr-1" /> Terminal
+          <Button size="sm" variant="ghost" className={`h-7 text-xs rounded-md px-2 sm:px-3 ${showTerminal ? 'bg-primary/20 text-primary' : 'text-slate-400 hover:text-white hover:bg-white/5'}`} onClick={() => setShowTerminal(!showTerminal)}>
+            <TerminalSquare className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Terminal</span>
           </Button>
           <Button 
             size="sm" 
             onClick={runCode}
             disabled={isExecuting}
-            className="h-7 text-xs rounded-md bg-[#22C55E]/20 text-[#22C55E] hover:bg-[#22C55E]/30 border border-[#22C55E]/30 font-bold"
+            className="h-7 text-xs rounded-md bg-[#22C55E]/20 text-[#22C55E] hover:bg-[#22C55E]/30 border border-[#22C55E]/30 font-bold px-2 sm:px-3"
           >
-            <Play className={`w-3.5 h-3.5 mr-1 ${isExecuting ? 'animate-pulse' : ''}`} fill="currentColor" /> {isExecuting ? 'Running...' : 'Run Code'}
+            <Play className={`w-3.5 h-3.5 sm:mr-1 ${isExecuting ? 'animate-pulse' : ''}`} fill="currentColor" />
+            <span className="hidden sm:inline">{isExecuting ? 'Running...' : 'Run Code'}</span>
           </Button>
         </div>
       </div>
       
-      <div className="flex-1 flex min-h-0 relative">
+      <div className="flex-1 flex flex-col md:flex-row min-h-0 relative">
         {/* VS Code Left Activity Bar & Sidebar wrapper */}
         {showExplorer && (
           <div className="flex h-full shrink-0 border-r border-[#252526]">
@@ -523,7 +535,12 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
                       return (
                         <div
                           key={fname}
-                          onClick={() => setActiveFile(fname)}
+                          onClick={() => {
+                            setActiveFile(fname)
+                            if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                              setShowExplorer(false)
+                            }
+                          }}
                           className={`group flex items-center justify-between px-3 py-1.5 cursor-pointer transition ${
                             isSelected ? 'bg-[#37373d] text-white font-semibold' : 'hover:bg-[#2a2d2e] text-slate-400'
                           }`}
@@ -683,6 +700,9 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
                   key={fname}
                   onClick={() => {
                     setActiveFile(fname)
+                    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                      setShowExplorer(false)
+                    }
                   }}
                   className={`flex items-center px-4 h-full border-r border-[#252526] text-[#c5c5c5] gap-2 cursor-pointer transition shrink-0 ${
                     isSelected 
@@ -765,7 +785,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
 
         {/* Live Preview Panel */}
         {showPreview && (
-          <div className="w-1/2 bg-white border-l border-[#252526] flex flex-col shrink-0 relative">
+          <div className="w-full md:w-1/2 h-80 md:h-full bg-white border-t md:border-t-0 md:border-l border-[#252526] flex flex-col shrink-0 relative">
             <div className="h-9 bg-[#181818] border-b border-[#252526] flex items-center justify-between px-4 select-none text-[11px] font-mono text-slate-400 shrink-0">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

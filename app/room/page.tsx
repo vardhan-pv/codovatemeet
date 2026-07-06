@@ -296,18 +296,18 @@ function WhiteboardWorkspace({ sendData }: { sendData: any }) {
   const [tool, setTool] = useState<'draw' | 'erase'>('draw')
   const [aiUmlPrompt, setAiUmlPrompt] = useState('')
 
-  const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getCanvasCoords = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current
     if (!canvas) return { x: 0, y: 0 }
     const rect = canvas.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / rect.width
-    const y = (e.clientY - rect.top) / rect.height
+    const x = (clientX - rect.left) / rect.width
+    const y = (clientY - rect.top) / rect.height
     return { x, y }
   }
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     isDrawingRef.current = true
-    const { x, y } = getCanvasCoords(e)
+    const { x, y } = getCanvasCoords(e.clientX, e.clientY)
     lastPosRef.current = { x, y }
   }
 
@@ -330,7 +330,39 @@ function WhiteboardWorkspace({ sendData }: { sendData: any }) {
     if (!isDrawingRef.current) return
     const canvas = canvasRef.current
     if (!canvas) return
-    const { x, y } = getCanvasCoords(e)
+    const { x, y } = getCanvasCoords(e.clientX, e.clientY)
+    const strokeColor = tool === 'erase' ? '#0b0f19' : color
+
+    drawLocal(lastPosRef.current.x, lastPosRef.current.y, x, y, strokeColor, brushSize)
+
+    sendData('WHITEBOARD_DRAW', {
+      x0: lastPosRef.current.x,
+      y0: lastPosRef.current.y,
+      x1: x,
+      y1: y,
+      color: strokeColor,
+      size: brushSize
+    })
+
+    lastPosRef.current = { x, y }
+  }
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length === 0) return
+    e.preventDefault()
+    isDrawingRef.current = true
+    const touch = e.touches[0]
+    const { x, y } = getCanvasCoords(touch.clientX, touch.clientY)
+    lastPosRef.current = { x, y }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current || e.touches.length === 0) return
+    e.preventDefault()
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const touch = e.touches[0]
+    const { x, y } = getCanvasCoords(touch.clientX, touch.clientY)
     const strokeColor = tool === 'erase' ? '#0b0f19' : color
 
     drawLocal(lastPosRef.current.x, lastPosRef.current.y, x, y, strokeColor, brushSize)
@@ -513,6 +545,9 @@ function WhiteboardWorkspace({ sendData }: { sendData: any }) {
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           className="w-full h-full cursor-crosshair block bg-card"
         />
       </div>
