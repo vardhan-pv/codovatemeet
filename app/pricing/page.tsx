@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
+import { billingService } from '@/services/billing'
 import {
   Check, X, Sparkles, Shield, Zap, Globe, Terminal, 
   HelpCircle, ChevronDown, CheckCircle, ArrowRight
@@ -49,6 +51,7 @@ const comparisonFeatures = [
 ]
 
 export default function PricingPage() {
+  const { user, token, loadProfile } = useAuth()
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly')
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
 
@@ -59,6 +62,56 @@ export default function PricingPage() {
   // Price calculations
   const getProPrice = () => (billingPeriod === 'yearly' ? '₹399' : '₹499')
   const getTeamPrice = () => (billingPeriod === 'yearly' ? '₹1,199' : '₹1,499')
+
+  const handlePlanSelect = async (planId: string) => {
+    if (!token) {
+      alert("Please sign in or register to choose a plan.")
+      window.location.href = '/login'
+      return
+    }
+
+    if (planId === 'enterprise') {
+      window.location.href = 'mailto:sales@codovatesolutions.in'
+      return
+    }
+
+    if (user?.plan === planId) {
+      alert(`You are already subscribed to the ${planId} plan.`)
+      return
+    }
+
+    const confirmChange = confirm(`Are you sure you want to subscribe to the ${planId.toUpperCase()} plan (${billingPeriod})?`)
+    if (!confirmChange) return
+
+    try {
+      await billingService.subscribe(planId, billingPeriod)
+      await loadProfile()
+      alert(`🎉 Successfully subscribed to the ${planId.toUpperCase()} plan!`)
+    } catch (e) {
+      console.error("Subscription failed:", e)
+      alert("Billing process simulation failed. Please try again.")
+    }
+  }
+
+  const handleAddonSelect = async (addonName: string, price: string) => {
+    if (!token) {
+      alert("Please sign in or register to buy add-ons.")
+      window.location.href = '/login'
+      return
+    }
+
+    const confirmChange = confirm(`Would you like to purchase the "${addonName}" add-on for ${price}?`)
+    if (!confirmChange) return
+
+    try {
+      await billingService.purchaseAddon(addonName)
+      await loadProfile()
+      alert(`🎉 Successfully purchased ${addonName} add-on!`)
+    } catch (e) {
+      console.error("Add-on purchase failed:", e)
+      alert("Billing process simulation failed. Please try again.")
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#08080a] text-[#e4e4e7] overflow-x-hidden font-sans pt-24 pb-20 selection:bg-primary/30">
@@ -124,7 +177,7 @@ export default function PricingPage() {
           <button
             onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
             className="w-14 h-8 bg-zinc-800 border border-zinc-700 rounded-full p-1 transition-colors relative flex items-center cursor-pointer outline-none focus:ring-2 focus:ring-primary/50"
-            aria-label="Toggle billing billingPeriod"
+            aria-label="Toggle billing Period"
           >
             <div
               className={`w-6 h-6 bg-primary rounded-full transition-transform ${
@@ -167,11 +220,16 @@ export default function PricingPage() {
             </ul>
           </div>
           <div className="mt-8">
-            <Link href="/register" className="block w-full">
-              <Button className="w-full h-11 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-bold border border-zinc-700">
-                Start Free
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => handlePlanSelect('free')}
+              className={`w-full h-11 rounded-xl font-bold border transition-colors ${
+                (user?.plan || 'free') === 'free'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 cursor-default hover:bg-emerald-500/10'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700'
+              }`}
+            >
+              {(user?.plan || 'free') === 'free' ? 'Current Plan' : 'Start Free'}
+            </Button>
           </div>
         </div>
 
@@ -201,11 +259,16 @@ export default function PricingPage() {
             </ul>
           </div>
           <div className="mt-8">
-            <Link href="/register" className="block w-full">
-              <Button className="w-full h-11 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold border-none shadow-md shadow-primary/20">
-                Upgrade to Pro
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => handlePlanSelect('pro')}
+              className={`w-full h-11 rounded-xl font-bold border-none shadow-md transition-colors ${
+                user?.plan === 'pro'
+                  ? 'bg-emerald-500/20 text-emerald-400 cursor-default hover:bg-emerald-500/20'
+                  : 'bg-primary hover:bg-primary/90 text-white shadow-primary/20'
+              }`}
+            >
+              {user?.plan === 'pro' ? 'Current Plan' : 'Upgrade to Pro'}
+            </Button>
           </div>
         </div>
 
@@ -232,11 +295,16 @@ export default function PricingPage() {
             </ul>
           </div>
           <div className="mt-8">
-            <Link href="/register" className="block w-full">
-              <Button className="w-full h-11 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold border-none shadow-md shadow-purple-500/10">
-                Start Team Trial
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => handlePlanSelect('team')}
+              className={`w-full h-11 rounded-xl font-bold border-none shadow-md transition-colors ${
+                user?.plan === 'team'
+                  ? 'bg-emerald-500/20 text-emerald-400 cursor-default hover:bg-emerald-500/20'
+                  : 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-500/10'
+              }`}
+            >
+              {user?.plan === 'team' ? 'Current Plan' : 'Start Team Trial'}
+            </Button>
           </div>
         </div>
 
@@ -261,11 +329,16 @@ export default function PricingPage() {
             </ul>
           </div>
           <div className="mt-8">
-            <Link href="mailto:sales@codovatesolutions.in" className="block w-full">
-              <Button className="w-full h-11 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-bold border border-zinc-700">
-                Contact Sales
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => handlePlanSelect('enterprise')}
+              className={`w-full h-11 rounded-xl font-bold border transition-colors ${
+                user?.plan === 'enterprise'
+                  ? 'bg-emerald-500/20 text-emerald-400 cursor-default hover:bg-emerald-500/20'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700'
+              }`}
+            >
+              {user?.plan === 'enterprise' ? 'Current Plan' : 'Contact Sales'}
+            </Button>
           </div>
         </div>
 
@@ -283,7 +356,7 @@ export default function PricingPage() {
             <thead>
               <tr className="bg-zinc-900 border-b border-[#3f3f46]">
                 <th className="p-4 font-bold text-white">Feature</th>
-                <th className="p-4 font-bold text-white text-right">Price</th>
+                <th className="p-4 font-bold text-white text-right">Price & Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/80">
@@ -297,7 +370,16 @@ export default function PricingPage() {
               ].map((addon, index) => (
                 <tr key={index} className="hover:bg-zinc-800/20 transition-colors">
                   <td className="p-4 font-medium text-slate-300">{addon.name}</td>
-                  <td className="p-4 text-right font-bold text-white">{addon.price}</td>
+                  <td className="p-4 text-right flex items-center justify-end gap-3 h-full">
+                    <span className="font-bold text-white">{addon.price}</span>
+                    <Button 
+                      onClick={() => handleAddonSelect(addon.name, addon.price)}
+                      size="sm" 
+                      className="h-6 text-[9px] bg-primary/25 hover:bg-primary text-white border-none rounded px-2"
+                    >
+                      Buy Add-on
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>

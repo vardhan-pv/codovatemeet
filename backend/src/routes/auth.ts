@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { OAuth2Client } from 'google-auth-library'
 import crypto from 'crypto'
-import { AccessToken } from 'livekit-server-sdk'
+import { AccessToken, RoomServiceClient } from 'livekit-server-sdk'
 
 const router = Router()
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
@@ -549,7 +549,10 @@ router.post('/reset-password', async (req: Request, res: Response) => {
 router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id
-    const resDb = await query('SELECT id, name, email, is_verified, mfa_enabled, role FROM users WHERE id = $1', [userId])
+    const resDb = await query(
+      'SELECT id, name, email, is_verified, mfa_enabled, role, plan, billing_period, ai_prompts_used, extra_ai_credits, active_workspaces FROM users WHERE id = $1',
+      [userId]
+    )
     if (resDb.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' })
     }
@@ -592,6 +595,34 @@ router.get('/livekit/token', async (req: Request, res: Response) => {
     if (!apiKey || !apiSecret) {
       console.error('LiveKit credentials are not defined in backend .env')
       return res.status(500).json({ error: 'LiveKit server credentials not configured' })
+    }
+
+    // Verify room size limit based on host plan
+    let maxAllowed = 5
+    let hostPlan = 'free'
+    try {
+      const meetingRes = await query('SELECT host_id FROM meetings WHERE meeting_code = $1', [room.toUpperCase()])
+      if (meetingRes.rows.length > 0) {
+        const hostId = meetingRes.rows[0].host_id
+        const hostRes = await query('SELECT plan FROM users WHERE id = $1', [hostId])
+        if (hostRes.rows.length > 0) {
+          hostPlan = hostRes.rows[0].plan || 'free'
+          if (hostPlan === 'pro') maxAllowed = 25
+          else if (hostPlan === 'team') maxAllowed = 100
+          else if (hostPlan === 'enterprise') maxAllowed = 1000
+        }
+      }
+      
+      const hostUrl = wsUrl ? wsUrl.replace('wss://', 'https://').replace('ws://', 'http://') : ''
+      if (hostUrl) {
+        const roomService = new RoomServiceClient(hostUrl, apiKey, apiSecret)
+        const activeParticipants = await roomService.listParticipants(room)
+        if (activeParticipants && activeParticipants.length >= maxAllowed) {
+          return res.status(403).json({ error: `Room is full. The host's plan (${hostPlan}) allows a maximum of ${maxAllowed} participants.` })
+        }
+      }
+    } catch (e) {
+      console.warn('Unable to query LiveKit participants count or host plan limits:', e)
     }
 
     const at = new AccessToken(apiKey, apiSecret, {

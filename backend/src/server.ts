@@ -8,6 +8,7 @@ import meetingsRouter from './routes/meetings'
 import messagesRouter from './routes/messages'
 import aiRouter from './routes/ai'
 import runRouter from './routes/run'
+import billingRouter from './routes/billing'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -45,6 +46,7 @@ app.use('/api/meetings', meetingsRouter)
 app.use('/api/messages', messagesRouter)
 app.use('/api/ai', aiRouter)
 app.use('/api/run', runRouter)
+app.use('/api/billing', billingRouter)
 
 app.listen(PORT, () => {
   console.log(`[SERVER SUCCESS] Backend server running on port ${PORT}`)

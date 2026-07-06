@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { authenticateToken } from './auth'
+import { query } from '../lib/db'
 
 const router = Router()
 
@@ -84,6 +85,29 @@ router.post('/', (req: Request, res: Response, next) => {
 
     if (!prompt) {
       return res.status(400).json({ error: 'Missing prompt' })
+    }
+
+    const user = (req as any).user
+    if (user && user.id) {
+      try {
+        const userRes = await query('SELECT plan, ai_prompts_used, extra_ai_credits FROM users WHERE id = $1', [user.id])
+        if (userRes.rows.length > 0) {
+          const { plan = 'free', ai_prompts_used = 0, extra_ai_credits = 0 } = userRes.rows[0]
+          
+          let limit = 20
+          if (plan === 'pro') limit = 500
+          else if (plan === 'team' || plan === 'enterprise') limit = 99999999
+          
+          const totalCredits = limit + extra_ai_credits
+          if (ai_prompts_used >= totalCredits) {
+            return res.status(403).json({ error: `AI prompt limit reached. You have used ${ai_prompts_used}/${totalCredits} prompts. Please upgrade your plan or purchase extra AI credits.` })
+          }
+          
+          await query('UPDATE users SET ai_prompts_used = ai_prompts_used + 1 WHERE id = $1', [user.id])
+        }
+      } catch (dbErr) {
+        console.warn('Billing prompt count verification failed:', dbErr)
+      }
     }
 
     const geminiKey = process.env.GEMINI_API_KEY

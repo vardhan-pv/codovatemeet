@@ -8,6 +8,11 @@ interface User {
   is_verified?: boolean
   mfa_enabled?: boolean
   role?: string
+  plan?: string
+  billing_period?: string
+  ai_prompts_used?: number
+  extra_ai_credits?: number
+  active_workspaces?: number
 }
 
 interface AuthState {
