@@ -3401,9 +3401,10 @@ function RoomPageContent() {
 
         {/* ── GLOBAL HIDDEN AUDIO ELEMENTS ────────────────────────────────────────
              These are rendered OUTSIDE the video grid so they always stay mounted.
-             This ensures audio keeps playing even when workspaces hide the grid.
+             We use absolute positioning instead of display:none because iOS/Safari
+             blocks audio playback for elements with display: none.
         ── */}
-        <div style={{ display: 'none' }} aria-hidden="true">
+        <div className="absolute w-0 h-0 overflow-hidden opacity-0 pointer-events-none" aria-hidden="true">
           {participants
             .filter(p => !p.isLocal)
             .map(p => {
@@ -3508,7 +3509,7 @@ function RoomPageContent() {
                       : displayTiles.length === 1
                         ? 'grid-cols-1'
                         : displayTiles.length === 2
-                          ? 'grid-cols-2 grid-rows-1'
+                          ? 'grid-cols-1 grid-rows-2 md:grid-cols-2 md:grid-rows-1'
                           : displayTiles.length <= 4
                             ? 'grid-cols-2 grid-rows-2'
                             : displayTiles.length <= 6
