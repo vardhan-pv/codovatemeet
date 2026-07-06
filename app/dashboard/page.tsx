@@ -33,6 +33,7 @@ export default function DashboardPage() {
   const { user, token, loadProfile, logout } = useAuth()
   const [recentMeetings, setRecentMeetings] = useState<MeetingRecord[]>([])
   const [createdCode, setCreatedCode] = useState<string | null>(null)
+  const [createdScheduledAt, setCreatedScheduledAt] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [roomName, setRoomName] = useState('')
@@ -243,6 +244,7 @@ export default function DashboardPage() {
     try {
       const data = await meetingService.createMeeting({ roomName, scheduledAt, type: meetingType })
       setCreatedCode(data.meetingId)
+      setCreatedScheduledAt(scheduledAt || new Date().toISOString())
       const meetings = await meetingService.getRecentMeetings()
       setRecentMeetings(meetings)
     } catch (err: any) {
@@ -274,6 +276,7 @@ export default function DashboardPage() {
         type: calMeetingType
       })
       setCreatedCode(data.meetingId)
+      setCreatedScheduledAt(calDate)
       
       // Reset forms and close modal
       setCalTitle(''); setCalDate(''); setCalDesc(''); setCalGuests(''); setCalAttachment(''); setCalDuration(60); setCalMeetingType('technical')
@@ -293,11 +296,24 @@ export default function DashboardPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const formatMeetingDate = (dateStr: string | null) => {
+    const dateObj = dateStr ? new Date(dateStr) : new Date()
+    try {
+      return dateObj.toLocaleString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      })
+    } catch (_) {
+      return dateStr || ''
+    }
+  }
+
   const handleShareWhatsApp = () => {
     if (!createdCode) return
     const meetTitle = roomName.trim() && !roomName.startsWith('{') ? roomName.trim() : 'Developer Collaboration Session'
     const link = `${window.location.origin}/room?id=${createdCode}`
-    const text = `🚀 You're invited to a collaborative session on Codovate Meet!\n\nLet's connect, communicate, and build together in real-time.\n\n📌 *Topic:* *${meetTitle}*\n\n🔗 *Join the workspace:* \n${link}\n\n🔑 *Or enter this meeting code:* \n*${createdCode}*\n\nPowered by Codovate Meet 💻`
+    const dateFormatted = formatMeetingDate(createdScheduledAt)
+    const text = `🚀 You're invited to a collaborative session on Codovate Meet!\n\nLet's connect, communicate, and build together in real-time.\n\n📅 *Date & Time:* \n${dateFormatted}\n\n📌 *Topic:* *${meetTitle}*\n\n🔗 *Join the workspace:* \n${link}\n\n🔑 *Or enter this meeting code:* \n*${createdCode}*\n\nPowered by Codovate Meet 💻`
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank')
   }
 

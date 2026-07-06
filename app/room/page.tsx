@@ -46,9 +46,9 @@ const getDisplayName = (identity: string) => {
 }
 
 const formatMeetingDate = (dateStr: string | null) => {
-  if (!dateStr) return ''
+  const dateObj = dateStr ? new Date(dateStr) : new Date()
   try {
-    return new Date(dateStr).toLocaleString('en-US', {
+    return dateObj.toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -1062,6 +1062,31 @@ function RoomPageContent() {
   const [schedResultCode, setSchedResultCode] = useState<string | null>(null)
   const [schedLoading, setSchedLoading] = useState(false)
   const [schedCopied, setSchedCopied] = useState(false)
+
+  const handleScheduleMeeting = async () => {
+    if (!schedTitle.trim() || !schedDateTime) {
+      alert("Please enter both a title and date/time for the follow-up session.")
+      return
+    }
+    setSchedLoading(true)
+    try {
+      const serializedRoomName = JSON.stringify({
+        name: schedTitle.trim(),
+        desc: schedAgenda.trim()
+      })
+      const data = await meetingService.createMeeting({
+        roomName: serializedRoomName,
+        scheduledAt: schedDateTime,
+        type: 'technical'
+      })
+      setSchedResultCode(data.meetingId)
+    } catch (e) {
+      console.error("Failed to schedule follow-up session", e)
+      alert("Failed to schedule follow-up session. Please try again.")
+    } finally {
+      setSchedLoading(false)
+    }
+  }
 
   // Pomodoro focus timer
   const [pomodoroSecs, setPomodoroSecs] = useState(25 * 60)
@@ -2838,7 +2863,8 @@ function RoomPageContent() {
             setTimeout(() => setSchedCopied(false), 2000)
           }
           const handleShareWhatsApp = () => {
-            const text = `🚀 You're invited to a collaborative session on Codovate Meet!\n\nLet's connect, communicate, and build together in real-time.\n\n📌 *Topic:* *${schedTitle.trim() || 'Follow-up Session'}*\n\n🔗 *Join the workspace:* \n${shareLink}\n\n🔑 *Or enter this meeting code:* \n*${schedResultCode}*\n\nPowered by Codovate Meet 💻`
+            const dateFormatted = formatMeetingDate(schedDateTime)
+            const text = `🚀 You're invited to a collaborative session on Codovate Meet!\n\nLet's connect, communicate, and build together in real-time.\n\n📅 *Date & Time:* \n${dateFormatted}\n\n📌 *Topic:* *${schedTitle.trim() || 'Follow-up Session'}*\n\n🔗 *Join the workspace:* \n${shareLink}\n\n🔑 *Or enter this meeting code:* \n*${schedResultCode}*\n\nPowered by Codovate Meet 💻`
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank')
           }
           return (
@@ -2918,7 +2944,7 @@ function RoomPageContent() {
               </div>
               <Button
                 onClick={handleScheduleMeeting}
-                disabled={schedLoading || !schedTitle.trim()}
+                disabled={schedLoading || !schedTitle.trim() || !schedDateTime}
                 className="w-full text-xs font-bold bg-primary hover:opacity-90 h-9 border-none rounded-xl"
               >
                 {schedLoading ? 'Scheduling...' : 'Schedule Meeting'}
@@ -3313,7 +3339,7 @@ function RoomPageContent() {
                       onClick={() => {
                         const link = typeof window !== 'undefined' ? `${window.location.origin}/room?id=${roomId}` : roomId
                         const dateFormatted = formatMeetingDate(meetingScheduledAt)
-                        const dateTimeStr = dateFormatted ? `📅 *Date & Time:* \n${dateFormatted}\n\n` : ''
+                        const dateTimeStr = `📅 *Date & Time:* \n${dateFormatted}\n\n`
                         const text = `🚀 You're invited to a live session on Codovate Meet!\n\nLet's connect, communicate, and build together in real-time.\n\n${dateTimeStr}🔗 *Join the workspace:* \n${link}\n\n🔑 *Or enter this meeting code:* \n*${roomId}*\n\nPowered by Codovate Meet 💻`
                         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank')
                       }}
