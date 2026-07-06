@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 
-export function MobileToolSelect({ activeSidebar, setActiveSidebar, setIsOnToGoMode, participantsCount }: any) {
+export function MobileToolSelect({ activeSidebar, setActiveSidebar, setIsOnToGoMode, participantsCount, meetingType }: any) {
   const [isOpen, setIsOpen] = useState(false)
 
   const handleSelect = (val: string) => {
@@ -19,15 +19,23 @@ export function MobileToolSelect({ activeSidebar, setActiveSidebar, setIsOnToGoM
     { value: 'chat', label: '💬 Chat' },
     { value: 'participants', label: `👥 Participants (${participantsCount})` },
     { value: 'ai', label: '✨ AI Notes' },
+    { value: 'tasks', label: '📋 Tasks' },
+    { value: 'polls', label: '📊 Polls' },
     { value: 'timetravel', label: '⏰ Timeline' },
     { value: 'focus', label: '⏱️ Focus' },
-    { value: 'interview', label: '👑 Interview' },
+  ]
+
+  if (meetingType === 'technical') {
+    items.push({ value: 'interview', label: '👑 Interview' })
+  }
+
+  items.push(
     { divider: true },
     { value: 'onthego', label: '🚶 On-the-go Mode' },
     { value: 'effects', label: '👤 Effects' },
     { value: 'scheduler', label: '📅 Schedule' },
-    { value: 'abuse', label: '🚩 Report Abuse' },
-  ]
+    { value: 'abuse', label: '🚩 Report Abuse' }
+  )
 
   return (
     <div className="relative md:hidden">

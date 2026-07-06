@@ -7,8 +7,17 @@ import {
   ShieldAlert, Settings, Users, Code, Paintbrush, 
   MessageSquare, HardDrive, Video, Activity,
   Lock, StopCircle, UserMinus, MicOff, VideoOff,
-  Terminal, X, ChevronRight, Share2, Play
+  Terminal, X, ChevronRight, Share2, Play, Sparkles
 } from 'lucide-react'
+
+const typeLabels: Record<string, string> = {
+  technical: 'Technical / Code Review',
+  interview: 'Technical Interview',
+  business: 'Business / Standup',
+  education: 'Classroom / Education',
+  brainstorming: 'Brainstorming',
+  standup: 'Standup'
+}
 
 export interface AdminSettings {
   isRoomLocked: boolean
@@ -186,10 +195,19 @@ export function AdminCommandCenter({
             {/* Live Metrics Header */}
             <div className="flex gap-3 w-full sm:w-auto justify-between sm:justify-start">
               <div className="flex-1 sm:flex-initial bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2.5 sm:gap-3">
-                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400" />
+                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-400" />
                 <div>
                   <p className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold uppercase tracking-widest leading-none">Participants</p>
                   <p className="text-xs sm:text-sm font-bold text-white leading-tight mt-1">{participants.length}</p>
+                </div>
+              </div>
+              <div className="flex-1 sm:flex-initial bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2.5 sm:gap-3">
+                <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400" />
+                <div>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold uppercase tracking-widest leading-none">Meeting Mode</p>
+                  <p className="text-xs sm:text-sm font-bold text-white leading-tight mt-1">
+                    {typeLabels[meetingType] || meetingType || 'Standard'}
+                  </p>
                 </div>
               </div>
               <div className="flex-1 sm:flex-initial bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2.5 sm:gap-3">
@@ -211,7 +229,7 @@ export function AdminCommandCenter({
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                 
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between col-span-1 md:col-span-2">
+                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between col-span-1 md:col-span-2 hidden">
                     <div>
                       <h4 className="font-bold text-white text-sm sm:text-base">Meeting Mode</h4>
                       <p className="text-xs text-muted-foreground mt-1">Change the workspace layout dynamically based on meeting intent.</p>

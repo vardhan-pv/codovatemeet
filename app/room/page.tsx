@@ -1176,17 +1176,13 @@ function RoomPageContent() {
 
         if (meetingData.type) {
           setMeetingType(meetingData.type)
+          // Always default workspaces to none so they do not show automatically
+          setActiveWorkspace('none')
+          
           if (meetingData.type === 'interview') {
             setActiveSidebar('interview')
           } else if (meetingData.type === 'focus') {
             setActiveSidebar('focus')
-          }
-          if (meetingData.type === 'technical' || meetingData.type === 'interview') {
-            setActiveWorkspace('code')
-          } else if (meetingData.type === 'education' || meetingData.type === 'brainstorming') {
-            setActiveWorkspace('whiteboard')
-          } else {
-            setActiveWorkspace('none')
           }
         }
       } catch (e) { console.error('Meeting not found', e) }
@@ -1298,7 +1294,7 @@ function RoomPageContent() {
   // Paste Event Listener for Plagiarism Risk checking
   useEffect(() => {
     const handlePaste = () => {
-      if (meetingType !== 'interview') return
+      if (meetingType !== 'technical' && meetingType !== 'interview') return
       setPlagiarismRisk(prev => {
         const newRisk = Math.min(95, prev + 25)
         const updated = {
@@ -1318,7 +1314,7 @@ function RoomPageContent() {
 
   // Coding Score Real-time Update Hook
   useEffect(() => {
-    if (meetingType !== 'interview') return
+    if (meetingType !== 'technical' && meetingType !== 'interview') return
     const codingScore = Math.min(100, 50 + Math.floor(metrics.codeEdits / 2) * 5)
     setInterviewScorecard(prev => {
       const updated = { ...prev, coding: codingScore }
@@ -1745,25 +1741,43 @@ function RoomPageContent() {
         try {
           if (isCleanedUp) return
           if (!isCompanionMode) {
-            await activeRoom.localParticipant.enableCameraAndMicrophone()
+            // Enable camera if not disabled in the lobby
+            if (!isVideoOff) {
+              try {
+                await activeRoom.localParticipant.setCameraEnabled(true)
+              } catch (camErr: any) {
+                console.warn("Failed to enable camera on join:", camErr)
+                setIsVideoOff(true)
+              }
+            } else {
+              await activeRoom.localParticipant.setCameraEnabled(false)
+            }
+
             if (isCleanedUp) {
               activeRoom.disconnect()
               return
             }
-            if (isVideoOff) await activeRoom.localParticipant.setCameraEnabled(false)
-            if (isMuted) await activeRoom.localParticipant.setMicrophoneEnabled(false)
+
+            // Enable microphone if not muted in the lobby
+            if (!isMuted) {
+              try {
+                await activeRoom.localParticipant.setMicrophoneEnabled(true)
+              } catch (micErr: any) {
+                console.warn("Failed to enable microphone on join:", micErr)
+                setIsMuted(true)
+                alert("Microphone not available: " + (micErr.message || micErr) + "\n\nPlease ensure your microphone is connected and permissions are allowed.")
+              }
+            } else {
+              await activeRoom.localParticipant.setMicrophoneEnabled(false)
+            }
           } else {
             await activeRoom.localParticipant.setCameraEnabled(false)
             await activeRoom.localParticipant.setMicrophoneEnabled(false)
             setIsMuted(true)
             setIsVideoOff(true)
           }
-        } catch (deviceErr) {
-          try {
-            if (!isCleanedUp) {
-              await activeRoom.localParticipant.setMicrophoneEnabled(!isMuted)
-            }
-          } catch (e) {}
+        } catch (deviceErr: any) {
+          console.error("Device initialization error:", deviceErr)
         }
       } catch (err) {
         if (!isCleanedUp) {
@@ -1858,7 +1872,7 @@ function RoomPageContent() {
         }
         
         // Speech analytics for Technical Interview dashboard
-        if (meetingType === 'interview') {
+        if (meetingType === 'technical' || meetingType === 'interview') {
           const words = textLower.split(/\s+/).length
           const fillers = (textLower.match(/\b(um|uh|like|ah|so|eh|basically)\b/gi) || []).length
           const fillerRatio = fillers / (words || 1)
@@ -1913,7 +1927,10 @@ function RoomPageContent() {
     try {
       await room.localParticipant.setMicrophoneEnabled(isMuted)
       setIsMuted(!isMuted)
-    } catch (e) {}
+    } catch (e: any) {
+      console.error('Failed to toggle microphone:', e)
+      alert('Could not toggle microphone: ' + (e.message || e) + '\n\nPlease ensure your microphone is connected and permissions are allowed.')
+    }
   }
 
   const handleVideoToggle = async () => {
@@ -3054,6 +3071,7 @@ function RoomPageContent() {
             setActiveSidebar={setActiveSidebar} 
             setIsOnToGoMode={setIsOnToGoMode} 
             participantsCount={participants.length} 
+            meetingType={meetingType}
           />
 
           {/* Desktop selector buttons */}
@@ -3091,7 +3109,29 @@ function RoomPageContent() {
             >
               <Sparkles className="h-4 w-4 mr-1 text-purple-500 animate-pulse" /> AI Notes
             </Button>
-            {(meetingType === 'technical' || meetingType === 'interview' || meetingType === 'hackathon') ? (
+            <Button
+              variant="ghost"
+              onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
+              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                activeSidebar === 'tasks'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 scale-105 font-bold'
+                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+              }`}
+            >
+              <Check className="h-4 w-4 mr-1 text-emerald-400" /> Tasks
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setActiveSidebar(activeSidebar === 'polls' ? null : 'polls')}
+              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
+                activeSidebar === 'polls'
+                  ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 scale-105 font-bold'
+                  : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
+              }`}
+            >
+              <BarChart2 className="h-4 w-4 mr-1 text-purple-400" /> Polls
+            </Button>
+            {(meetingType === 'technical' || meetingType === 'interview' || meetingType === 'hackathon') && (
               <>
                 <Button
                   variant="ghost"
@@ -3106,31 +3146,6 @@ function RoomPageContent() {
                   className="h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 text-muted-foreground hover:bg-slate-100 hover:text-slate-800"
                 >
                   <Rocket className="h-4 w-4 mr-1 text-indigo-400" /> Deploy
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
-                  className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
-                    activeSidebar === 'tasks'
-                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 scale-105 font-bold'
-                      : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
-                  }`}
-                >
-                  <Check className="h-4 w-4 mr-1 text-emerald-400" /> Tasks
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => setActiveSidebar(activeSidebar === 'polls' ? null : 'polls')}
-                  className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
-                    activeSidebar === 'polls'
-                      ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 scale-105 font-bold'
-                      : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-800'
-                  }`}
-                >
-                  <BarChart2 className="h-4 w-4 mr-1 text-purple-400" /> Polls
                 </Button>
               </>
             )}
@@ -3156,7 +3171,7 @@ function RoomPageContent() {
             >
               ⏱️ Focus
             </Button>
-            {meetingType === 'interview' && (
+            {(meetingType === 'technical' || meetingType === 'interview') && (
               <Button
                 variant="ghost"
                 onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')}
@@ -3351,7 +3366,7 @@ function RoomPageContent() {
                 { tab: 'ai', label: 'AI', icon: <Sparkles className="h-3.5 w-3.5" /> },
                 { tab: 'timetravel', label: 'Timeline', icon: <Clock className="h-3.5 w-3.5" /> }
               ]
-              if (meetingType === 'interview') {
+              if (meetingType === 'technical' || meetingType === 'interview') {
                 sidebarTabs.push({ tab: 'interview', label: 'Interview', icon: <Crown className="h-3.5 w-3.5" /> })
               } else if (meetingType === 'focus') {
                 sidebarTabs.push({ tab: 'focus', label: 'Focus', icon: <Timer className="h-3.5 w-3.5" /> })

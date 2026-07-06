@@ -49,7 +49,6 @@ export default function DashboardPage() {
     { id: 'education', label: 'Education', icon: GraduationCap, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
     { id: 'brainstorming', label: 'Brainstorm', icon: Lightbulb, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
     { id: 'standup', label: 'Standup', icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-    { id: 'interview', label: 'Interview', icon: MessageSquare, color: 'text-purple-400', bg: 'bg-purple-400/10' },
   ]
 
   // Advanced Calendar Scheduler Modal states
@@ -62,6 +61,7 @@ export default function DashboardPage() {
   const [calGuests, setCalGuests] = useState('')
   const [calAttachment, setCalAttachment] = useState('')
   const [calDuration, setCalDuration] = useState(60)
+  const [calMeetingType, setCalMeetingType] = useState('technical')
 
   // Floating AI Assistant states
   const [showFloatingAi, setShowFloatingAi] = useState(false)
@@ -280,12 +280,13 @@ export default function DashboardPage() {
         roomName: serializedRoomName,
         scheduledAt: calDate,
         durationMinutes: calDuration,
-        guests: calGuests.trim()
+        guests: calGuests.trim(),
+        type: calMeetingType
       })
       setCreatedCode(data.meetingId)
       
       // Reset forms and close modal
-      setCalTitle(''); setCalDate(''); setCalDesc(''); setCalGuests(''); setCalAttachment(''); setCalDuration(60)
+      setCalTitle(''); setCalDate(''); setCalDesc(''); setCalGuests(''); setCalAttachment(''); setCalDuration(60); setCalMeetingType('technical')
       setShowCalendarModal(false)
 
       const meetings = await meetingService.getRecentMeetings()
@@ -823,6 +824,16 @@ export default function DashboardPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> Meeting Type</label>
+                  <select value={calMeetingType} onChange={(e) => setCalMeetingType(e.target.value)} className="w-full h-10 bg-background border border-border rounded-xl px-3 text-sm text-foreground outline-none focus:border-primary">
+                    <option value="technical">💻 Technical / Code Review</option>
+                    <option value="business">💼 Business / Standup</option>
+                    <option value="education">🎓 Classroom / Education</option>
+                    <option value="brainstorming">💡 Brainstorming</option>
+                    <option value="standup">👥 Standup</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5"><Tag className="h-3.5 w-3.5 text-primary" /> Event Color</label>
                   <select value={calColor} onChange={(e) => setCalColor(e.target.value)} className="w-full h-10 bg-background border border-border rounded-xl px-3 text-sm text-foreground outline-none focus:border-primary">
                     <option value="blue">🔵 Royal Blue</option>
@@ -830,15 +841,6 @@ export default function DashboardPage() {
                     <option value="green">🟢 Mint Green</option>
                     <option value="yellow">🟡 Amber Yellow</option>
                     <option value="indigo">🟣 Deep Indigo</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5"><Paperclip className="h-3.5 w-3.5 text-primary" /> Attachments</label>
-                  <select value={calAttachment} onChange={(e) => setCalAttachment(e.target.value)} className="w-full h-10 bg-background border border-border rounded-xl px-3 text-sm text-foreground outline-none focus:border-primary">
-                    <option value="">No files selected</option>
-                    <option value="architecture_doc.pdf">📁 architecture_doc.pdf</option>
-                    <option value="product_roadmap.xlsx">📁 product_roadmap.xlsx</option>
-                    <option value="sprint_board.json">📁 sprint_board.json</option>
                   </select>
                 </div>
               </div>
@@ -856,9 +858,19 @@ export default function DashboardPage() {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-primary" /> Invite Guests (Emails)</label>
-                  <Input placeholder="developer@company.com..." value={calGuests} onChange={(e) => setCalGuests(e.target.value)} className="h-10 border-border" />
+                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5"><Paperclip className="h-3.5 w-3.5 text-primary" /> Attachments</label>
+                  <select value={calAttachment} onChange={(e) => setCalAttachment(e.target.value)} className="w-full h-10 bg-background border border-border rounded-xl px-3 text-sm text-foreground outline-none focus:border-primary">
+                    <option value="">No files selected</option>
+                    <option value="architecture_doc.pdf">📁 architecture_doc.pdf</option>
+                    <option value="product_roadmap.xlsx">📁 product_roadmap.xlsx</option>
+                    <option value="sprint_board.json">📁 sprint_board.json</option>
+                  </select>
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-primary" /> Invite Guests (Emails)</label>
+                <Input placeholder="developer@company.com..." value={calGuests} onChange={(e) => setCalGuests(e.target.value)} className="h-10 border-border" />
               </div>
 
               <div className="space-y-1">
