@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const db_1 = require("../lib/db");
 const router = (0, express_1.Router)();
 const askGemini = async (contextPrompt, geminiKey) => {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
@@ -77,6 +78,28 @@ router.post('/', (req, res, next) => {
         const { prompt, chatHistory = [], codeSnippet = '', transcript = [] } = req.body;
         if (!prompt) {
             return res.status(400).json({ error: 'Missing prompt' });
+        }
+        const user = req.user;
+        if (user && user.id) {
+            try {
+                const userRes = await (0, db_1.query)('SELECT plan, ai_prompts_used, extra_ai_credits FROM users WHERE id = $1', [user.id]);
+                if (userRes.rows.length > 0) {
+                    const { plan = 'free', ai_prompts_used = 0, extra_ai_credits = 0 } = userRes.rows[0];
+                    let limit = 20;
+                    if (plan === 'pro')
+                        limit = 500;
+                    else if (plan === 'team' || plan === 'enterprise')
+                        limit = 99999999;
+                    const totalCredits = limit + extra_ai_credits;
+                    if (ai_prompts_used >= totalCredits) {
+                        return res.status(403).json({ error: `AI prompt limit reached. You have used ${ai_prompts_used}/${totalCredits} prompts. Please upgrade your plan or purchase extra AI credits.` });
+                    }
+                    await (0, db_1.query)('UPDATE users SET ai_prompts_used = ai_prompts_used + 1 WHERE id = $1', [user.id]);
+                }
+            }
+            catch (dbErr) {
+                console.warn('Billing prompt count verification failed:', dbErr);
+            }
         }
         const geminiKey = process.env.GEMINI_API_KEY;
         const groqKey = process.env.GROQ_API_KEY;

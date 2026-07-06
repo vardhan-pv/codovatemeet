@@ -34,7 +34,7 @@ async function initDB() {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `);
-            // Add new security columns to users table
+            // Add new security and billing columns to users table
             await client.query(`
         ALTER TABLE users 
         ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE,
@@ -45,7 +45,12 @@ async function initDB() {
         ADD COLUMN IF NOT EXISTS reset_expires TIMESTAMP DEFAULT NULL,
         ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN DEFAULT FALSE,
         ADD COLUMN IF NOT EXISTS mfa_secret VARCHAR(255) DEFAULT NULL,
-        ADD COLUMN IF NOT EXISTS role VARCHAR(255) DEFAULT 'user';
+        ADD COLUMN IF NOT EXISTS role VARCHAR(255) DEFAULT 'user',
+        ADD COLUMN IF NOT EXISTS plan VARCHAR(255) DEFAULT 'free',
+        ADD COLUMN IF NOT EXISTS billing_period VARCHAR(255) DEFAULT 'monthly',
+        ADD COLUMN IF NOT EXISTS ai_prompts_used INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS extra_ai_credits INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS active_workspaces INTEGER DEFAULT 1;
       `);
             // Create Security Logs table
             await client.query(`

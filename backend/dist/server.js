@@ -12,6 +12,7 @@ const meetings_1 = __importDefault(require("./routes/meetings"));
 const messages_1 = __importDefault(require("./routes/messages"));
 const ai_1 = __importDefault(require("./routes/ai"));
 const run_1 = __importDefault(require("./routes/run"));
+const billing_1 = __importDefault(require("./routes/billing"));
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
 // Configure CORS to dynamically allow requests from local development origins
@@ -43,6 +44,7 @@ app.use('/api/meetings', meetings_1.default);
 app.use('/api/messages', messages_1.default);
 app.use('/api/ai', ai_1.default);
 app.use('/api/run', run_1.default);
+app.use('/api/billing', billing_1.default);
 app.listen(PORT, () => {
     console.log(`[SERVER SUCCESS] Backend server running on port ${PORT}`);
 });
