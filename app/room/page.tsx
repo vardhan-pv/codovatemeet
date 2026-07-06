@@ -3269,12 +3269,12 @@ function RoomPageContent() {
                   </div>
                 )}
 
-                <div className="flex flex-col h-full justify-center">
-                  <div className={`grid gap-4 w-full h-full content-center ${
-                    isFeaturedPage ? 'grid-cols-1 grid-rows-1 w-full h-full mx-auto' :
-                    displayTiles.length <= 1 ? 'grid-cols-1 w-full h-full mx-auto' :
-                    displayTiles.length === 2 ? 'grid-cols-1 md:grid-cols-2 w-full h-full mx-auto' :
-                    'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full h-full mx-auto'
+                <div className="flex flex-col h-full">
+                  <div className={`grid gap-4 w-full flex-1 min-h-0 auto-rows-fr ${
+                    isFeaturedPage ? 'grid-cols-1 grid-rows-1 mx-auto' :
+                    displayTiles.length <= 1 ? 'grid-cols-1 mx-auto' :
+                    displayTiles.length === 2 ? 'grid-cols-1 md:grid-cols-2 mx-auto' :
+                    'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mx-auto'
                   }`}>
                     {displayTiles.map(tile => {
                       const pid = tile.id.split(':')[0]
