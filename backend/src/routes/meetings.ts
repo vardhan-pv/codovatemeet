@@ -14,7 +14,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     if (code) {
       const result = await query(
-        `SELECT m.*, u.name as host_name 
+        `SELECT m.*, u.name as host_name, u.email as host_email 
          FROM meetings m 
          JOIN users u ON m.host_id = u.id 
          WHERE m.meeting_code = $1`,

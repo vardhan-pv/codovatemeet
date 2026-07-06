@@ -920,6 +920,7 @@ function RoomPageContent() {
   const [statusText, setStatusText] = useState('')
   const [meetingHostId, setMeetingHostId] = useState<string | null>(null)
   const [meetingHostName, setMeetingHostName] = useState<string | null>(null)
+  const [meetingHostEmail, setMeetingHostEmail] = useState<string | null>(null)
   const [shareError, setShareError] = useState<string | null>(null)
   const [serverUrl, setServerUrl] = useState<string | null>(null)
   const [meetingTitle, setMeetingTitle] = useState<string | null>(null)
@@ -968,7 +969,10 @@ function RoomPageContent() {
     isScreenShareLocked: false,
   })
 
-  const isHostUser = !meetingHostId || (user && user.id === meetingHostId) || participants.length <= 1
+  const isHostUser = !!(
+    meetingHostId && user && 
+    (user.id === meetingHostId || (meetingHostEmail && user.email === meetingHostEmail))
+  )
 
   useEffect(() => {
     if (activeWorkspace === 'none') {
@@ -1157,6 +1161,7 @@ function RoomPageContent() {
         const meetingData = await meetingService.validateMeeting(roomId)
         setMeetingHostId(meetingData.host_id)
         setMeetingHostName(meetingData.host_name)
+        setMeetingHostEmail(meetingData.host_email)
         
         let title = meetingData.room_name || 'Untitled Meeting'
         let desc = ''
