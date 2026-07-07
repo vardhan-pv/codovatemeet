@@ -40,7 +40,6 @@ export default function LandingPage() {
             <Link href="#features" className="text-muted-foreground hover:text-white transition-colors">Features</Link>
             <Link href="#ai" className="text-muted-foreground hover:text-white transition-colors">AI Pair Programmer</Link>
             <Link href="#workspace" className="text-muted-foreground hover:text-white transition-colors">Live Workspace</Link>
-            <Link href="/pricing" className="text-muted-foreground hover:text-white transition-colors">Pricing</Link>
           </div>
 
           <div className="flex items-center gap-3">
@@ -445,7 +444,6 @@ export default function LandingPage() {
                 <li><Link href="#features" className="hover:text-white transition-colors">Shared Workspace</Link></li>
                 <li><Link href="#ai" className="hover:text-white transition-colors">AI pair programming</Link></li>
                 <li><Link href="#features" className="hover:text-white transition-colors">Interactive Whiteboard</Link></li>
-                <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing Plans</Link></li>
               </ul>
             </div>
             

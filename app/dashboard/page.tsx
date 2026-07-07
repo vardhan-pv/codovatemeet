@@ -5,12 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
 import { meetingService } from '@/services/meeting'
-import { billingService } from '@/services/billing'
 import {
   LogOut, Plus, Video, Copy, Check, ArrowRight, Clock, Calendar,
   LayoutDashboard, Users, X, Globe, Tag, AlignLeft, Paperclip, Mail, Sparkles,
-  ShieldCheck, KeyRound, Lock, MonitorPlay, Briefcase, GraduationCap, Lightbulb,
-  CreditCard, Zap, Star, Building2, ChevronDown, HelpCircle
+  ShieldCheck, KeyRound, Lock, MonitorPlay, Briefcase, GraduationCap, Lightbulb
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -31,13 +29,7 @@ interface MeetingRecord {
   duration_minutes?: number
 }
 
-// ── PLAN CONFIG ──
-const PLAN_CONFIG: Record<string, { label: string; color: string; maxParticipants: number; aiLimit: number }> = {
-  free:       { label: 'Free',       color: 'text-emerald-400',  maxParticipants: 5,    aiLimit: 20 },
-  pro:        { label: 'Pro ⭐',     color: 'text-primary',      maxParticipants: 25,   aiLimit: 500 },
-  team:       { label: 'Team',       color: 'text-purple-400',   maxParticipants: 100,  aiLimit: 99999 },
-  enterprise: { label: 'Enterprise', color: 'text-slate-300',    maxParticipants: 1000, aiLimit: 99999 },
-}
+
 
 export default function DashboardPage() {
   const { user, token, loadProfile, logout } = useAuth()
@@ -52,9 +44,7 @@ export default function DashboardPage() {
   const [isJoining, setIsJoining] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
   const [meetingType, setMeetingType] = useState('technical')
-  const [activeTab, setActiveTab] = useState<'overview' | 'billing'>('overview')
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly')
-  const [billingLoading, setBillingLoading] = useState<string | null>(null)
+
 
   // Meeting types definition
   const meetingTypes = [
@@ -239,32 +229,7 @@ export default function DashboardPage() {
     }
   }
 
-  const handlePlanSelect = async (planId: string) => {
-    if (user?.plan === planId) return
-    const confirmChange = confirm(`Subscribe to the ${planId.toUpperCase()} plan (${billingPeriod})?`)
-    if (!confirmChange) return
-    setBillingLoading(planId)
-    try {
-      await billingService.subscribe(planId, billingPeriod)
-      await loadProfile()
-      alert(`🎉 Successfully subscribed to ${planId.toUpperCase()}!`)
-    } catch (e) {
-      alert('Subscription failed. Please try again.')
-    } finally { setBillingLoading(null) }
-  }
 
-  const handleAddonPurchase = async (addonName: string, price: string) => {
-    const ok = confirm(`Purchase "${addonName}" add-on for ${price}?`)
-    if (!ok) return
-    setBillingLoading(addonName)
-    try {
-      await billingService.purchaseAddon(addonName)
-      await loadProfile()
-      alert(`🎉 ${addonName} add-on purchased!`)
-    } catch (e) {
-      alert('Purchase failed. Please try again.')
-    } finally { setBillingLoading(null) }
-  }
 
   useEffect(() => {
     if (!token) { window.location.href = '/login'; return }
@@ -446,26 +411,7 @@ export default function DashboardPage() {
       {/* ── MAIN CONTENT ── */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-10 space-y-10">
 
-        {/* ── TAB SWITCHER ── */}
-        <div className="flex items-center gap-1 bg-slate-900/60 border border-border rounded-xl p-1 w-fit">
-          {(['overview', 'billing'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2 rounded-lg text-xs font-bold transition-all capitalize flex items-center gap-1.5 ${
-                activeTab === tab
-                  ? 'bg-primary text-white shadow-md shadow-primary/20'
-                  : 'text-muted-foreground hover:text-white'
-              }`}
-            >
-              {tab === 'overview' ? <LayoutDashboard className="h-3.5 w-3.5" /> : <CreditCard className="h-3.5 w-3.5" />}
-              {tab === 'overview' ? 'Dashboard' : 'Billing & Plans'}
-            </button>
-          ))}
-        </div>
 
-        {activeTab === 'overview' && (
-        <>
         {/* Welcome banner */}
         <motion.div {...fadeInUp} className="relative overflow-hidden hero-gradient rounded-2xl p-8 shadow-lg">
           <div className="absolute rounded-full blur-[100px] pointer-events-none w-64 h-64 bg-blue-300/20 top-[-40px] right-0" />
@@ -798,163 +744,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </motion.section>
-        </>
-        )} {/* end overview tab */}
-
-        {/* ══════════════════════════════════════════════════ */}
-        {/* ── BILLING & PLANS TAB ── */}
-        {/* ══════════════════════════════════════════════════ */}
-        {activeTab === 'billing' && (
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-10">
-
-          {/* Current plan banner */}
-          <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 shadow-lg">
-            <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[100px] bg-primary/10 pointer-events-none" />
-            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">Current Plan</p>
-                <h2 className={`text-3xl font-black ${PLAN_CONFIG[user?.plan || 'free']?.color || 'text-white'}`}>
-                  {PLAN_CONFIG[user?.plan || 'free']?.label || 'Free'}
-                </h2>
-                <p className="text-xs text-slate-400 mt-1">
-                  Up to <strong className="text-slate-200">{PLAN_CONFIG[user?.plan || 'free']?.maxParticipants}</strong> participants &middot; <strong className="text-slate-200">{PLAN_CONFIG[user?.plan || 'free']?.aiLimit === 99999 ? 'Unlimited' : PLAN_CONFIG[user?.plan || 'free']?.aiLimit}</strong> AI prompts/mo
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 items-start sm:items-end">
-                <div className="text-xs text-slate-400 font-medium">AI Usage this month</div>
-                <div className="flex items-center gap-3">
-                  <div className="w-48 h-2 bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary to-blue-400 rounded-full transition-all"
-                      style={{ width: `${Math.min(100, ((user?.ai_prompts_used || 0) / Math.max(1, (PLAN_CONFIG[user?.plan || 'free']?.aiLimit === 99999 ? 9999 : PLAN_CONFIG[user?.plan || 'free']?.aiLimit || 20))) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-bold text-slate-300 whitespace-nowrap">
-                    {user?.ai_prompts_used || 0} / {PLAN_CONFIG[user?.plan || 'free']?.aiLimit === 99999 ? '∞' : PLAN_CONFIG[user?.plan || 'free']?.aiLimit}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Billing period toggle */}
-          <div className="flex items-center gap-4 justify-center">
-            <span className={`text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'text-white font-bold' : 'text-slate-400'}`}>Monthly</span>
-            <button
-              onClick={() => setBillingPeriod(p => p === 'monthly' ? 'yearly' : 'monthly')}
-              className="w-14 h-8 bg-zinc-800 border border-zinc-700 rounded-full p-1 flex items-center cursor-pointer outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              <div className={`w-6 h-6 bg-primary rounded-full transition-transform ${billingPeriod === 'yearly' ? 'translate-x-6' : 'translate-x-0'}`} />
-            </button>
-            <span className={`text-sm font-medium flex items-center gap-2 ${billingPeriod === 'yearly' ? 'text-white font-bold' : 'text-slate-400'}`}>
-              Yearly
-              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">Save 20%</span>
-            </span>
-          </div>
-
-          {/* Plan cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {[
-              {
-                id: 'free', label: 'Free', price: '₹0', yearlyPrice: '₹0',
-                color: 'text-emerald-400', border: 'border-zinc-700',
-                features: ['5 Participants', '60-min meetings', 'HD Video', 'Code Editor', '20 AI prompts'],
-                btn: 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700',
-              },
-              {
-                id: 'pro', label: 'Pro ⭐', price: '₹499', yearlyPrice: '₹399',
-                color: 'text-primary', border: 'border-primary',
-                popular: true,
-                features: ['25 Participants', 'Unlimited Meetings', 'AI Pair Programmer', 'Terminal', '500 AI prompts', 'Recording'],
-                btn: 'bg-primary hover:bg-primary/90 border-none',
-              },
-              {
-                id: 'team', label: 'Team', price: '₹1,499', yearlyPrice: '₹1,199',
-                color: 'text-purple-400', border: 'border-zinc-700',
-                features: ['100 Participants', 'Unlimited AI', 'Team Dashboard', 'GitHub Integration', 'Custom Branding', '500GB Storage'],
-                btn: 'bg-purple-600 hover:bg-purple-500 border-none',
-              },
-              {
-                id: 'enterprise', label: 'Enterprise', price: 'Custom', yearlyPrice: 'Custom',
-                color: 'text-slate-300', border: 'border-zinc-700',
-                features: ['Unlimited Participants', 'SSO Login', 'Dedicated AI', 'On-premise', 'SLA 99.99%', 'Custom Training'],
-                btn: 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700',
-              },
-            ].map((plan) => {
-              const isCurrent = (user?.plan || 'free') === plan.id
-              const displayPrice = billingPeriod === 'yearly' ? plan.yearlyPrice : plan.price
-              return (
-                <div key={plan.id} className={`bg-[#1a1a1f] border-2 ${plan.popular && !isCurrent ? plan.border : 'border-zinc-800'} ${isCurrent ? 'border-emerald-500/60' : ''} rounded-2xl p-5 flex flex-col justify-between relative transition-all hover:border-zinc-600`}>
-                  {plan.popular && !isCurrent && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-[9px] font-black px-3 py-0.5 rounded-full uppercase tracking-widest">🔥 Most Popular</div>
-                  )}
-                  {isCurrent && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[9px] font-black px-3 py-0.5 rounded-full uppercase tracking-widest">✓ Current Plan</div>
-                  )}
-                  <div>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider ${plan.color}`}>{plan.label}</span>
-                    <div className="mt-2 flex items-baseline gap-1">
-                      <span className="text-2xl font-extrabold text-white">{displayPrice}</span>
-                      {displayPrice !== 'Custom' && <span className="text-slate-500 text-[10px]">/mo</span>}
-                    </div>
-                    <ul className="mt-3 space-y-1.5">
-                      {plan.features.map(f => (
-                        <li key={f} className="flex items-center gap-2 text-[11px] text-slate-300">
-                          <Check className={`w-3 h-3 shrink-0 ${plan.color}`} />{f}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <Button
-                    onClick={() => plan.id === 'enterprise' ? window.open('mailto:sales@codovatesolutions.in') : handlePlanSelect(plan.id)}
-                    disabled={isCurrent || billingLoading === plan.id}
-                    className={`mt-5 w-full h-9 text-xs font-bold rounded-xl text-white border ${isCurrent ? 'bg-emerald-500/20 text-emerald-400 cursor-default' : plan.btn} ${billingLoading === plan.id ? 'opacity-60 cursor-wait' : ''}`}
-                  >
-                    {billingLoading === plan.id ? 'Processing...' : isCurrent ? 'Active' : plan.id === 'enterprise' ? 'Contact Sales' : `Switch to ${plan.label.replace(' ⭐','')}`}
-                  </Button>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Add-ons */}
-          <div className="bg-[#1a1a1f] border border-zinc-800 rounded-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-zinc-800 flex items-center gap-2">
-              <Zap className="h-4 w-4 text-yellow-400" />
-              <h3 className="font-bold text-white text-sm">Flexible Add-ons</h3>
-              <span className="text-[10px] text-slate-400">Purchase anytime</span>
-            </div>
-            <div className="divide-y divide-zinc-800/60">
-              {[
-                { name: 'Extra AI Credits', price: '₹199/mo', desc: '+500 AI prompts' },
-                { name: 'AI Meeting Summary', price: '₹99/mo', desc: 'Auto-summarize every meeting' },
-                { name: '100GB Storage', price: '₹149/mo', desc: 'Extra cloud recording space' },
-                { name: 'Extra Workspace', price: '₹99/mo', desc: '+1 additional workspace' },
-                { name: 'Priority Support', price: '₹299/mo', desc: '4-hour response SLA' },
-              ].map((addon) => (
-                <div key={addon.name} className="flex items-center justify-between px-6 py-3.5 hover:bg-zinc-800/20 transition-colors">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-200">{addon.name}</p>
-                    <p className="text-[10px] text-slate-500">{addon.desc}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold text-white">{addon.price}</span>
-                    <Button
-                      size="sm"
-                      onClick={() => handleAddonPurchase(addon.name, addon.price)}
-                      disabled={billingLoading === addon.name}
-                      className="h-7 text-[10px] font-bold bg-primary/20 hover:bg-primary text-white border-none rounded-lg px-3"
-                    >
-                      {billingLoading === addon.name ? '...' : 'Buy'}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </motion.div>
-        )} {/* end billing tab */}
 
       </main>
 
