@@ -9,6 +9,8 @@ import { TabBar } from './editor/TabBar'
 import { PreviewPanel } from './editor/PreviewPanel'
 import { TerminalPanel } from './editor/TerminalPanel'
 import type { Terminal as XTerm } from 'xterm'
+import { Button } from '@/components/ui/button'
+import { X, CheckCircle, AlertCircle, Copy, Check, Users } from 'lucide-react'
 
 interface CodeEditorProps {
   code: string
@@ -53,29 +55,48 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
   const currentFile = fileKeys.includes(activeFile) ? activeFile : (fileKeys[0] || 'index.html')
   const activeFileInfo = files[currentFile] || { code: '', language: 'javascript' }
 
+  // Toggle Live Preview and Terminal to FALSE by default (VS Code clean mode)
   const [showExplorer, setShowExplorer] = useState(true)
   const [sidebarTab, setSidebarTab] = useState<'explorer' | 'search' | 'comments'>('explorer')
-  const [showPreview, setShowPreview] = useState(true)
-  const [showTerminal, setShowTerminal] = useState(true)
+  const [showPreview, setShowPreview] = useState(false)
+  const [showTerminal, setShowTerminal] = useState(false)
   const [isExecuting, setIsExecuting] = useState(false)
   const [previewContent, setPreviewContent] = useState('')
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving'>('saved')
   const [searchQuery, setSearchQuery] = useState('')
   const [replaceQuery, setReplaceQuery] = useState('')
   
+  // Custom Modals
+  const [isFullScreen, setIsFullScreen] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
+  
+  // GitHub Integration Modal states
+  const [showGitHubModal, setShowGitHubModal] = useState(false)
+  const [githubToken, setGithubToken] = useState('')
+  const [githubRepo, setGithubRepo] = useState('')
+  const [githubBranch, setGithubBranch] = useState('main')
+  const [githubCommitMsg, setGithubCommitMsg] = useState('Sync from Codovate Meet collaborative workspace')
+  const [githubPushingStatus, setGithubPushingStatus] = useState<'idle' | 'pushing' | 'success' | 'error'>('idle')
+  const [githubErrorText, setGithubErrorText] = useState('')
+  const [githubSuccessUrl, setGithubSuccessUrl] = useState('')
+  const [pushProgress, setPushProgress] = useState('')
+
   const [comments, setComments] = useState<{ id: string; filename: string; line: number; text: string; author: string; time: string }[]>([])
   const [peerCursors, setPeerCursors] = useState<{ [senderSid: string]: { filename: string; lineNumber: number; column: number; username: string } }>({})
   const [decorations, setDecorations] = useState<string[]>([])
   
   const editorRef = useRef<any>(null)
   const xtermRef = useRef<XTerm | null>(null)
+  const folderInputRef = useRef<HTMLInputElement>(null)
 
-  // Collapse sidebars on smaller viewports initially
+  // Retrieve saved github credentials on mount
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      setShowExplorer(false)
-      setShowPreview(false)
-      setShowTerminal(false)
+    if (typeof window !== 'undefined') {
+      const savedToken = localStorage.getItem('codovate_github_token')
+      const savedRepo = localStorage.getItem('codovate_github_repo')
+      if (savedToken) setGithubToken(savedToken)
+      if (savedRepo) setGithubRepo(savedRepo)
     }
   }, [])
 
@@ -87,7 +108,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
         <div style="background: #09090b; color: #71717a; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 20px;">
           <div>
             <h3 style="color: #fff; margin-bottom: 8px;">No HTML File Found</h3>
-            <p style="font-size: 12px; max-width: 250px; margin: 0 auto; line-height: 1.5;">Create an <strong>index.html</strong> file in the file explorer to enable real-time Live Preview.</p>
+            <p style="font-size: 12px; max-width: 250px; margin: 0 auto; line-height: 1.5;">Create or import an <strong>index.html</strong> file in the sidebar to enable Live Preview.</p>
           </div>
         </div>
       `)
@@ -295,6 +316,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     }
   }
 
+  // File management
   const handleCreateFile = () => {
     const filename = prompt("Enter new filename (e.g. index.py, style.css, app.ts):")
     if (!filename) return
@@ -309,12 +331,18 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     else if (ext === 'py') fileLang = 'python'
     else if (ext === 'html') fileLang = 'html'
     else if (ext === 'css') fileLang = 'css'
+    else if (ext === 'cpp' || ext === 'cc' || ext === 'h') fileLang = 'cpp'
+    else if (ext === 'java') fileLang = 'java'
+    else if (ext === 'go') fileLang = 'go'
+    else if (ext === 'rs') fileLang = 'rust'
     
     const newFileCode = fileLang === 'html' 
       ? `<!DOCTYPE html>\n<html>\n<head>\n  <title>New Page</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n</body>\n</html>`
       : fileLang === 'python'
         ? `print("Hello from python file ${filename}!")`
-        : `console.log("Hello from ${filename}!");`
+        : fileLang === 'cpp'
+          ? `#include <iostream>\n\nint main() {\n    std::cout << "Hello from C++ file ${filename}!" << std::endl;\n    return 0;\n}`
+          : `console.log("Hello from ${filename}!");`
 
     const updatedFiles = {
       ...files,
@@ -341,6 +369,153 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     }
   }
 
+  // Folder Upload
+  const handleFolderUploadClick = () => {
+    if (folderInputRef.current) {
+      folderInputRef.current.click()
+    }
+  }
+
+  const handleFolderUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const filesList = e.target.files
+    if (!filesList || filesList.length === 0) return
+
+    const newFiles: { [filename: string]: { code: string; language: string } } = {}
+
+    for (let i = 0; i < filesList.length; i++) {
+      const file = filesList[i]
+      if (file.size > 500 * 1024) continue // Skip files > 500KB
+
+      const ext = file.name.split('.').pop()?.toLowerCase() || ''
+      const langMap: { [key: string]: string } = {
+        js: 'javascript',
+        jsx: 'javascript',
+        ts: 'typescript',
+        tsx: 'typescript',
+        py: 'python',
+        html: 'html',
+        css: 'css',
+        json: 'json',
+        md: 'markdown',
+        cpp: 'cpp',
+        cc: 'cpp',
+        h: 'cpp',
+        java: 'java',
+        go: 'go',
+        rs: 'rust',
+        rb: 'ruby',
+        php: 'php',
+        sql: 'sql',
+        sh: 'shell',
+        txt: 'plaintext'
+      }
+
+      const fileLang = langMap[ext]
+      if (!fileLang) continue // Skip unsupported extensions
+
+      try {
+        const text = await file.text()
+        // Use relative path or just name to represent the key
+        const key = file.webkitRelativePath ? file.webkitRelativePath.split('/').slice(1).join('/') || file.name : file.name
+        newFiles[key] = { code: text, language: fileLang }
+      } catch (err) {
+        // ignore read errors
+      }
+    }
+
+    if (Object.keys(newFiles).length === 0) {
+      alert("No compatible text/code files found in the folder!")
+      return
+    }
+
+    const mergedFiles = { ...files, ...newFiles }
+    const firstUploaded = Object.keys(newFiles)[0]
+    setActiveFile(firstUploaded)
+    onCodeChange(JSON.stringify(mergedFiles))
+    if (sendData) {
+      sendData('CODE_EDIT', { code: JSON.stringify(mergedFiles) })
+    }
+  }
+
+  // GitHub Push
+  const handleGitHubPush = async () => {
+    if (!githubToken.trim() || !githubRepo.trim() || !githubBranch.trim()) {
+      setGithubErrorText('All fields except commit message are required.')
+      setGithubPushingStatus('error')
+      return
+    }
+
+    // Save tokens in localStorage
+    localStorage.setItem('codovate_github_token', githubToken)
+    localStorage.setItem('codovate_github_repo', githubRepo)
+
+    setGithubPushingStatus('pushing')
+    setGithubErrorText('')
+    setGithubSuccessUrl('')
+
+    const fileKeysToPush = Object.keys(files)
+    const headers: HeadersInit = {
+      'Authorization': `token ${githubToken}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    }
+
+    try {
+      for (let i = 0; i < fileKeysToPush.length; i++) {
+        const fname = fileKeysToPush[i]
+        const fileContent = files[fname].code
+        const base64Content = btoa(unescape(encodeURIComponent(fileContent)))
+
+        setPushProgress(`Staging file: ${fname} (${i + 1}/${fileKeysToPush.length})...`)
+
+        // Get file SHA if it exists in the repo to avoid conflicts
+        let sha: string | undefined = undefined
+        try {
+          const res = await fetch(`https://api.github.com/repos/${githubRepo}/contents/${fname}?ref=${githubBranch}`, { headers })
+          if (res.status === 200) {
+            const data = await res.json()
+            sha = data.sha
+          }
+        } catch (e) {
+          // file doesn't exist or repo is empty
+        }
+
+        // PUT file contents to GitHub repository
+        const putRes = await fetch(`https://api.github.com/repos/${githubRepo}/contents/${fname}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({
+            message: githubCommitMsg,
+            content: base64Content,
+            branch: githubBranch,
+            sha: sha
+          })
+        })
+
+        if (!putRes.ok) {
+          const errData = await putRes.json()
+          throw new Error(errData.message || `Failed to push ${fname}`)
+        }
+      }
+
+      setGithubPushingStatus('success')
+      setGithubSuccessUrl(`https://github.com/${githubRepo}/tree/${githubBranch}`)
+    } catch (err: any) {
+      setGithubErrorText(err.message || 'Verification or Push failed. Check repo owner/name structure and PAT scope.')
+      setGithubPushingStatus('error')
+    }
+  }
+
+  // Copy workspace invitation details
+  const copyMeetingLink = () => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href)
+      setCopiedLink(true)
+      setTimeout(() => setCopiedLink(false), 2000)
+    }
+  }
+
+  // Comments & Search triggers
   const getSearchResults = () => {
     if (!searchQuery.trim()) return []
     const results: { filename: string; line: number; text: string }[] = []
@@ -415,13 +590,6 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     }
   }
 
-  const handleGitHubSync = () => {
-    const repo = prompt("Enter GitHub repository (e.g. facebook/react):")
-    if (repo) {
-      onCodeChange(`// Pulled from ${repo}\n// This is a mock response. In a future phase, we will use the GitHub API.\n\nexport function App() {\n  return <div>Hello GitHub!</div>\n}\n`)
-    }
-  }
-
   const handleTerminalReady = (term: XTerm | null) => {
     xtermRef.current = term
     if (term) {
@@ -435,8 +603,19 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
   const searchResults = getSearchResults()
 
   return (
-    <div className="flex flex-col h-full bg-[#0d0d12] rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+    <div className={`flex flex-col h-full bg-[#0d0d12] rounded-2xl border border-white/10 shadow-2xl overflow-hidden transition-all duration-300 ${
+      isFullScreen ? 'fixed inset-0 w-screen h-screen z-50 rounded-none' : 'relative'
+    }`}>
       
+      {/* Invisible HTML5 Directory Upload Input */}
+      <input 
+        type="file" 
+        ref={folderInputRef}
+        onChange={handleFolderUpload}
+        style={{ display: 'none' }}
+        {...{ webkitdirectory: '', directory: '', multiple: true }} 
+      />
+
       {/* ── Editor Header ── */}
       <EditorHeader 
         showExplorer={showExplorer}
@@ -462,7 +641,10 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
         autoSaveStatus={autoSaveStatus}
         isExecuting={isExecuting}
         onRunCode={runCode}
-        onGitHubSync={handleGitHubSync}
+        onGitHubSync={() => setShowGitHubModal(true)}
+        isFullScreen={isFullScreen}
+        onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
+        onShareWorkspace={() => setShowShareModal(true)}
       />
       
       <div className="flex-1 flex flex-col md:flex-row min-h-0 relative">
@@ -487,6 +669,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
               }}
               onCreateFile={handleCreateFile}
               onDeleteFile={handleDeleteFile}
+              onFolderUploadClick={handleFolderUploadClick}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               replaceQuery={replaceQuery}
@@ -568,6 +751,180 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
           onClose={() => setShowTerminal(false)}
         />
       )}
+
+      {/* ── GitHub Modal Overlay ── */}
+      {showGitHubModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#18181b] border border-white/10 rounded-2xl w-full max-w-md p-6 relative shadow-2xl flex flex-col font-sans select-none">
+            <button 
+              onClick={() => {
+                setShowGitHubModal(false)
+                setGithubPushingStatus('idle')
+              }} 
+              className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1">Push Workspace to GitHub</h3>
+            <p className="text-xs text-slate-450 mb-5 leading-relaxed">Save your workspace code directly to a GitHub repository.</p>
+
+            {githubPushingStatus === 'pushing' ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mb-4" />
+                <p className="text-xs text-slate-300 font-medium">{pushProgress}</p>
+              </div>
+            ) : githubPushingStatus === 'success' ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center animate-in zoom-in-95 duration-200">
+                <CheckCircle className="w-10 h-10 text-emerald-500 mb-3" />
+                <h4 className="text-sm font-bold text-white mb-1">Push Completed Successfully!</h4>
+                <p className="text-xs text-slate-450 mb-4">All workspace files have been pushed to your branch.</p>
+                <a 
+                  href={githubSuccessUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-primary hover:bg-primary-hover text-white text-xs px-4 py-2 rounded-lg font-bold transition-all"
+                >
+                  View Files on GitHub
+                </a>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-450">GitHub Personal Access Token (PAT)</label>
+                  <input 
+                    type="password"
+                    placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                    value={githubToken}
+                    onChange={(e) => setGithubToken(e.target.value)}
+                    className="w-full p-2.5 bg-slate-950 border border-white/10 text-white rounded-lg outline-none focus:border-primary text-xs transition-all font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-450">Repository Path</label>
+                  <input 
+                    type="text"
+                    placeholder="username/repository-name"
+                    value={githubRepo}
+                    onChange={(e) => setGithubRepo(e.target.value)}
+                    className="w-full p-2.5 bg-slate-950 border border-white/10 text-white rounded-lg outline-none focus:border-primary text-xs transition-all font-mono"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-slate-450">Branch</label>
+                    <input 
+                      type="text"
+                      placeholder="main"
+                      value={githubBranch}
+                      onChange={(e) => setGithubBranch(e.target.value)}
+                      className="w-full p-2.5 bg-slate-950 border border-white/10 text-white rounded-lg outline-none focus:border-primary text-xs transition-all font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-slate-450">Version Control</label>
+                    <div className="p-2.5 bg-slate-950/65 border border-white/5 text-slate-500 rounded-lg text-xs cursor-not-allowed select-none">
+                      Active Workspace
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-450">Commit Message</label>
+                  <textarea 
+                    rows={2}
+                    value={githubCommitMsg}
+                    onChange={(e) => setGithubCommitMsg(e.target.value)}
+                    className="w-full p-2.5 bg-slate-950 border border-white/10 text-white rounded-lg outline-none focus:border-primary text-xs transition-all"
+                  />
+                </div>
+
+                {githubErrorText && (
+                  <div className="flex items-start gap-2 text-rose-500 text-xs bg-rose-500/10 border border-rose-500/20 rounded-lg p-2.5">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{githubErrorText}</span>
+                  </div>
+                )}
+
+                <Button 
+                  onClick={handleGitHubPush}
+                  className="w-full bg-primary hover:bg-primary-hover text-white py-2.5 rounded-lg font-bold text-xs transition-all"
+                >
+                  Sync & Push Changes
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Share Modal Overlay ── */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#18181b] border border-white/10 rounded-2xl w-full max-w-sm p-6 relative shadow-2xl flex flex-col font-sans select-none">
+            <button 
+              onClick={() => setShowShareModal(false)} 
+              className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              <Users className="w-4 h-4 text-primary" /> Share Workspace
+            </h3>
+            <p className="text-xs text-slate-450 mb-5 leading-relaxed">Collaborate in real-time with other developers in this meeting room.</p>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase font-bold text-slate-450">Direct Join URL</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text"
+                    readOnly
+                    value={typeof window !== 'undefined' ? window.location.href : ''}
+                    className="flex-1 p-2 bg-slate-950 border border-white/10 text-slate-400 rounded-lg text-xs outline-none focus:border-primary truncate select-all"
+                  />
+                  <Button 
+                    size="sm"
+                    onClick={copyMeetingLink}
+                    className={`shrink-0 h-8 rounded-lg px-3 transition-all ${
+                      copiedLink ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-primary'
+                    }`}
+                  >
+                    {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-3.5 bg-slate-950/60 rounded-xl border border-white/5 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-medium">Sync Channels</span>
+                  <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> WebRTC Active
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-medium">Auto-Save Status</span>
+                  <span className="text-slate-500">Synced to cloud</span>
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('sync_terminal'))
+                  alert("Terminal output sync broadcasted to all participants!")
+                }}
+                className="w-full border border-white/10 bg-transparent text-slate-300 hover:bg-white/5 hover:text-white py-2 rounded-lg font-bold text-xs transition-all"
+              >
+                Broadcast Sandbox Output
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

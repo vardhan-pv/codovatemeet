@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
-import { ChevronRight, MessageSquare, CornerDownRight, Plus } from 'lucide-react'
+import { ChevronRight, MessageSquare, CornerDownRight, Plus, FolderUp } from 'lucide-react'
 
 interface Comment {
   id: string
@@ -19,6 +19,7 @@ interface SidebarPaneProps {
   onSelectFile: (fname: string) => void
   onCreateFile: () => void
   onDeleteFile: (fname: string) => void
+  onFolderUploadClick: () => void
   searchQuery: string
   setSearchQuery: (query: string) => void
   replaceQuery: string
@@ -39,6 +40,7 @@ export function SidebarPane({
   onSelectFile,
   onCreateFile,
   onDeleteFile,
+  onFolderUploadClick,
   searchQuery,
   setSearchQuery,
   replaceQuery,
@@ -56,15 +58,26 @@ export function SidebarPane({
         <>
           <div className="p-3 border-b border-white/5 flex justify-between items-center text-slate-400 font-bold uppercase tracking-wider">
             <span>Explorer</span>
-            <button 
-              onClick={onCreateFile} 
-              className="hover:text-white hover:bg-white/5 p-1 rounded font-bold text-slate-400 bg-transparent border-none outline-none cursor-pointer transition flex items-center justify-center"
-              title="New File"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              {/* Folder Import Button */}
+              <button 
+                onClick={onFolderUploadClick} 
+                className="hover:text-white hover:bg-white/5 p-1 rounded font-bold text-slate-400 bg-transparent border-none outline-none cursor-pointer transition flex items-center justify-center"
+                title="Import Local Folder"
+              >
+                <FolderUp className="w-3.5 h-3.5" />
+              </button>
+              {/* New File Button */}
+              <button 
+                onClick={onCreateFile} 
+                className="hover:text-white hover:bg-white/5 p-1 rounded font-bold text-slate-400 bg-transparent border-none outline-none cursor-pointer transition flex items-center justify-center"
+                title="New File"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto py-2 space-y-0.5">
+          <div className="flex-1 overflow-y-auto py-2 space-y-0.5 animate-in fade-in duration-200">
             {fileKeys.map(fname => {
               const fileInfo = files[fname] || { language: 'javascript' }
               const fileLang = fileInfo.language
@@ -76,20 +89,22 @@ export function SidebarPane({
                   className={`group flex items-center justify-between px-3 py-2 cursor-pointer transition-all border-l-2 ${
                     isSelected 
                       ? 'bg-primary/10 text-white font-semibold border-l-primary' 
-                      : 'hover:bg-white/5 text-slate-400 border-l-transparent'
+                      : 'hover:bg-white/5 text-slate-450 border-l-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 truncate">
-                    <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded leading-none ${
+                    <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded leading-none ${
                       fileLang === 'javascript' ? 'bg-yellow-500/10 text-yellow-500' :
                       fileLang === 'typescript' ? 'bg-blue-500/10 text-blue-400' :
                       fileLang === 'python' ? 'bg-green-500/10 text-green-400' :
-                      fileLang === 'html' ? 'bg-orange-500/10 text-orange-500' : 'bg-teal-500/10 text-teal-400'
+                      fileLang === 'html' ? 'bg-orange-500/10 text-orange-500' : 
+                      fileLang === 'css' ? 'bg-teal-500/10 text-teal-400' : 'bg-slate-500/15 text-slate-450'
                     }`}>
                       {fileLang === 'javascript' ? 'JS' :
                        fileLang === 'typescript' ? 'TS' :
                        fileLang === 'python' ? 'PY' :
-                       fileLang === 'html' ? 'HTML' : 'CSS'}
+                       fileLang === 'html' ? 'HTML' :
+                       fileLang === 'css' ? 'CSS' : fileLang.substring(0, 3).toUpperCase()}
                     </span>
                     <span className="truncate">{fname}</span>
                   </div>
@@ -99,7 +114,7 @@ export function SidebarPane({
                         e.stopPropagation()
                         onDeleteFile(fname)
                       }}
-                      className="opacity-0 group-hover:opacity-100 hover:text-rose-400 text-slate-500 text-xs ml-1 bg-transparent border-none cursor-pointer p-0.5 rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 hover:text-rose-450 text-slate-500 text-xs ml-1 bg-transparent border-none cursor-pointer p-0.5 rounded transition-all"
                       title="Delete File"
                     >
                       ×

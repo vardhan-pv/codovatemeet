@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
-import { Play, TerminalSquare } from 'lucide-react'
+import { Play, TerminalSquare, Maximize2, Minimize2, Share2 } from 'lucide-react'
 
 interface EditorHeaderProps {
   showExplorer: boolean
@@ -15,6 +15,9 @@ interface EditorHeaderProps {
   isExecuting: boolean
   onRunCode: () => void
   onGitHubSync: () => void
+  isFullScreen: boolean
+  onToggleFullScreen: () => void
+  onShareWorkspace: () => void
 }
 
 export function EditorHeader({
@@ -29,16 +32,19 @@ export function EditorHeader({
   autoSaveStatus,
   isExecuting,
   onRunCode,
-  onGitHubSync
+  onGitHubSync,
+  isFullScreen,
+  onToggleFullScreen,
+  onShareWorkspace
 }: EditorHeaderProps) {
   return (
     <div className="h-12 bg-slate-950 border-b border-white/10 flex items-center justify-between px-4 shrink-0 shadow-lg select-none">
       <div className="flex items-center gap-3">
         {/* Fake window controls */}
         <div className="hidden sm:flex gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-rose-500/80 hover:bg-rose-500 transition-colors cursor-pointer" />
-          <div className="w-3 h-3 rounded-full bg-amber-500/80 hover:bg-amber-500 transition-colors cursor-pointer" />
-          <div className="w-3 h-3 rounded-full bg-emerald-500/80 hover:bg-emerald-500 transition-colors cursor-pointer" />
+          <div className="w-3 h-3 rounded-full bg-rose-500/85 hover:bg-rose-500 transition-colors cursor-pointer" />
+          <div className="w-3 h-3 rounded-full bg-amber-500/85 hover:bg-amber-550 transition-colors cursor-pointer" />
+          <div className="w-3 h-3 rounded-full bg-emerald-500/85 hover:bg-emerald-500 transition-colors cursor-pointer" />
         </div>
         
         {/* Toggle Explorer Button */}
@@ -48,7 +54,7 @@ export function EditorHeader({
           className={`h-8 text-xs rounded-lg ml-1 sm:ml-4 px-3 border border-white/5 transition-all ${
             showExplorer 
               ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20' 
-              : 'text-slate-450 hover:text-white hover:bg-white/5'
+              : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`} 
           onClick={() => setShowExplorer(!showExplorer)}
         >
@@ -59,7 +65,7 @@ export function EditorHeader({
         {/* Language selector */}
         <div className="relative group ml-1 sm:ml-2">
           <select 
-            className="bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-slate-300 font-mono focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer outline-none transition-all hover:bg-slate-800"
+            className="bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 font-mono focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer outline-none transition-all hover:bg-slate-800"
             value={activeLanguage}
             onChange={(e) => onLanguageChange(e.target.value)}
           >
@@ -68,6 +74,10 @@ export function EditorHeader({
             <option value="python">Python</option>
             <option value="html">HTML</option>
             <option value="css">CSS</option>
+            <option value="cpp">C++</option>
+            <option value="java">Java</option>
+            <option value="go">Go</option>
+            <option value="rust">Rust</option>
           </select>
         </div>
 
@@ -88,6 +98,37 @@ export function EditorHeader({
       </div>
       
       <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Share Button */}
+        <Button 
+          size="sm" 
+          variant="ghost" 
+          className="h-8 text-xs text-slate-400 hover:text-white hover:bg-white/5 border border-white/5 rounded-lg flex items-center transition-all px-2.5 sm:px-3"
+          onClick={onShareWorkspace}
+        >
+          <Share2 className="w-3.5 h-3.5 sm:mr-1.5" />
+          <span className="hidden sm:inline">Share</span>
+        </Button>
+
+        {/* Full Screen Button */}
+        <Button 
+          size="sm" 
+          variant="ghost" 
+          className="h-8 text-xs text-slate-400 hover:text-white hover:bg-white/5 border border-white/5 rounded-lg flex items-center transition-all px-2.5 sm:px-3"
+          onClick={onToggleFullScreen}
+        >
+          {isFullScreen ? (
+            <>
+              <Minimize2 className="w-3.5 h-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">Exit Fullscreen</span>
+            </>
+          ) : (
+            <>
+              <Maximize2 className="w-3.5 h-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">Fullscreen</span>
+            </>
+          )}
+        </Button>
+
         {/* Toggle Live Preview */}
         <Button 
           size="sm" 
@@ -103,7 +144,7 @@ export function EditorHeader({
           <span className="sm:hidden">👁️</span>
         </Button>
 
-        {/* Pull from GitHub */}
+        {/* Pull / Push GitHub */}
         <Button 
           size="sm" 
           variant="ghost" 
@@ -138,7 +179,7 @@ export function EditorHeader({
           disabled={isExecuting}
           className={`h-8 text-xs rounded-lg font-bold px-3 border transition-all ${
             isExecuting 
-              ? 'bg-amber-550/10 text-amber-400 border-amber-500/25 cursor-wait' 
+              ? 'bg-amber-500/10 text-amber-400 border-amber-500/25 cursor-wait' 
               : 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border-emerald-500/30'
           }`}
         >
