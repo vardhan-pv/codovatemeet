@@ -364,7 +364,7 @@ export default function DashboardPage() {
             <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-4 border-t-primary animate-spin" />
             {/* Inner logo */}
             <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shadow-lg bg-slate-900 border border-slate-800">
-              <img src="/logo.png" className="w-full h-full object-cover" alt="Codovate Logo" />
+              <img src="/logo.jpeg" className="w-full h-full object-cover" alt="Codovate Logo" />
             </div>
           </div>
           <p className="text-muted-foreground text-sm font-medium tracking-wide">Loading your workspace...</p>
@@ -388,7 +388,7 @@ export default function DashboardPage() {
       <header className="bg-primary px-6 flex items-center justify-between z-50 h-16 shadow-lg shadow-primary/25" style={{ borderBottom: '2px solid rgba(147,210,255,0.55)' }}>
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border border-white/30">
-            <img src="/logo.png" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
+            <img src="/logo.jpeg" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
           </div>
           <span className="font-extrabold text-lg tracking-tight text-white select-none">Codovate-Meet</span>
         </Link>

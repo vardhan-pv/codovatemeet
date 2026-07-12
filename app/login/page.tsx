@@ -184,7 +184,7 @@ export default function LoginPage() {
 
         <Link href="/" className="relative z-10 flex items-center gap-2.5 group">
           <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border border-white/30">
-            <img src="/logo.png" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
+            <img src="/logo.jpeg" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
           </div>
           <div className="flex flex-col leading-none">
             <span className="font-extrabold text-lg tracking-tight text-white">Codovate-Meet</span>

@@ -985,7 +985,7 @@ function RoomPageFallback() {
           <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-4 border-t-primary animate-spin" />
           {/* Inner logo */}
           <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shadow-lg bg-slate-900 border border-slate-800">
-            <img src="/logo.png" className="w-full h-full object-cover" alt="Codovate Logo" />
+            <img src="/logo.jpeg" className="w-full h-full object-cover" alt="Codovate Logo" />
           </div>
         </div>
         <p className="text-muted-foreground text-sm font-medium tracking-wide">Initializing Collaborative Workspace...</p>

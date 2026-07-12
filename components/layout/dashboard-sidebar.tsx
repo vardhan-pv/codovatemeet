@@ -61,7 +61,7 @@ export function DashboardSidebar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 mb-12 block group">
             <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border border-white/20">
-              <img src="/logo.png" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
+              <img src="/logo.jpeg" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
             </div>
             <span className="font-extrabold text-xl text-primary group-hover:text-white transition-colors">
               Codovate

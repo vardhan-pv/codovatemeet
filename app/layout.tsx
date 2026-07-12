@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     siteName: 'Codovate Meet',
     images: [
       {
-        url: '/logo.png',
+        url: '/logo.jpeg',
         width: 1200,
         height: 630,
         alt: 'Codovate Meet Logo',
