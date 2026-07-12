@@ -91,6 +91,65 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="font-sans antialiased bg-[#030712] text-slate-200" suppressHydrationWarning>
+        {/* JSON-LD Structured Data for Rich Google Search Results */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "SoftwareApplication",
+                  "name": "Codovate Meet",
+                  "applicationCategory": "DeveloperApplication",
+                  "operatingSystem": "Web",
+                  "url": "https://meet.codovatesolutions.in",
+                  "description": "AI-Powered Collaboration Platform for developers. Meet, Code, Build, and Deploy Together with real-time video meetings, collaborative code editing, AI pair programming, GitHub integration, and screen sharing.",
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "USD"
+                  },
+                  "featureList": [
+                    "Real-time Collaborative Code Editor",
+                    "AI Pair Programmer",
+                    "Video Meetings with WebRTC",
+                    "AI Meeting Notes",
+                    "Screen Sharing",
+                    "GitHub Integration",
+                    "Interactive Whiteboard",
+                    "End-to-End Encrypted Meetings"
+                  ],
+                  "screenshot": "https://meet.codovatesolutions.in/opengraph-image.png",
+                  "creator": {
+                    "@type": "Organization",
+                    "name": "Codovate Solutions",
+                    "url": "https://codovatesolutions.com"
+                  }
+                },
+                {
+                  "@type": "Organization",
+                  "name": "Codovate Solutions",
+                  "url": "https://codovatesolutions.com",
+                  "logo": "https://meet.codovatesolutions.in/logo.jpeg",
+                  "sameAs": [
+                    "https://github.com/codovatesolutions"
+                  ]
+                },
+                {
+                  "@type": "WebSite",
+                  "name": "Codovate Meet",
+                  "url": "https://meet.codovatesolutions.in",
+                  "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": "https://meet.codovatesolutions.in/join?room={search_term_string}",
+                    "query-input": "required name=search_term_string"
+                  }
+                }
+              ]
+            })
+          }}
+        />
         <Providers>{children}</Providers>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
