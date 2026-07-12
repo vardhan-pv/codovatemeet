@@ -8,10 +8,20 @@ interface WhiteboardProps {
   lobbyName?: string
   sendData?: (type: string, payload: any) => void
   readOnly?: boolean
+  activeWorkspace?: string
 }
 
-export function Whiteboard({ room, lobbyName, sendData, readOnly = false }: WhiteboardProps) {
+export function Whiteboard({ room, lobbyName, sendData, readOnly = false, activeWorkspace }: WhiteboardProps) {
   const [editor, setEditor] = useState<any>(null)
+
+  useEffect(() => {
+    if (activeWorkspace === 'whiteboard' && editor) {
+      const timer = setTimeout(() => {
+        window.dispatchEvent(new Event('resize'))
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [activeWorkspace, editor])
 
   useEffect(() => {
     const handleClear = () => {

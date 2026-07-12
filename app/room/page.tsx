@@ -3433,7 +3433,7 @@ function RoomPageContent() {
               <CodeEditor code={activeCode} onCodeChange={setActiveCode} room={room} lobbyName={lobbyName} sendData={sendData} readOnly={userRoles[lobbyName] === 'Guest' || (adminSettings.isCodeLocked && !isHostUser)} />
             </div>
             <div className={activeWorkspace === 'whiteboard' ? 'h-full w-full' : 'hidden'}>
-              <Whiteboard room={room} lobbyName={lobbyName} sendData={sendData} readOnly={userRoles[lobbyName] === 'Guest' || (adminSettings.isWhiteboardLocked && !isHostUser)} />
+              <Whiteboard activeWorkspace={activeWorkspace} room={room} lobbyName={lobbyName} sendData={sendData} readOnly={userRoles[lobbyName] === 'Guest' || (adminSettings.isWhiteboardLocked && !isHostUser)} />
             </div>
             <div className={activeWorkspace === 'uno' ? 'h-full w-full' : 'hidden'}>
               <UnoGameWorkspace room={room} lobbyName={lobbyName} sendData={sendData} setXp={setXp} />
