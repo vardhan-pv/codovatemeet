@@ -10,9 +10,15 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mon
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://meet.codovatesolutions.in'),
-  title: 'Codovate Meet — The AI-Powered Developer Collaboration Platform',
+
+  title: {
+    default: 'Codovate Meet — AI-Powered Collaboration Platform',
+    template: '%s | Codovate Meet',
+  },
+
   description:
-    'Join a meeting, write code together, debug together, draw architecture, and use AI assistance — all in one collaborative space.',
+    'AI-powered collaboration platform for developers, teams and startups. Video meetings, AI Pair Programmer, Live Workspace, screen sharing, GitHub integration and real-time coding — all in one place. Meet. Code. Build. Deploy Together.',
+
   keywords: [
     'AI Collaboration Platform',
     'Developer Collaboration',
@@ -33,23 +39,38 @@ export const metadata: Metadata = {
     'Startup Collaboration',
     'Remote Development',
     'Real-time Collaboration',
-    'Codovate Meet'
+    'Codovate Meet',
+    'Google Meet alternative',
+    'Zoom alternative for developers',
+    'developer meeting platform',
+    'live code collaboration',
+    'screen sharing for developers',
+    'GitHub integration meetings',
   ],
+
   authors: [{ name: 'Codovate Solutions', url: 'https://codovatesolutions.com' }],
   creator: 'Codovate Solutions',
   publisher: 'Codovate Solutions',
+
   alternates: {
-    canonical: '/',
+    canonical: 'https://meet.codovatesolutions.in',
   },
+
   icons: {
-    icon: '/logo.jpeg',
-    shortcut: '/logo.jpeg',
-    apple: '/logo.jpeg',
+    icon: [
+      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.png', sizes: '16x16', type: 'image/png' },
+    ],
+    shortcut: '/favicon.png',
+    apple: '/apple-icon.png',
   },
+
+  manifest: '/site.webmanifest',
+
   openGraph: {
-    title: 'Codovate Meet — The Developer Communication & Collaboration Platform',
+    title: 'Codovate Meet — AI-Powered Developer Collaboration Platform',
     description:
-      'Join a meeting, write code together, debug together, draw architecture, and use AI assistance — all in one collaborative space.',
+      'Meet, code and build together with AI. Codovate Meet combines video conferencing, collaborative coding, AI Pair Programmer and Live Workspace into one platform.',
     url: 'https://meet.codovatesolutions.in',
     siteName: 'Codovate Meet',
     images: [
@@ -57,22 +78,48 @@ export const metadata: Metadata = {
         url: '/opengraph-image.png',
         width: 1200,
         height: 630,
-        alt: 'Codovate Meet Poster - AI-Powered Collaboration Platform',
+        alt: 'Codovate Meet — AI-Powered Collaboration Platform for Developers',
       },
     ],
     locale: 'en_US',
     type: 'website',
   },
+
   twitter: {
     card: 'summary_large_image',
-    title: 'Codovate Meet — The Developer Communication & Collaboration Platform',
-    description: 'Join a meeting, write code together, debug together, draw architecture, and use AI assistance.',
+    title: 'Codovate Meet — AI-Powered Developer Collaboration Platform',
+    description: 'Meet, code and build together with AI. Video meetings, collaborative coding, AI Pair Programmer and GitHub integration.',
     images: ['/opengraph-image.png'],
+    creator: '@codovate',
+    site: '@codovate',
   },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+
+  verification: {
+    // Add your verification codes when available:
+    // google: 'your-google-site-verification-code',
+    // yandex: 'your-yandex-verification-code',
+  },
+
+  category: 'technology',
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'light dark',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  colorScheme: 'dark',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#2563eb' },
     { media: '(prefers-color-scheme: dark)', color: '#3b82f6' },
@@ -90,6 +137,12 @@ export default function RootLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} bg-background dark`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Preconnect to external domains for performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://images.unsplash.com" />
+      </head>
       <body className="font-sans antialiased bg-[#030712] text-slate-200" suppressHydrationWarning>
         {/* JSON-LD Structured Data for Rich Google Search Results */}
         <script
@@ -101,7 +154,7 @@ export default function RootLayout({
                 {
                   "@type": "SoftwareApplication",
                   "name": "Codovate Meet",
-                  "applicationCategory": "DeveloperApplication",
+                  "applicationCategory": "BusinessApplication",
                   "operatingSystem": "Web",
                   "url": "https://meet.codovatesolutions.in",
                   "description": "AI-Powered Collaboration Platform for developers. Meet, Code, Build, and Deploy Together with real-time video meetings, collaborative code editing, AI pair programming, GitHub integration, and screen sharing.",
@@ -145,6 +198,51 @@ export default function RootLayout({
                     "target": "https://meet.codovatesolutions.in/join?room={search_term_string}",
                     "query-input": "required name=search_term_string"
                   }
+                },
+                {
+                  "@type": "FAQPage",
+                  "mainEntity": [
+                    {
+                      "@type": "Question",
+                      "name": "What is Codovate Meet?",
+                      "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Codovate Meet is an AI-powered collaboration platform for developers and teams. It combines video meetings, a real-time collaborative code editor, AI Pair Programmer, interactive whiteboard, screen sharing, and GitHub integration into one seamless workspace."
+                      }
+                    },
+                    {
+                      "@type": "Question",
+                      "name": "How does the AI Pair Programmer work?",
+                      "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "The AI Pair Programmer listens to your meeting context and provides intelligent code suggestions, auto-completions, bug fixes, and explanations. It works alongside you in the collaborative code editor during live meetings."
+                      }
+                    },
+                    {
+                      "@type": "Question",
+                      "name": "Is Codovate Meet free to use?",
+                      "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes, Codovate Meet offers a free tier with full access to video meetings, collaborative coding, AI assistance, screen sharing, and GitHub integration. No credit card required."
+                      }
+                    },
+                    {
+                      "@type": "Question",
+                      "name": "Why choose Codovate Meet over Google Meet or Zoom?",
+                      "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Unlike Google Meet or Zoom, Codovate Meet is purpose-built for developers. It includes a built-in VS Code-style code editor, AI Pair Programmer, GitHub push integration, an interactive whiteboard, and real-time code collaboration — features that generic meeting platforms don't offer."
+                      }
+                    },
+                    {
+                      "@type": "Question",
+                      "name": "Is Codovate Meet secure?",
+                      "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes, all meetings use end-to-end encryption via WebRTC. Your code is never stored on our servers and all communication is peer-to-peer encrypted."
+                      }
+                    }
+                  ]
                 }
               ]
             })

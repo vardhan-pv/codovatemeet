@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Mail, Lock, ArrowLeft, Video, ArrowRight, ShieldCheck, KeyRound } from 'lucide-react'
@@ -183,8 +184,8 @@ export default function LoginPage() {
         <div className="absolute rounded-full blur-[100px] pointer-events-none w-64 h-64 bg-indigo-500/20 bottom-10 left-0" />
 
         <Link href="/" className="relative z-10 flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border border-white/30">
-            <img src="/logo.jpeg" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
+          <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border border-white/30 relative">
+            <Image src="/logo.jpeg" fill className="object-cover" alt="Codovate Meet Logo" />
           </div>
           <div className="flex flex-col leading-none">
             <span className="font-extrabold text-lg tracking-tight text-white">Codovate-Meet</span>

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { 
   ArrowRight, Video, Terminal, GitBranch, Cpu, Sparkles, Layout, 
@@ -26,8 +27,8 @@ export default function LandingPage() {
       <nav className="fixed top-0 inset-x-0 z-50 bg-background/60 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-105 bg-white/10 border border-white/10">
-                <img src="/logo.jpeg" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
+              <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-105 bg-white/10 border border-white/10 relative">
+                <Image src="/logo.jpeg" fill className="object-cover" alt="Codovate Meet Logo" />
               </div>
               <div className="flex flex-col leading-none">
                 <span className="font-extrabold text-base tracking-tight text-white group-hover:text-primary transition-colors">
@@ -142,11 +143,11 @@ export default function LandingPage() {
               <div className="col-span-3 border-r border-white/5 flex flex-col bg-secondary">
                 <div className="p-3 grid grid-rows-2 gap-2 flex-1">
                   <div className="bg-slate-800 rounded-lg relative overflow-hidden group">
-                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover opacity-80 mix-blend-luminosity group-hover:mix-blend-normal transition-all" alt="Participant" />
+                    <Image src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600&auto=format&fit=crop" fill className="object-cover opacity-80 mix-blend-luminosity group-hover:mix-blend-normal transition-all" alt="Participant" />
                     <span className="absolute bottom-2 left-2 text-[10px] bg-black/60 px-2 py-0.5 rounded text-white backdrop-blur-md border border-white/10">Alex</span>
                   </div>
                   <div className="bg-slate-800 rounded-lg relative overflow-hidden group">
-                    <img src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover opacity-80 mix-blend-luminosity group-hover:mix-blend-normal transition-all" alt="Participant" />
+                    <Image src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=600&auto=format&fit=crop" fill className="object-cover opacity-80 mix-blend-luminosity group-hover:mix-blend-normal transition-all" alt="Participant" />
                     <span className="absolute bottom-2 left-2 text-[10px] bg-black/60 px-2 py-0.5 rounded text-white backdrop-blur-md border border-white/10">You</span>
                     <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
                   </div>
@@ -378,6 +379,74 @@ export default function LandingPage() {
       </section>
       </main>
 
+      {/* ── FAQ SECTION (SEO + AEO Optimization) ── */}
+      <section id="faq" className="relative py-24 sm:py-32 bg-[#050816]">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent" />
+        <div className="max-w-4xl mx-auto px-6 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className="text-primary text-xs font-bold tracking-[0.25em] uppercase block mb-4">Frequently Asked Questions</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+              Everything you need to know
+            </h2>
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-sm leading-relaxed">
+              Quick answers about Codovate Meet — the AI-powered collaboration platform built for developers and teams.
+            </p>
+          </motion.div>
+
+          <div className="space-y-4">
+            {[
+              {
+                q: 'What is Codovate Meet?',
+                a: 'Codovate Meet is an AI-powered collaboration platform for developers and teams. It combines video meetings, a real-time collaborative code editor (similar to VS Code), AI Pair Programmer, interactive whiteboard, screen sharing, and GitHub integration into one seamless workspace. Meet. Code. Build. Deploy Together.'
+              },
+              {
+                q: 'How does the AI Pair Programmer work?',
+                a: 'The AI Pair Programmer listens to your meeting context and provides intelligent code suggestions, auto-completions, bug fixes, and explanations directly inside the collaborative code editor. It works alongside you during live meetings, helping your team code faster and smarter.'
+              },
+              {
+                q: 'Is Codovate Meet free to use?',
+                a: 'Yes! Codovate Meet offers a free tier with full access to video meetings, collaborative coding, AI assistance, screen sharing, and GitHub integration. No credit card required to get started.'
+              },
+              {
+                q: 'Why choose Codovate Meet over Google Meet or Zoom?',
+                a: 'Unlike Google Meet or Zoom, Codovate Meet is purpose-built for developers. It includes a built-in VS Code-style code editor with multi-language support, AI Pair Programmer, GitHub push/pull integration, an interactive whiteboard for architecture diagrams, and real-time code collaboration — features that generic meeting platforms simply don\'t offer.'
+              },
+              {
+                q: 'Is Codovate Meet secure?',
+                a: 'Absolutely. All meetings use end-to-end encryption via WebRTC. Your code is never stored on our servers — all communication is peer-to-peer encrypted. We take security and privacy very seriously.'
+              },
+              {
+                q: 'Which programming languages does the code editor support?',
+                a: 'The collaborative code editor supports JavaScript, TypeScript, Python, HTML, CSS, C++, Java, Go, Rust, and many more languages. It features syntax highlighting, IntelliSense, bracket pair colorization, and full Monaco Editor capabilities — the same engine that powers VS Code.'
+              },
+            ].map((item, index) => (
+              <motion.details
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                viewport={{ once: true }}
+                className="group bg-white/[0.02] border border-white/5 rounded-xl overflow-hidden hover:border-primary/20 transition-all duration-300"
+              >
+                <summary className="flex items-center justify-between px-6 py-5 cursor-pointer select-none text-white font-semibold text-sm sm:text-base hover:text-primary transition-colors list-none [&::-webkit-details-marker]:hidden">
+                  <span>{item.q}</span>
+                  <span className="text-slate-500 group-open:rotate-45 transition-transform duration-300 text-xl font-light ml-4 shrink-0">+</span>
+                </summary>
+                <div className="px-6 pb-5 text-sm text-slate-400 leading-relaxed border-t border-white/5 pt-4">
+                  {item.a}
+                </div>
+              </motion.details>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── FOOTER ── */}
       <footer className="border-t border-white/5 bg-[#0B0D19]/90 relative overflow-hidden">
         {/* Glow highlight */}
@@ -389,8 +458,8 @@ export default function LandingPage() {
             {/* Column 1: Branding & Tagline */}
             <div className="lg:col-span-2 space-y-6">
               <Link href="/" className="flex items-center gap-3 group">
-                <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-lg bg-white/10 border border-white/10">
-                  <img src="/logo.jpeg" className="w-full h-full object-cover" alt="Codovate Meet Logo" />
+                <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-lg bg-white/10 border border-white/10 relative">
+                  <Image src="/logo.jpeg" fill className="object-cover" alt="Codovate Meet Logo" />
                 </div>
                 <span className="font-extrabold text-lg tracking-tight text-white group-hover:text-primary transition-colors">
                   Codovate Meet

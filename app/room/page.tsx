@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { Room, RoomEvent, LocalVideoTrack, createLocalVideoTrack } from 'livekit-client'
 import { useAuth } from '@/hooks/useAuth'
 import { livekitService } from '@/services/livekit'
@@ -984,8 +985,8 @@ function RoomPageFallback() {
           {/* Spinning outer loader */}
           <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-4 border-t-primary animate-spin" />
           {/* Inner logo */}
-          <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shadow-lg bg-slate-900 border border-slate-800">
-            <img src="/logo.jpeg" className="w-full h-full object-cover" alt="Codovate Logo" />
+          <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shadow-lg bg-slate-900 border border-slate-800 relative">
+            <Image src="/logo.jpeg" fill className="object-cover" alt="Codovate Logo" />
           </div>
         </div>
         <p className="text-muted-foreground text-sm font-medium tracking-wide">Initializing Collaborative Workspace...</p>
