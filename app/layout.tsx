@@ -14,9 +14,9 @@ export const metadata: Metadata = {
   description:
     'Join a meeting, write code together, debug together, draw architecture, and use AI assistance — all in one collaborative space.',
   icons: {
-    icon: '/favicon.png',
-    shortcut: '/favicon.png',
-    apple: '/favicon.png',
+    icon: '/logo.jpeg',
+    shortcut: '/logo.jpeg',
+    apple: '/logo.jpeg',
   },
   openGraph: {
     title: 'Codovate Meet — The Developer Communication & Collaboration Platform',
