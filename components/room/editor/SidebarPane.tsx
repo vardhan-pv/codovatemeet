@@ -1,6 +1,9 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { ChevronRight, MessageSquare, CornerDownRight, Plus, FolderUp } from 'lucide-react'
+import { 
+  ChevronRight, ChevronDown, Folder, FolderOpen, FileCode, FileJson, 
+  Settings, GitBranch, Terminal, Code2, Palette, FileText, File, Package, Plus, FolderUp, MessageSquare, CornerDownRight
+} from 'lucide-react'
 
 interface Comment {
   id: string
@@ -17,7 +20,7 @@ interface SidebarPaneProps {
   files: { [filename: string]: { code: string; language: string } }
   currentFile: string
   onSelectFile: (fname: string) => void
-  onCreateFile: () => void
+  onCreateFile: (defaultPath?: string) => void
   onDeleteFile: (fname: string) => void
   onFolderUploadClick: () => void
   searchQuery: string
@@ -30,6 +33,57 @@ interface SidebarPaneProps {
   onAddComment: () => void
   onDeleteComment: (cid: string) => void
   onNavigateToComment: (filename: string, line: number) => void
+}
+
+// Tree Node Structure
+interface TreeNode {
+  name: string
+  path: string
+  isFolder: boolean
+  children: TreeNode[]
+}
+
+// Helper to build tree from flat list of paths
+function buildTree(fileKeys: string[]): TreeNode {
+  const root: TreeNode = { name: 'root', path: '', isFolder: true, children: [] }
+
+  fileKeys.forEach(filePath => {
+    // Standardize path delimiters
+    const normalizedPath = filePath.replace(/\\/g, '/')
+    const parts = normalizedPath.split('/')
+    let current = root
+
+    parts.forEach((part, index) => {
+      const isFolder = index < parts.length - 1
+      const currentPath = parts.slice(0, index + 1).join('/')
+
+      let existingNode = current.children.find(child => child.name === part && child.isFolder === isFolder)
+
+      if (!existingNode) {
+        existingNode = {
+          name: part,
+          path: currentPath,
+          isFolder,
+          children: []
+        }
+        current.children.push(existingNode)
+      }
+      current = existingNode
+    })
+  })
+
+  // Sort folder children: directories first, then files alphabetically
+  const sortTree = (node: TreeNode) => {
+    node.children.sort((a, b) => {
+      if (a.isFolder && !b.isFolder) return -1
+      if (!a.isFolder && b.isFolder) return 1
+      return a.name.localeCompare(b.name)
+    })
+    node.children.forEach(sortTree)
+  }
+
+  sortTree(root)
+  return root
 }
 
 export function SidebarPane({
@@ -52,12 +106,171 @@ export function SidebarPane({
   onDeleteComment,
   onNavigateToComment
 }: SidebarPaneProps) {
+  
+  const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set(['components', 'app', 'backend']))
+
+  // Automatically expand parent directories of active file
+  useEffect(() => {
+    if (currentFile) {
+      const parts = currentFile.replace(/\\/g, '/').split('/')
+      if (parts.length > 1) {
+        setExpandedDirs(prev => {
+          const next = new Set(prev)
+          let currentPath = ''
+          for (let i = 0; i < parts.length - 1; i++) {
+            currentPath = currentPath ? `${currentPath}/${parts[i]}` : parts[i]
+            next.add(currentPath)
+          }
+          return next
+        })
+      }
+    }
+  }, [currentFile])
+
+  const toggleDirectory = (path: string) => {
+    setExpandedDirs(prev => {
+      const next = new Set(prev)
+      if (next.has(path)) {
+        next.delete(path)
+      } else {
+        next.add(path)
+      }
+      return next
+    })
+  }
+
+  // Get custom colored folder icons
+  const getFolderIcon = (name: string, isOpen: boolean) => {
+    const colorMap: { [key: string]: string } = {
+      app: 'text-rose-450',
+      components: 'text-emerald-500',
+      backend: 'text-violet-500',
+      hooks: 'text-purple-400',
+      lib: 'text-amber-500',
+      public: 'text-sky-400',
+      services: 'text-cyan-400',
+      out: 'text-indigo-400',
+      '.next': 'text-slate-400',
+      node_modules: 'text-emerald-600'
+    }
+    const colorClass = colorMap[name.toLowerCase()] || 'text-amber-400/90'
+    return isOpen 
+      ? <FolderOpen className={`w-4 h-4 shrink-0 ${colorClass}`} /> 
+      : <Folder className={`w-4 h-4 shrink-0 ${colorClass}`} />
+  }
+
+  // Get VS Code themed file icons matching the second image
+  const getFileIcon = (name: string, language: string) => {
+    const lowerName = name.toLowerCase()
+    
+    if (lowerName === 'package.json' || lowerName === 'package-lock.json') {
+      return <Package className="w-4 h-4 text-emerald-500 shrink-0" />
+    }
+    if (lowerName === '.gitignore' || lowerName === '.gitattributes') {
+      return <GitBranch className="w-4 h-4 text-rose-500 shrink-0" />
+    }
+    if (lowerName.startsWith('.env')) {
+      return <Settings className="w-4 h-4 text-amber-500 shrink-0" />
+    }
+    if (lowerName.endsWith('config.js') || lowerName.endsWith('config.mjs') || lowerName.endsWith('.json')) {
+      return <FileJson className="w-4 h-4 text-blue-400 shrink-0" />
+    }
+
+    // Language fallbacks
+    switch (language.toLowerCase()) {
+      case 'javascript':
+        return <Terminal className="w-4 h-4 text-yellow-500 shrink-0" />
+      case 'typescript':
+        return <Terminal className="w-4 h-4 text-sky-450 shrink-0" />
+      case 'python':
+        return <Code2 className="w-4 h-4 text-green-500 shrink-0" />
+      case 'html':
+        return <Code2 className="w-4 h-4 text-orange-500 shrink-0" />
+      case 'css':
+        return <Palette className="w-4 h-4 text-teal-400 shrink-0" />
+      case 'markdown':
+        return <FileText className="w-4 h-4 text-blue-400 shrink-0" />
+      default:
+        return <File className="w-4 h-4 text-slate-400 shrink-0" />
+    }
+  }
+
+  // Recursive Tree Renderer
+  const renderTreeNodes = (nodes: TreeNode[], depth: number = 0) => {
+    return nodes.map(node => {
+      const isSelected = node.path === currentFile
+      const fileInfo = files[node.path] || { language: 'plaintext' }
+      
+      if (node.isFolder) {
+        const isOpen = expandedDirs.has(node.path)
+        return (
+          <div key={node.path} className="flex flex-col">
+            <div
+              onClick={() => toggleDirectory(node.path)}
+              className="group flex items-center justify-between px-3 py-1.5 hover:bg-white/5 cursor-pointer text-slate-400 select-none transition-all duration-150"
+              style={{ paddingLeft: `${depth * 12 + 12}px` }}
+            >
+              <div className="flex items-center gap-1.5 truncate">
+                {isOpen ? <ChevronDown className="w-3.5 h-3.5 text-slate-500" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-500" />}
+                {getFolderIcon(node.name, isOpen)}
+                <span className="truncate text-slate-300 font-sans text-xs">{node.name}</span>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onCreateFile(node.path + '/')
+                }}
+                className="opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded text-slate-500 bg-transparent border-none cursor-pointer"
+                title="Create file in folder"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
+            {isOpen && renderTreeNodes(node.children, depth + 1)}
+          </div>
+        )
+      } else {
+        return (
+          <div
+            key={node.path}
+            onClick={() => onSelectFile(node.path)}
+            className={`group flex items-center justify-between px-3 py-1.5 cursor-pointer transition-all border-l-2 ${
+              isSelected 
+                ? 'bg-[#2a2d2e] text-white font-semibold border-l-primary shadow-inner' 
+                : 'hover:bg-white/5 text-slate-400 border-l-transparent'
+            }`}
+            style={{ paddingLeft: `${depth * 12 + 24}px` }}
+          >
+            <div className="flex items-center gap-2 truncate">
+              {getFileIcon(node.name, fileInfo.language)}
+              <span className="truncate text-xs font-sans select-none">{node.name}</span>
+            </div>
+            {fileKeys.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDeleteFile(node.path)
+                }}
+                className="opacity-0 group-hover:opacity-100 hover:text-rose-400 text-slate-500 text-xs bg-transparent border-none cursor-pointer transition-all"
+                title="Delete File"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        )
+      }
+    })
+  }
+
+  const treeRoot = buildTree(fileKeys)
+
   return (
-    <aside className="w-56 bg-[#18181b] flex flex-col select-none shrink-0 font-mono text-[11px] text-[#c5c5c5] border-r border-white/5 h-full">
+    <aside className="w-56 bg-[#18181b] flex flex-col select-none shrink-0 border-r border-white/5 h-full">
       {sidebarTab === 'explorer' ? (
         <>
           <div className="p-3 border-b border-white/5 flex justify-between items-center text-slate-400 font-bold uppercase tracking-wider">
-            <span>Explorer</span>
+            <span className="text-[10px] font-sans">Explorer</span>
             <div className="flex items-center gap-1.5">
               {/* Folder Import Button */}
               <button 
@@ -69,60 +282,17 @@ export function SidebarPane({
               </button>
               {/* New File Button */}
               <button 
-                onClick={onCreateFile} 
+                onClick={() => onCreateFile('')} 
                 className="hover:text-white hover:bg-white/5 p-1 rounded font-bold text-slate-400 bg-transparent border-none outline-none cursor-pointer transition flex items-center justify-center"
-                title="New File"
+                title="New File at Root"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
+          {/* Collapsible Tree Area */}
           <div className="flex-1 overflow-y-auto py-2 space-y-0.5 animate-in fade-in duration-200">
-            {fileKeys.map(fname => {
-              const fileInfo = files[fname] || { language: 'javascript' }
-              const fileLang = fileInfo.language
-              const isSelected = fname === currentFile
-              return (
-                <div
-                  key={fname}
-                  onClick={() => onSelectFile(fname)}
-                  className={`group flex items-center justify-between px-3 py-2 cursor-pointer transition-all border-l-2 ${
-                    isSelected 
-                      ? 'bg-primary/10 text-white font-semibold border-l-primary' 
-                      : 'hover:bg-white/5 text-slate-450 border-l-transparent'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 truncate">
-                    <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded leading-none ${
-                      fileLang === 'javascript' ? 'bg-yellow-500/10 text-yellow-500' :
-                      fileLang === 'typescript' ? 'bg-blue-500/10 text-blue-400' :
-                      fileLang === 'python' ? 'bg-green-500/10 text-green-400' :
-                      fileLang === 'html' ? 'bg-orange-500/10 text-orange-500' : 
-                      fileLang === 'css' ? 'bg-teal-500/10 text-teal-400' : 'bg-slate-500/15 text-slate-450'
-                    }`}>
-                      {fileLang === 'javascript' ? 'JS' :
-                       fileLang === 'typescript' ? 'TS' :
-                       fileLang === 'python' ? 'PY' :
-                       fileLang === 'html' ? 'HTML' :
-                       fileLang === 'css' ? 'CSS' : fileLang.substring(0, 3).toUpperCase()}
-                    </span>
-                    <span className="truncate">{fname}</span>
-                  </div>
-                  {fileKeys.length > 1 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onDeleteFile(fname)
-                      }}
-                      className="opacity-0 group-hover:opacity-100 hover:text-rose-450 text-slate-500 text-xs ml-1 bg-transparent border-none cursor-pointer p-0.5 rounded transition-all"
-                      title="Delete File"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              )
-            })}
+            {renderTreeNodes(treeRoot.children)}
           </div>
         </>
       ) : sidebarTab === 'search' ? (
@@ -169,7 +339,7 @@ export function SidebarPane({
                   className="p-2 rounded-lg bg-slate-950/40 hover:bg-slate-950 border border-white/5 hover:border-primary/20 cursor-pointer text-[10px] group transition"
                 >
                   <div className="flex justify-between items-center text-slate-350 font-bold mb-1">
-                    <span className="truncate flex items-center gap-1 text-primary"><ChevronRight className="w-3 h-3 shrink-0" /> {res.filename}</span>
+                    <span className="truncate flex items-center gap-1 text-primary"><ChevronRight className="w-3.5 h-3.5 shrink-0" /> {res.filename}</span>
                     <span className="text-slate-500 font-normal">L{res.line}</span>
                   </div>
                   <p className="text-slate-400 font-mono truncate leading-normal italic pl-4">{res.text}</p>
@@ -201,11 +371,11 @@ export function SidebarPane({
                   className="p-2.5 rounded-lg bg-slate-950/40 hover:bg-slate-950 border border-white/5 hover:border-emerald-500/20 cursor-pointer text-[10px] group transition flex flex-col gap-1.5"
                 >
                   <div className="flex justify-between items-center text-slate-300 font-bold">
-                    <span className="truncate flex items-center gap-1 text-emerald-400"><MessageSquare className="w-3 h-3 shrink-0" /> {c.author}</span>
+                    <span className="truncate flex items-center gap-1 text-emerald-400"><MessageSquare className="w-3.5 h-3.5 shrink-0" /> {c.author}</span>
                     <span className="text-slate-500 font-normal text-[8px]">{c.time}</span>
                   </div>
-                  <div className="text-slate-500 text-[8px] flex items-center gap-1.5 font-bold">
-                    <CornerDownRight className="w-2.5 h-2.5 text-slate-600 shrink-0" /> {c.filename} : Line {c.line}
+                  <div className="text-slate-550 text-[8px] flex items-center gap-1.5 font-bold">
+                    <CornerDownRight className="w-2.5 h-2.5 text-slate-655 shrink-0" /> {c.filename} : Line {c.line}
                   </div>
                   <p className="text-slate-200 font-sans mt-0.5 whitespace-pre-wrap leading-relaxed">{c.text}</p>
                   <button

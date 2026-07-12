@@ -317,8 +317,8 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
   }
 
   // File management
-  const handleCreateFile = () => {
-    const filename = prompt("Enter new filename (e.g. index.py, style.css, app.ts):")
+  const handleCreateFile = (defaultPath?: string) => {
+    const filename = prompt("Enter new filename (e.g. index.py, style.css, app.ts):", defaultPath || '')
     if (!filename) return
     if (files[filename]) {
       alert("File already exists!")
