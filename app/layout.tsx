@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://meet.codovate.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://meet.codovatesolutions.in'),
   title: 'Codovate Meet — The AI-Powered Developer Collaboration Platform',
   description:
     'Join a meeting, write code together, debug together, draw architecture, and use AI assistance — all in one collaborative space.',
@@ -50,14 +50,14 @@ export const metadata: Metadata = {
     title: 'Codovate Meet — The Developer Communication & Collaboration Platform',
     description:
       'Join a meeting, write code together, debug together, draw architecture, and use AI assistance — all in one collaborative space.',
-    url: 'https://meet.codovate.com',
+    url: 'https://meet.codovatesolutions.in',
     siteName: 'Codovate Meet',
     images: [
       {
-        url: '/logo.jpeg',
+        url: '/opengraph-image.png',
         width: 1200,
         height: 630,
-        alt: 'Codovate Meet Logo',
+        alt: 'Codovate Meet Poster - AI-Powered Collaboration Platform',
       },
     ],
     locale: 'en_US',
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Codovate Meet — The Developer Communication & Collaboration Platform',
     description: 'Join a meeting, write code together, debug together, draw architecture, and use AI assistance.',
-    images: ['/logo.jpeg'],
+    images: ['/opengraph-image.png'],
   },
 }
 
