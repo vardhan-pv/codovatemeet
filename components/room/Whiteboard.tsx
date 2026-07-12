@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import { Tldraw } from '@tldraw/tldraw'
-import '@tldraw/tldraw/tldraw.css'
 
 interface WhiteboardProps {
   room?: any
@@ -42,12 +41,12 @@ export function Whiteboard({ room, lobbyName, sendData, readOnly = false }: Whit
           <span className="text-[10px] uppercase font-bold text-primary bg-primary/10 px-2 py-1 rounded">Live Sync Active</span>
         </div>
       </div>
-      
-      <div className="flex-1 w-full h-full relative" style={{ isolation: 'isolate' }}>
-        <Tldraw 
-          className="tldraw-container"
-          onMount={(e) => setEditor(e)}
-        />
+      <div className="flex-1 w-full relative">
+        <div className="absolute inset-0" style={{ isolation: 'isolate' }}>
+          <Tldraw 
+            onMount={(e) => setEditor(e)}
+          />
+        </div>
       </div>
     </div>
   )
