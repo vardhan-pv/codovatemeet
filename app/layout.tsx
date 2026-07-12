@@ -1,7 +1,6 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import '@tldraw/tldraw/tldraw.css'
 import { Providers } from './providers'
 
 import { Inter, JetBrains_Mono } from 'next/font/google'
