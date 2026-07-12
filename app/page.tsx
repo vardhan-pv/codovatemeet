@@ -57,7 +57,8 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ── HERO ── */}
+      <main>
+        {/* ── HERO ── */}
       <section className="relative pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden hero-gradient">
         {/* Abstract shapes */}
         <div className="absolute rounded-full blur-[100px] pointer-events-none w-[600px] h-[600px] bg-primary/20 top-[-200px] right-[-200px]" />
@@ -375,6 +376,7 @@ export default function LandingPage() {
           </div>
         </motion.div>
       </section>
+      </main>
 
       {/* ── FOOTER ── */}
       <footer className="border-t border-white/5 bg-[#0B0D19]/90 relative overflow-hidden">

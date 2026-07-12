@@ -13,6 +13,21 @@ export const metadata: Metadata = {
   title: 'Codovate Meet — The AI-Powered Developer Collaboration Platform',
   description:
     'Join a meeting, write code together, debug together, draw architecture, and use AI assistance — all in one collaborative space.',
+  keywords: [
+    'developer collaboration',
+    'video conferencing for developers',
+    'remote pair programming',
+    'collaborative coding',
+    'AI pair programmer',
+    'remote engineering teams',
+    'software development platform'
+  ],
+  authors: [{ name: 'Codovate Solutions', url: 'https://codovatesolutions.com' }],
+  creator: 'Codovate Solutions',
+  publisher: 'Codovate Solutions',
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: '/logo.jpeg',
     shortcut: '/logo.jpeg',
@@ -34,6 +49,12 @@ export const metadata: Metadata = {
     ],
     locale: 'en_US',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Codovate Meet — The Developer Communication & Collaboration Platform',
+    description: 'Join a meeting, write code together, debug together, draw architecture, and use AI assistance.',
+    images: ['/logo.jpeg'],
   },
 }
 
