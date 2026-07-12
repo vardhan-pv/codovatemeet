@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { 
   ChevronRight, ChevronDown, Folder, FolderOpen, FileCode, FileJson, 
-  Settings, GitBranch, Terminal, Code2, Palette, FileText, File, Package, Plus, FolderUp, MessageSquare, CornerDownRight
+  Settings, GitBranch, Terminal, Code2, Palette, FileText, File, Package, Plus, FolderUp, MessageSquare, CornerDownRight, MoreHorizontal
 } from 'lucide-react'
 
 interface Comment {
@@ -33,6 +33,7 @@ interface SidebarPaneProps {
   onAddComment: () => void
   onDeleteComment: (cid: string) => void
   onNavigateToComment: (filename: string, line: number) => void
+  rootFolderName?: string
 }
 
 // Tree Node Structure
@@ -104,10 +105,12 @@ export function SidebarPane({
   comments,
   onAddComment,
   onDeleteComment,
-  onNavigateToComment
+  onNavigateToComment,
+  rootFolderName = 'WORKSPACE'
 }: SidebarPaneProps) {
   
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set(['components', 'app', 'backend']))
+  const [isRootExpanded, setIsRootExpanded] = useState(true)
 
   // Automatically expand parent directories of active file
   useEffect(() => {
@@ -151,7 +154,7 @@ export function SidebarPane({
       services: 'text-cyan-400',
       out: 'text-indigo-400',
       '.next': 'text-slate-400',
-      node_modules: 'text-emerald-600'
+      node_modules: 'text-slate-500'
     }
     const colorClass = colorMap[name.toLowerCase()] || 'text-amber-400/90'
     return isOpen 
@@ -207,7 +210,7 @@ export function SidebarPane({
           <div key={node.path} className="flex flex-col">
             <div
               onClick={() => toggleDirectory(node.path)}
-              className="group flex items-center justify-between px-3 py-1.5 hover:bg-white/5 cursor-pointer text-slate-400 select-none transition-all duration-150"
+              className="group flex items-center justify-between px-3 py-1 hover:bg-white/5 cursor-pointer text-slate-400 select-none transition-all duration-150"
               style={{ paddingLeft: `${depth * 12 + 12}px` }}
             >
               <div className="flex items-center gap-1.5 truncate">
@@ -223,7 +226,7 @@ export function SidebarPane({
                 className="opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded text-slate-500 bg-transparent border-none cursor-pointer"
                 title="Create file in folder"
               >
-                <Plus className="w-3 h-3" />
+                <Plus className="w-3.5 h-3.5" />
               </button>
             </div>
             {isOpen && renderTreeNodes(node.children, depth + 1)}
@@ -234,7 +237,7 @@ export function SidebarPane({
           <div
             key={node.path}
             onClick={() => onSelectFile(node.path)}
-            className={`group flex items-center justify-between px-3 py-1.5 cursor-pointer transition-all border-l-2 ${
+            className={`group flex items-center justify-between px-3 py-1 cursor-pointer transition-all border-l-2 ${
               isSelected 
                 ? 'bg-[#2a2d2e] text-white font-semibold border-l-primary shadow-inner' 
                 : 'hover:bg-white/5 text-slate-400 border-l-transparent'
@@ -251,7 +254,7 @@ export function SidebarPane({
                   e.stopPropagation()
                   onDeleteFile(node.path)
                 }}
-                className="opacity-0 group-hover:opacity-100 hover:text-rose-400 text-slate-500 text-xs bg-transparent border-none cursor-pointer transition-all"
+                className="opacity-0 group-hover:opacity-100 hover:text-rose-450 text-slate-500 text-xs bg-transparent border-none cursor-pointer transition-all"
                 title="Delete File"
               >
                 ×
@@ -269,30 +272,58 @@ export function SidebarPane({
     <aside className="w-56 bg-[#18181b] flex flex-col select-none shrink-0 border-r border-white/5 h-full">
       {sidebarTab === 'explorer' ? (
         <>
-          <div className="p-3 border-b border-white/5 flex justify-between items-center text-slate-400 font-bold uppercase tracking-wider">
-            <span className="text-[10px] font-sans">Explorer</span>
-            <div className="flex items-center gap-1.5">
-              {/* Folder Import Button */}
-              <button 
-                onClick={onFolderUploadClick} 
-                className="hover:text-white hover:bg-white/5 p-1 rounded font-bold text-slate-400 bg-transparent border-none outline-none cursor-pointer transition flex items-center justify-center"
-                title="Import Local Folder"
-              >
-                <FolderUp className="w-3.5 h-3.5" />
-              </button>
-              {/* New File Button */}
-              <button 
-                onClick={() => onCreateFile('')} 
-                className="hover:text-white hover:bg-white/5 p-1 rounded font-bold text-slate-400 bg-transparent border-none outline-none cursor-pointer transition flex items-center justify-center"
-                title="New File at Root"
-              >
-                <Plus className="w-3.5 h-3.5" />
+          {/* Main Sidebar Header (Explorer ...) */}
+          <div className="p-3 flex justify-between items-center text-slate-400 select-none">
+            <span className="text-[11px] font-sans font-bold tracking-wider uppercase">Explorer</span>
+            <div className="flex items-center gap-1">
+              <button className="hover:text-white p-1 rounded transition-colors text-slate-500">
+                <MoreHorizontal className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
-          {/* Collapsible Tree Area */}
-          <div className="flex-1 overflow-y-auto py-2 space-y-0.5 animate-in fade-in duration-200">
-            {renderTreeNodes(treeRoot.children)}
+
+          {/* Root directory collapsible folder header (Image 1) */}
+          <div className="flex flex-col flex-grow overflow-y-auto">
+            <div
+              onClick={() => setIsRootExpanded(!isRootExpanded)}
+              className="flex items-center justify-between px-3 py-1 hover:bg-white/5 cursor-pointer text-slate-400 select-none transition-all duration-150 border-t border-b border-white/5 bg-slate-950/20"
+            >
+              <div className="flex items-center gap-1.5 truncate">
+                {isRootExpanded ? <ChevronDown className="w-3.5 h-3.5 text-slate-500" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-500" />}
+                <span className="truncate text-xs font-bold text-slate-200 uppercase font-sans tracking-wide">{rootFolderName}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {/* Folder Import Button */}
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onFolderUploadClick()
+                  }} 
+                  className="hover:text-white hover:bg-white/5 p-0.5 rounded text-slate-500 bg-transparent border-none cursor-pointer transition flex items-center justify-center"
+                  title="Import Local Folder"
+                >
+                  <FolderUp className="w-3 h-3" />
+                </button>
+                {/* New File Button */}
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onCreateFile('')
+                  }} 
+                  className="hover:text-white hover:bg-white/5 p-0.5 rounded text-slate-500 bg-transparent border-none cursor-pointer transition flex items-center justify-center"
+                  title="New File at Root"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+
+            {/* Tree nodes inside collapsible root workspace */}
+            {isRootExpanded && (
+              <div className="py-1 space-y-0.5 animate-in fade-in duration-250">
+                {renderTreeNodes(treeRoot.children)}
+              </div>
+            )}
           </div>
         </>
       ) : sidebarTab === 'search' ? (
