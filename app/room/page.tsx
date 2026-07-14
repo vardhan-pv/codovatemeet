@@ -1251,6 +1251,7 @@ function RoomPageContent() {
   useEffect(() => {
     let interval: any;
     if (isPresentingWorkspace === 'code' && activeCode) {
+      displayCaption('System', `Broadcasting your code workspace to peers...`)
       // Broadcast immediately
       sendData('PRESENT_WORKSPACE', { workspaceType: 'code', state: activeCode })
       
@@ -1868,6 +1869,7 @@ function RoomPageContent() {
         if (parsed.type === 'PRESENT_WORKSPACE') {
           const localId = room.localParticipant.sid || room.localParticipant.identity
           if (parsed.senderSid !== localId) {
+            displayCaption('System', `Received ${parsed.workspaceType} workspace broadcast from ${parsed.sender}`)
             setPresentedWorkspace({
               type: parsed.workspaceType,
               state: parsed.state,
