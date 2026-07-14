@@ -249,7 +249,7 @@ export default function LandingPage() {
 
 
       {/* ── DEVELOPER FEATURES ── */}
-      <section id="features" className="py-32 px-6 max-w-7xl mx-auto">
+      <section id="features" className="py-20 px-6 max-w-7xl mx-auto">
         <motion.div
           className="text-center mb-20"
           initial={{ opacity: 0, y: 20 }}
@@ -317,7 +317,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── UNIQUE VALUE PROPOSITION ── */}
-      <section id="ai" className="py-24 border-y border-white/5 bg-secondary relative overflow-hidden">
+      <section id="ai" className="py-16 border-y border-white/5 bg-secondary relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -388,7 +388,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-32 px-6 relative overflow-hidden">
+      <section className="py-20 px-6 relative overflow-hidden">
         <div className="absolute rounded-full blur-[100px] pointer-events-none w-[800px] h-[800px] bg-primary/10 top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2" />
         <motion.div
           className="relative z-10 max-w-4xl mx-auto text-center"
@@ -420,7 +420,7 @@ export default function LandingPage() {
       </main>
 
       {/* ── FAQ SECTION (SEO + AEO Optimization) ── */}
-      <section id="faq" className="relative py-24 sm:py-32 bg-[#050816]">
+      <section id="faq" className="relative py-16 sm:py-24 bg-[#050816]">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent" />
         <div className="max-w-4xl mx-auto px-6 relative z-10">
           <motion.div
