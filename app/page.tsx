@@ -30,12 +30,12 @@ export default function LandingPage() {
       {/* ── NAVBAR ── */}
       <nav className="fixed top-0 inset-x-0 z-50 bg-background/60 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-105 bg-white/10 border border-white/10 relative shrink-0">
+            <Link href="/" className="flex items-center gap-3 group shrink-0">
+              <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-105 bg-white/10 border border-white/10 relative shrink-0">
                 <Image src="/logo.jpeg" fill className="object-cover" alt="Codovate Meet Logo" />
               </div>
               <div className="flex flex-col leading-none">
-                <span className="font-extrabold text-sm sm:text-base tracking-tight text-white group-hover:text-primary transition-colors">
+                <span className="font-extrabold text-base tracking-tight text-white group-hover:text-primary transition-colors">
                   Codovate Meet
                 </span>
               </div>
@@ -61,12 +61,12 @@ export default function LandingPage() {
             
             {/* Mobile Menu Toggle */}
             <Button 
-              variant="ghost" 
+              variant="outline" 
               size="icon" 
-              className="md:hidden text-white ml-2"
+              className="md:hidden text-white ml-2 bg-white/5 border-white/10 hover:bg-white/10 rounded-lg h-9 w-9"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
         </div>
