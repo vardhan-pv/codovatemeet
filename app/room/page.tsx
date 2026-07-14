@@ -1831,6 +1831,11 @@ function RoomPageContent() {
           window.dispatchEvent(new CustomEvent('wb_clear'))
           return
         }
+        if (parsed.type === 'FORCE_WORKSPACE') {
+          setActiveWorkspace(parsed.workspace)
+          displayCaption('System', `${sender} is sharing the ${parsed.workspace} workspace`)
+          return
+        }
         if (parsed.type === 'CODE_EDIT') {
           window.dispatchEvent(new CustomEvent('code_sync', { detail: parsed }))
           setMetrics(prev => ({ ...prev, codeEdits: prev.codeEdits + 1 }))
@@ -3702,14 +3707,24 @@ function RoomPageContent() {
               <span className="text-sm">🃏</span>
             </Button>
             {activeWorkspace !== 'none' && (
-              <Button
-                size="icon"
-                onClick={() => setIsWorkspaceMaximized(!isWorkspaceMaximized)}
-                className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${isWorkspaceMaximized ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                title={isWorkspaceMaximized ? "Restore Screen" : "Enlarge Workspace"}
-              >
-                {isWorkspaceMaximized ? "🔍" : "🖥️"}
-              </Button>
+              <>
+                <Button
+                  size="icon"
+                  onClick={() => setIsWorkspaceMaximized(!isWorkspaceMaximized)}
+                  className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ${isWorkspaceMaximized ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                  title={isWorkspaceMaximized ? "Restore Screen" : "Enlarge Workspace"}
+                >
+                  {isWorkspaceMaximized ? "🔍" : "🖥️"}
+                </Button>
+                <Button
+                  size="icon"
+                  onClick={() => sendData('FORCE_WORKSPACE', { workspace: activeWorkspace })}
+                  className="h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20 scale-105 ml-1"
+                  title="Share Workspace with others"
+                >
+                  📤
+                </Button>
+              </>
             )}
           </div>
 
@@ -3759,14 +3774,24 @@ function RoomPageContent() {
               <span className="text-sm xl:mr-1.5">🃏</span> <span className="hidden xl:inline">UNO! Game</span>
             </Button>
             {activeWorkspace !== 'none' && (
-              <Button
-                size="sm"
-                onClick={() => setIsWorkspaceMaximized(!isWorkspaceMaximized)}
-                className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${isWorkspaceMaximized ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                title={isWorkspaceMaximized ? "Restore Screen" : "Enlarge Workspace"}
-              >
-                {isWorkspaceMaximized ? "🔍" : "🖥️"} <span className="hidden xl:inline">{isWorkspaceMaximized ? " Show Videos" : " Enlarge Workspace"}</span>
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => setIsWorkspaceMaximized(!isWorkspaceMaximized)}
+                  className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ${isWorkspaceMaximized ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20 scale-105' : 'bg-popover border-border text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                  title={isWorkspaceMaximized ? "Restore Screen" : "Enlarge Workspace"}
+                >
+                  {isWorkspaceMaximized ? "🔍" : "🖥️"} <span className="hidden xl:inline">{isWorkspaceMaximized ? " Show Videos" : " Enlarge Workspace"}</span>
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => sendData('FORCE_WORKSPACE', { workspace: activeWorkspace })}
+                  className="h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20 scale-105 ml-1"
+                  title="Share Workspace with everyone in the meeting"
+                >
+                  📤 <span className="hidden xl:inline"> Share Workspace</span>
+                </Button>
+              </>
             )}
           </div>
 
