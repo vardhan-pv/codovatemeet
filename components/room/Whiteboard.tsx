@@ -9,9 +9,10 @@ interface WhiteboardProps {
   sendData?: (type: string, payload: any) => void
   readOnly?: boolean
   activeWorkspace?: string
+  presentedState?: string
 }
 
-export function Whiteboard({ room, lobbyName, sendData, readOnly = false, activeWorkspace }: WhiteboardProps) {
+export function Whiteboard({ room, lobbyName, sendData, readOnly = false, activeWorkspace, presentedState }: WhiteboardProps) {
   const [editor, setEditor] = useState<any>(null)
 
   useEffect(() => {
@@ -37,8 +38,21 @@ export function Whiteboard({ room, lobbyName, sendData, readOnly = false, active
   useEffect(() => {
     if (editor) {
       editor.updateInstanceState({ isReadonly: readOnly })
+      if (!readOnly) {
+        ;(window as any).codovateWhiteboardEditor = editor
+      }
     }
   }, [editor, readOnly])
+
+  useEffect(() => {
+    if (editor && presentedState && readOnly) {
+      try {
+        editor.store.loadSnapshot(JSON.parse(presentedState))
+      } catch (e) {
+        console.error("Failed to load whiteboard snapshot", e)
+      }
+    }
+  }, [editor, presentedState, readOnly])
 
   return (
     <div className="flex flex-col h-full bg-[#0B1120] rounded-xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">

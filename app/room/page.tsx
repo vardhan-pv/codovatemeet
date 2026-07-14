@@ -1064,6 +1064,8 @@ function RoomPageContent() {
 
   // Workspace Split Layout: 'none' | 'code' | 'whiteboard' | 'uno' | 'agenda' | 'notes'
   const [activeWorkspace, setActiveWorkspace] = useState<'none' | 'code' | 'whiteboard' | 'uno' | 'agenda' | 'notes'>('none')
+  const [isPresentingWorkspace, setIsPresentingWorkspace] = useState<string | null>(null)
+  const [presentedWorkspace, setPresentedWorkspace] = useState<{ type: string, state: any, presenterSid: string, presenterName: string } | null>(null)
   const [currentPage, setCurrentPage] = useState(0)
   const [isWorkspaceMaximized, setIsWorkspaceMaximized] = useState(false)
   const [meetingType, setMeetingType] = useState('technical')
@@ -1244,6 +1246,30 @@ function RoomPageContent() {
       console.warn("Failed to publish peer state:", e)
     }
   }
+
+  // Broadcast Code State when presenting
+  useEffect(() => {
+    if (isPresentingWorkspace === 'code' && activeCode) {
+      sendData('PRESENT_WORKSPACE', { workspaceType: 'code', state: activeCode, presenterSid: room?.localParticipant?.sid, presenterName: lobbyName })
+    }
+  }, [activeCode, isPresentingWorkspace, room, lobbyName]) // Omitting sendData to avoid circular dependency loops if sendData identity changes
+
+  // Broadcast Whiteboard State when presenting
+  useEffect(() => {
+    let interval: any;
+    if (isPresentingWorkspace === 'whiteboard') {
+      interval = setInterval(() => {
+        const wbEditor = (window as any).codovateWhiteboardEditor
+        if (wbEditor) {
+          try {
+            const snapshot = wbEditor.store.getSnapshot()
+            sendData('PRESENT_WORKSPACE', { workspaceType: 'whiteboard', state: JSON.stringify(snapshot), presenterSid: room?.localParticipant?.sid, presenterName: lobbyName })
+          } catch (e) {}
+        }
+      }, 1500)
+    }
+    return () => clearInterval(interval)
+  }, [isPresentingWorkspace, room, lobbyName])
 
   const changeMeetingType = (newType: string) => {
     setMeetingType(newType)
@@ -1825,22 +1851,28 @@ function RoomPageContent() {
           }, 3000)
           return
         }
-        if (parsed.type === 'WHITEBOARD_DRAW') {
-          window.dispatchEvent(new CustomEvent('wb_draw', { detail: parsed }))
+        if (parsed.type === 'WHITEBOARD_DRAW' || parsed.type === 'WHITEBOARD_CLEAR' || parsed.type === 'CODE_EDIT') {
+          // Ignored. Workspaces are local unless presented.
           return
         }
-        if (parsed.type === 'WHITEBOARD_CLEAR') {
-          window.dispatchEvent(new CustomEvent('wb_clear'))
+        if (parsed.type === 'PRESENT_WORKSPACE') {
+          if (parsed.presenterSid !== room.localParticipant.sid) {
+            setPresentedWorkspace({
+              type: parsed.workspaceType,
+              state: parsed.state,
+              presenterSid: parsed.presenterSid,
+              presenterName: parsed.presenterName
+            })
+          }
+          return
+        }
+        if (parsed.type === 'STOP_PRESENT_WORKSPACE') {
+          setPresentedWorkspace(prev => (prev?.presenterSid === parsed.presenterSid ? null : prev))
           return
         }
         if (parsed.type === 'FORCE_WORKSPACE') {
           setActiveWorkspace(parsed.workspace)
           displayCaption('System', `${sender} is sharing the ${parsed.workspace} workspace`)
-          return
-        }
-        if (parsed.type === 'CODE_EDIT') {
-          window.dispatchEvent(new CustomEvent('code_sync', { detail: parsed }))
-          setMetrics(prev => ({ ...prev, codeEdits: prev.codeEdits + 1 }))
           return
         }
         if (parsed.type === 'AI_REQ') {
@@ -3516,16 +3548,34 @@ function RoomPageContent() {
                       ? 'grid-cols-1 grid-rows-1'
                       : activeWorkspace !== 'none'
                         ? 'grid-cols-1'
-                        : displayTiles.length === 1
+                        : (displayTiles.length + (presentedWorkspace ? 1 : 0)) === 1
                           ? 'grid-cols-1'
-                          : displayTiles.length === 2
+                          : (displayTiles.length + (presentedWorkspace ? 1 : 0)) === 2
                             ? 'grid-cols-1 grid-rows-2 md:grid-cols-2 md:grid-rows-1'
-                            : displayTiles.length <= 4
+                            : (displayTiles.length + (presentedWorkspace ? 1 : 0)) <= 4
                               ? 'grid-cols-2 grid-rows-2'
-                              : displayTiles.length <= 6
+                              : (displayTiles.length + (presentedWorkspace ? 1 : 0)) <= 6
                                 ? 'grid-cols-3 grid-rows-2'
                                 : 'grid-cols-3 grid-rows-3'
                   } auto-rows-fr`}>
+                    {presentedWorkspace && (
+                      <div className="w-full h-full rounded-[20px] overflow-hidden min-h-0 bg-[#050816] relative border-2 border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.4)] flex flex-col group">
+                        <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/80 to-transparent p-4 pointer-events-none flex justify-between items-start">
+                          <span className="bg-indigo-600 text-white text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            {presentedWorkspace.presenterName}'s {presentedWorkspace.type}
+                          </span>
+                        </div>
+                        <div className="flex-1 w-full h-full relative pointer-events-auto mt-10">
+                          {presentedWorkspace.type === 'code' && (
+                            <CodeEditor code={presentedWorkspace.state} readOnly={true} onCodeChange={() => {}} />
+                          )}
+                          {presentedWorkspace.type === 'whiteboard' && (
+                            <Whiteboard readOnly={true} presentedState={presentedWorkspace.state} />
+                          )}
+                        </div>
+                      </div>
+                    )}
                     {displayTiles.map(tile => {
                       const pid = tile.id.split(':')[0]
                       return (
@@ -3722,11 +3772,22 @@ function RoomPageContent() {
                 </Button>
                 <Button
                   size="icon"
-                  onClick={() => sendData('FORCE_WORKSPACE', { workspace: activeWorkspace })}
-                  className="h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20 scale-105 ml-1"
-                  title="Share Workspace with others"
+                  onClick={() => {
+                    if (isPresentingWorkspace === activeWorkspace) {
+                      setIsPresentingWorkspace(null)
+                      sendData('STOP_PRESENT_WORKSPACE', { presenterSid: room?.localParticipant?.sid })
+                    } else {
+                      setIsPresentingWorkspace(activeWorkspace)
+                    }
+                  }}
+                  className={`h-9 w-9 rounded-lg border transition-all duration-300 hover:scale-105 ml-1 ${
+                    isPresentingWorkspace === activeWorkspace 
+                      ? 'bg-red-600 text-white border-red-600 shadow-md shadow-red-500/20 scale-105'
+                      : 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20'
+                  }`}
+                  title={isPresentingWorkspace === activeWorkspace ? "Stop Presenting" : "Present Workspace to everyone"}
                 >
-                  📤
+                  {isPresentingWorkspace === activeWorkspace ? '🛑' : '📤'}
                 </Button>
               </>
             )}
@@ -3789,11 +3850,22 @@ function RoomPageContent() {
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => sendData('FORCE_WORKSPACE', { workspace: activeWorkspace })}
-                  className="h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20 scale-105 ml-1"
-                  title="Share Workspace with everyone in the meeting"
+                  onClick={() => {
+                    if (isPresentingWorkspace === activeWorkspace) {
+                      setIsPresentingWorkspace(null)
+                      sendData('STOP_PRESENT_WORKSPACE', { presenterSid: room?.localParticipant?.sid })
+                    } else {
+                      setIsPresentingWorkspace(activeWorkspace)
+                    }
+                  }}
+                  className={`h-9 font-semibold text-xs border transition-all duration-300 hover:scale-105 ml-1 ${
+                    isPresentingWorkspace === activeWorkspace 
+                      ? 'bg-red-600 text-white border-red-600 shadow-md shadow-red-500/20 scale-105'
+                      : 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20'
+                  }`}
+                  title={isPresentingWorkspace === activeWorkspace ? "Stop Presenting Workspace" : "Present Workspace to everyone"}
                 >
-                  📤 <span className="hidden xl:inline"> Share Workspace</span>
+                  {isPresentingWorkspace === activeWorkspace ? '🛑' : '📤'} <span className="hidden xl:inline"> {isPresentingWorkspace === activeWorkspace ? 'Stop Presenting' : 'Present Workspace'}</span>
                 </Button>
               </>
             )}

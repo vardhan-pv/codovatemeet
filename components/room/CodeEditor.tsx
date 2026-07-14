@@ -250,33 +250,17 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     }
   }
 
-  // Listen for incoming code, cursor, and comment changes
+  // Sync local files when code prop changes (used for Read-Only Presentation Mode)
   useEffect(() => {
-    if (!room) return
-    const handleData = (data: Uint8Array, participant: any) => {
+    if (readOnly && code) {
       try {
-        const decoded = JSON.parse(new TextDecoder().decode(data))
-        if (decoded.type === 'CODE_EDIT' && decoded.senderSid !== room.localParticipant.sid) {
-          onCodeChange(decoded.code)
-        } else if (decoded.type === 'CURSOR_MOVE' && decoded.senderSid !== room.localParticipant.sid) {
-          setPeerCursors(prev => ({
-            ...prev,
-            [decoded.senderSid]: decoded.payload
-          }))
-        } else if (decoded.type === 'COMMENT_ADD') {
-          setComments(prev => [...prev, decoded.payload])
-        } else if (decoded.type === 'COMMENT_DELETE') {
-          setComments(prev => prev.filter(c => c.id !== decoded.payload.id))
+        const parsed = JSON.parse(code)
+        if (JSON.stringify(parsed) !== JSON.stringify(files)) {
+          setActiveFile(Object.keys(parsed)[0] || 'index.html')
         }
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
     }
-    room.on('dataReceived', handleData)
-    return () => {
-      room.off('dataReceived', handleData)
-    }
-  }, [room, onCodeChange])
+  }, [code, readOnly])
 
   // Listen for terminal sync command from admin
   useEffect(() => {
