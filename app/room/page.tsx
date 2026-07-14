@@ -1220,7 +1220,9 @@ function RoomPageContent() {
       room.localParticipant.publishData(data, { reliable: true })
 
       // Process commands locally since publishData doesn't trigger DataReceived for the sender
-      if (type === 'ADMIN_COMMAND') {
+      if (type === 'FORCE_WORKSPACE') {
+        displayCaption('System', `You shared the ${payload.workspace} workspace with everyone`)
+      } else if (type === 'ADMIN_COMMAND') {
         const { command, targetId, value } = payload
         if (command === 'TOGGLE_ROOM_LOCK') setAdminSettings(prev => ({ ...prev, isRoomLocked: value }))
         else if (command === 'TOGGLE_CODE_LOCK') setAdminSettings(prev => ({ ...prev, isCodeLocked: value }))
