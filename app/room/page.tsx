@@ -3514,15 +3514,17 @@ function RoomPageContent() {
                   <div className={`grid gap-3 w-full flex-1 min-h-0 ${
                     isFeaturedPage
                       ? 'grid-cols-1 grid-rows-1'
-                      : displayTiles.length === 1
+                      : activeWorkspace !== 'none'
                         ? 'grid-cols-1'
-                        : displayTiles.length === 2
-                          ? 'grid-cols-1 grid-rows-2 md:grid-cols-2 md:grid-rows-1'
-                          : displayTiles.length <= 4
-                            ? 'grid-cols-2 grid-rows-2'
-                            : displayTiles.length <= 6
-                              ? 'grid-cols-3 grid-rows-2'
-                              : 'grid-cols-3 grid-rows-3'
+                        : displayTiles.length === 1
+                          ? 'grid-cols-1'
+                          : displayTiles.length === 2
+                            ? 'grid-cols-1 grid-rows-2 md:grid-cols-2 md:grid-rows-1'
+                            : displayTiles.length <= 4
+                              ? 'grid-cols-2 grid-rows-2'
+                              : displayTiles.length <= 6
+                                ? 'grid-cols-3 grid-rows-2'
+                                : 'grid-cols-3 grid-rows-3'
                   } auto-rows-fr`}>
                     {displayTiles.map(tile => {
                       const pid = tile.id.split(':')[0]
