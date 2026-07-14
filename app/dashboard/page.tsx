@@ -246,6 +246,10 @@ export default function DashboardPage() {
   }, [token])
 
   const handleCreateMeeting = async () => {
+    if (!scheduledAt) {
+      alert("Please select a date and time to schedule this meeting.")
+      return
+    }
     setIsCreating(true)
     try {
       const data = await meetingService.createMeeting({ roomName, scheduledAt, type: meetingType })
@@ -514,15 +518,15 @@ export default function DashboardPage() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-primary" /> Schedule <span className="text-muted-foreground font-normal text-xs">(optional)</span>
+                      <Calendar className="h-3.5 w-3.5 text-primary" /> Schedule <span className="text-red-500 font-normal text-xs">(required)</span>
                     </label>
                     <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)}
-                      className="bg-background border-border rounded-xl h-11" />
+                      className="bg-background border-border rounded-xl h-11" required />
                   </div>
                   <Button className="w-full btn-glow text-white font-bold rounded-xl h-12"
                     onClick={handleCreateMeeting} disabled={isCreating}>
                     <Plus className="h-4 w-4 mr-2" />
-                    {isCreating ? 'Creating...' : 'Create Instant Meeting'}
+                    {isCreating ? 'Creating...' : 'Create Meeting'}
                   </Button>
                 </div>
               )}
