@@ -6,7 +6,7 @@ import { Room } from 'livekit-client'
 import {
   ShieldAlert, Settings, Users, Code, Paintbrush, 
   MessageSquare, HardDrive, Video, Activity,
-  Lock, StopCircle, UserMinus, MicOff, VideoOff,
+  Lock, StopCircle, UserMinus, MicOff, VideoOff, Mic,
   Terminal, X, ChevronRight, Share2, Play, Sparkles
 } from 'lucide-react'
 
