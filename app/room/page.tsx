@@ -1872,6 +1872,7 @@ function RoomPageContent() {
               state: parsed.state,
               presenterSid: parsed.senderSid,
               presenterName: parsed.sender
+            })
           }
           return
         }
