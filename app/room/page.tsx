@@ -22,7 +22,7 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert,
   X, Maximize2, Minimize2, Subtitles, Expand, Shrink, Sparkles, Code, Paintbrush,
   BarChart2, ShieldCheck, Trophy, Crown, Flag, Calendar, Heart, Send, Clock,
-  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer
+  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const CodeEditor = dynamic(() => import('@/components/room/CodeEditor').then(m => ({ default: m.CodeEditor })), { ssr: false })
@@ -1866,7 +1866,7 @@ function RoomPageContent() {
         if (parsed.type === 'PRESENT_WORKSPACE') {
           const localId = room.localParticipant.sid || room.localParticipant.identity
           if (parsed.senderSid !== localId) {
-            displayCaption('System', `Received ${parsed.workspaceType} workspace from ${parsed.sender}`)
+            // Persistent banner is shown via presentedWorkspace state — no auto-dismiss caption
             setPresentedWorkspace({
               type: parsed.workspaceType,
               state: parsed.state,
@@ -3762,6 +3762,23 @@ function RoomPageContent() {
             <p>
               {activeCaption.text}
             </p>
+          </div>
+        )}
+
+        {/* Persistent Workspace-Sharing Notification Banner */}
+        {presentedWorkspace && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 animate-in fade-in slide-in-from-top-3 duration-300 pointer-events-none">
+            <div className="flex items-center gap-2.5 bg-[#1a1a2e]/90 backdrop-blur-md border border-white/10 shadow-xl rounded-2xl px-4 py-2.5 text-white">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 shrink-0">
+                <Share2 className="h-3.5 w-3.5 text-primary" />
+              </span>
+              <div className="flex flex-col">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-primary leading-none mb-0.5">SYSTEM</span>
+                <span className="text-xs font-semibold leading-tight">
+                  <span className="font-bold">{presentedWorkspace.presenterName}</span> is sharing their {presentedWorkspace.type} workspace
+                </span>
+              </div>
+            </div>
           </div>
         )}
 
