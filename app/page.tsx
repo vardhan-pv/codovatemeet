@@ -1,12 +1,13 @@
 'use client'
 
+import { useState } from 'react'
+
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { 
-  ArrowRight, Video, Terminal, GitBranch, Cpu, Sparkles, Layout, 
-  MessageSquareCode, Rocket, Shield, Users, CheckCircle, Play
+  MessageSquareCode, Rocket, Shield, Users, CheckCircle, Play, Menu, X
 } from 'lucide-react'
 
 const fadeInUp = {
@@ -20,18 +21,20 @@ const stagger = {
 }
 
 export default function LandingPage() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-sans selection:bg-primary/30">
 
       {/* ── NAVBAR ── */}
       <nav className="fixed top-0 inset-x-0 z-50 bg-background/60 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-105 bg-white/10 border border-white/10 relative">
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-105 bg-white/10 border border-white/10 relative shrink-0">
                 <Image src="/logo.jpeg" fill className="object-cover" alt="Codovate Meet Logo" />
               </div>
               <div className="flex flex-col leading-none">
-                <span className="font-extrabold text-base tracking-tight text-white group-hover:text-primary transition-colors">
+                <span className="font-extrabold text-sm sm:text-base tracking-tight text-white group-hover:text-primary transition-colors">
                   Codovate Meet
                 </span>
               </div>
@@ -43,21 +46,50 @@ export default function LandingPage() {
             <Link href="#workspace" className="text-muted-foreground hover:text-white transition-colors">Live Workspace</Link>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/login" className="hidden sm:inline-block">
               <Button variant="ghost" className="font-medium text-muted-foreground hover:text-white hover:bg-white/5 rounded-lg">
                 Sign In
               </Button>
             </Link>
-            <Link href="/register">
+            <Link href="/register" className="hidden sm:inline-block">
               <Button className="btn-glow text-white font-bold rounded-lg px-5">
                 Start Building Free
               </Button>
             </Link>
+            
+            {/* Mobile Menu Toggle */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="md:hidden text-white ml-2"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </Button>
           </div>
         </div>
-      </nav>
 
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-16 left-0 right-0 bg-[#030712]/95 backdrop-blur-3xl border-b border-white/5 p-4 flex flex-col gap-4 shadow-2xl">
+            <Link href="#features" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-muted-foreground hover:text-white py-2 px-4 rounded-lg hover:bg-white/5">Features</Link>
+            <Link href="#ai" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-muted-foreground hover:text-white py-2 px-4 rounded-lg hover:bg-white/5">AI Pair Programmer</Link>
+            <Link href="#workspace" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-muted-foreground hover:text-white py-2 px-4 rounded-lg hover:bg-white/5">Live Workspace</Link>
+            <div className="h-px bg-white/10 my-2" />
+            <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+              <Button variant="ghost" className="w-full justify-start text-base font-medium text-white hover:bg-white/5 rounded-lg">
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+              <Button className="w-full btn-glow text-white font-bold rounded-lg">
+                Start Building Free
+              </Button>
+            </Link>
+          </div>
+        )}
+      </nav>
       <main>
         {/* ── HERO ── */}
       <section className="relative pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden hero-gradient">
