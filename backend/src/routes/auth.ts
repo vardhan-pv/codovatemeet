@@ -598,7 +598,7 @@ router.get('/livekit/token', async (req: Request, res: Response) => {
     }
 
     // Verify room size limit based on host plan
-    let maxAllowed = 5
+    let maxAllowed = 100
     let hostPlan = 'free'
     try {
       const meetingRes = await query('SELECT host_id FROM meetings WHERE meeting_code = $1', [room.toUpperCase()])

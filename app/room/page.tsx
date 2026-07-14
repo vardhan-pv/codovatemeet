@@ -1438,8 +1438,9 @@ function RoomPageContent() {
       const data = await livekitService.getRoomToken(roomId.toUpperCase(), uniqueIdentity)
       setToken(data.token)
       setServerUrl(data.serverUrl)
-    } catch (err) {
-      setStatusText('Failed to obtain room token.')
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || err?.message || 'Failed to obtain room token.'
+      setStatusText(msg)
     }
   }
 

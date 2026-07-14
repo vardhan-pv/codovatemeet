@@ -440,7 +440,7 @@ router.get('/livekit/token', async (req, res) => {
             return res.status(500).json({ error: 'LiveKit server credentials not configured' });
         }
         // Verify room size limit based on host plan
-        let maxAllowed = 5;
+        let maxAllowed = 100;
         let hostPlan = 'free';
         try {
             const meetingRes = await (0, db_1.query)('SELECT host_id FROM meetings WHERE meeting_code = $1', [room.toUpperCase()]);
