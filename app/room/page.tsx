@@ -1663,15 +1663,6 @@ function RoomPageContent() {
     }
   }, [hasJoined])
 
-  // LiveKit room connection
-  useEffect(() => {
-    if (!token || !hasJoined) return
-
-    setStatusText('Connecting to video server...')
-    const activeRoom = new Room({
-      adaptiveStream: false,
-      dynacast: false,
-      publishDefaults: {
   // WebRTC Data Channel Event Handlers
   useEffect(() => {
     if (!room) return
