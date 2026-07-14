@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
 import './globals.css'
 import { Providers } from './providers'
+import SplashScreen from '@/components/layout/splash-screen'
 
 import { Inter, JetBrains_Mono } from 'next/font/google'
 
@@ -274,7 +275,10 @@ export default function RootLayout({
             gtag('config', 'G-BMK8WZ22WV');
           `}
         </Script>
-        <Providers>{children}</Providers>
+        <Providers>
+          <SplashScreen />
+          {children}
+        </Providers>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
