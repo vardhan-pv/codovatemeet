@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { 
+  ArrowRight, Video, Terminal, GitBranch, Cpu, Sparkles, Layout, 
   MessageSquareCode, Rocket, Shield, Users, CheckCircle, Play, Menu, X
 } from 'lucide-react'
 
