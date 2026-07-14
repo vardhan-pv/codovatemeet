@@ -11,6 +11,7 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mon
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://meet.codovatesolutions.in'),
+  applicationName: 'Codovate Meet',
 
   title: {
     default: 'Codovate Meet — AI-Powered Collaboration Platform',
@@ -55,15 +56,6 @@ export const metadata: Metadata = {
 
   alternates: {
     canonical: 'https://meet.codovatesolutions.in',
-  },
-
-  icons: {
-    icon: [
-      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon.png', sizes: '16x16', type: 'image/png' },
-    ],
-    shortcut: '/favicon.png',
-    apple: '/apple-icon.png',
   },
 
   manifest: '/site.webmanifest',
