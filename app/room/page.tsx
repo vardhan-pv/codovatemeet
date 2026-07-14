@@ -1684,31 +1684,31 @@ function RoomPageContent() {
         const senderSid = parsed.senderSid || participant?.sid || sender
 
         if (parsed.type === 'END_MEETING') {
-          activeRoom.disconnect()
+          room.disconnect()
           alert('The host has ended the meeting.')
           window.location.href = '/dashboard'
           return
         }
         if (parsed.type === 'ADMIN_COMMAND') {
           // If the target is a specific user, ensure it applies to us
-          if (parsed.targetId && parsed.targetId !== 'ALL' && parsed.targetId !== activeRoom.localParticipant.identity) {
+          if (parsed.targetId && parsed.targetId !== 'ALL' && parsed.targetId !== room.localParticipant.identity) {
             return
           }
 
           if (parsed.command === 'FORCE_MUTE') {
-            activeRoom.localParticipant.setMicrophoneEnabled(false)
+            room.localParticipant.setMicrophoneEnabled(false)
             setIsMuted(true)
             displayCaption('System', 'A Host has muted your microphone.')
           } else if (parsed.command === 'FORCE_VIDEO_OFF') {
-            activeRoom.localParticipant.setCameraEnabled(false)
+            room.localParticipant.setCameraEnabled(false)
             setIsVideoOff(true)
             displayCaption('System', 'A Host has turned off your camera.')
           } else if (parsed.command === 'KICK_USER') {
-            activeRoom.disconnect()
+            room.disconnect()
             alert('You have been removed from the meeting by a host.')
             window.location.href = '/dashboard'
           } else if (parsed.command === 'END_MEETING_ALL') {
-            activeRoom.disconnect()
+            room.disconnect()
             alert('The host has ended the meeting.')
             window.location.href = '/dashboard'
           } else if (parsed.command === 'TOGGLE_ROOM_LOCK') {
@@ -1728,7 +1728,7 @@ function RoomPageContent() {
             window.dispatchEvent(new CustomEvent('sync_terminal'))
           } else if (parsed.command === 'SET_ROLE') {
             setUserRoles(prev => ({ ...prev, [parsed.targetId]: parsed.value }))
-            if (parsed.targetId === activeRoom.localParticipant.identity) {
+            if (parsed.targetId === room.localParticipant.identity) {
               displayCaption('System', `Your role has been changed to ${parsed.value}`)
             }
           } else if (parsed.command === 'SET_MEETING_TYPE') {
