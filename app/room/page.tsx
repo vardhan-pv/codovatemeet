@@ -1249,8 +1249,18 @@ function RoomPageContent() {
 
   // Broadcast Code State when presenting
   useEffect(() => {
+    let interval: any;
     if (isPresentingWorkspace === 'code' && activeCode) {
-      sendData('PRESENT_WORKSPACE', { workspaceType: 'code', state: activeCode, presenterSid: room?.localParticipant?.sid, presenterName: lobbyName })
+      // Broadcast immediately
+      sendData('PRESENT_WORKSPACE', { workspaceType: 'code', state: activeCode })
+      
+      // And broadcast periodically for late joiners
+      interval = setInterval(() => {
+        sendData('PRESENT_WORKSPACE', { workspaceType: 'code', state: activeCode })
+      }, 1500)
+    }
+    return () => {
+      if (interval) clearInterval(interval)
     }
   }, [activeCode, isPresentingWorkspace, room, lobbyName]) // Omitting sendData to avoid circular dependency loops if sendData identity changes
 
@@ -1263,7 +1273,7 @@ function RoomPageContent() {
         if (wbEditor) {
           try {
             const snapshot = wbEditor.store.getSnapshot()
-            sendData('PRESENT_WORKSPACE', { workspaceType: 'whiteboard', state: JSON.stringify(snapshot), presenterSid: room?.localParticipant?.sid, presenterName: lobbyName })
+            sendData('PRESENT_WORKSPACE', { workspaceType: 'whiteboard', state: JSON.stringify(snapshot) })
           } catch (e) {}
         }
       }, 1500)
@@ -1856,18 +1866,19 @@ function RoomPageContent() {
           return
         }
         if (parsed.type === 'PRESENT_WORKSPACE') {
-          if (parsed.presenterSid !== room.localParticipant.sid) {
+          const localId = room.localParticipant.sid || room.localParticipant.identity
+          if (parsed.senderSid !== localId) {
             setPresentedWorkspace({
               type: parsed.workspaceType,
               state: parsed.state,
-              presenterSid: parsed.presenterSid,
-              presenterName: parsed.presenterName
+              presenterSid: parsed.senderSid,
+              presenterName: parsed.sender
             })
           }
           return
         }
         if (parsed.type === 'STOP_PRESENT_WORKSPACE') {
-          setPresentedWorkspace(prev => (prev?.presenterSid === parsed.presenterSid ? null : prev))
+          setPresentedWorkspace(prev => (prev?.presenterSid === parsed.senderSid ? null : prev))
           return
         }
         if (parsed.type === 'FORCE_WORKSPACE') {
@@ -3775,7 +3786,7 @@ function RoomPageContent() {
                   onClick={() => {
                     if (isPresentingWorkspace === activeWorkspace) {
                       setIsPresentingWorkspace(null)
-                      sendData('STOP_PRESENT_WORKSPACE', { presenterSid: room?.localParticipant?.sid })
+                      sendData('STOP_PRESENT_WORKSPACE', {})
                     } else {
                       setIsPresentingWorkspace(activeWorkspace)
                     }
@@ -3853,7 +3864,7 @@ function RoomPageContent() {
                   onClick={() => {
                     if (isPresentingWorkspace === activeWorkspace) {
                       setIsPresentingWorkspace(null)
-                      sendData('STOP_PRESENT_WORKSPACE', { presenterSid: room?.localParticipant?.sid })
+                      sendData('STOP_PRESENT_WORKSPACE', {})
                     } else {
                       setIsPresentingWorkspace(activeWorkspace)
                     }
