@@ -26,6 +26,8 @@ export interface AdminSettings {
   isChatDisabled: boolean
   isAiDisabled: boolean
   isScreenShareLocked: boolean
+  isMicLocked: boolean
+  isCameraLocked: boolean
 }
 
 interface AdminCommandCenterProps {
@@ -74,10 +76,20 @@ export function AdminCommandCenter({
 
   const handleForceMuteAll = () => {
     broadcastAdminCommand('FORCE_MUTE', 'ALL')
+    broadcastAdminCommand('TOGGLE_MIC_LOCK', 'ALL', true)
+  }
+
+  const handleAllowUnmuteAll = () => {
+    broadcastAdminCommand('TOGGLE_MIC_LOCK', 'ALL', false)
   }
 
   const handleForceVideoOffAll = () => {
     broadcastAdminCommand('FORCE_VIDEO_OFF', 'ALL')
+    broadcastAdminCommand('TOGGLE_CAMERA_LOCK', 'ALL', true)
+  }
+
+  const handleAllowVideoAll = () => {
+    broadcastAdminCommand('TOGGLE_CAMERA_LOCK', 'ALL', false)
   }
 
   const handleKickParticipant = (participantId: string) => {
@@ -270,13 +282,48 @@ export function AdminCommandCenter({
 
                 <div>
                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Mass Actions</h4>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button onClick={handleForceMuteAll} className="bg-white/5 text-white hover:bg-white/10 border border-white/10 w-full sm:w-auto justify-center">
-                      <MicOff className="h-4 w-4 mr-2" /> Mute Everyone
-                    </Button>
-                    <Button onClick={handleForceVideoOffAll} className="bg-white/5 text-white hover:bg-white/10 border border-white/10 w-full sm:w-auto justify-center">
-                      <VideoOff className="h-4 w-4 mr-2" /> Turn Off All Cameras
-                    </Button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Audio Controls */}
+                    <div className="bg-secondary/20 p-4 rounded-xl border border-white/5 space-y-3">
+                      <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Audio Management</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button 
+                          onClick={handleForceMuteAll} 
+                          className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 text-xs font-bold shrink-0 transition-colors"
+                          size="sm"
+                        >
+                          <MicOff className="h-3.5 w-3.5 mr-1.5" /> Mute & Lock Everyone
+                        </Button>
+                        <Button 
+                          onClick={handleAllowUnmuteAll} 
+                          className="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white border border-emerald-500/20 text-xs font-bold shrink-0 transition-colors"
+                          size="sm"
+                        >
+                          <Mic className="h-3.5 w-3.5 mr-1.5" /> Unmute & Unlock Everyone
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Video Controls */}
+                    <div className="bg-secondary/20 p-4 rounded-xl border border-white/5 space-y-3">
+                      <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Video Management</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button 
+                          onClick={handleForceVideoOffAll} 
+                          className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 text-xs font-bold shrink-0 transition-colors"
+                          size="sm"
+                        >
+                          <VideoOff className="h-3.5 w-3.5 mr-1.5" /> Stop & Lock Video
+                        </Button>
+                        <Button 
+                          onClick={handleAllowVideoAll} 
+                          className="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white border border-emerald-500/20 text-xs font-bold shrink-0 transition-colors"
+                          size="sm"
+                        >
+                          <Video className="h-3.5 w-3.5 mr-1.5" /> Start & Unlock Video
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

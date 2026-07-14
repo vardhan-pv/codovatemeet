@@ -1066,6 +1066,7 @@ function RoomPageContent() {
   const [activeWorkspace, setActiveWorkspace] = useState<'none' | 'code' | 'whiteboard' | 'uno' | 'agenda' | 'notes'>('none')
   const [isPresentingWorkspace, setIsPresentingWorkspace] = useState<string | null>(null)
   const [presentedWorkspace, setPresentedWorkspace] = useState<{ type: string, state: any, presenterSid: string, presenterName: string } | null>(null)
+  const [presentedWorkspaceLayout, setPresentedWorkspaceLayout] = useState<'grid' | 'maximized' | 'minimized'>('grid')
   const [currentPage, setCurrentPage] = useState(0)
   const [isWorkspaceMaximized, setIsWorkspaceMaximized] = useState(false)
   const [meetingType, setMeetingType] = useState('technical')
@@ -1079,6 +1080,8 @@ function RoomPageContent() {
     isChatDisabled: false,
     isAiDisabled: false,
     isScreenShareLocked: false,
+    isMicLocked: false,
+    isCameraLocked: false,
   })
 
   const isHostUser = !!(
@@ -1092,6 +1095,12 @@ function RoomPageContent() {
     }
     setCurrentPage(0)
   }, [activeWorkspace])
+
+  useEffect(() => {
+    if (!presentedWorkspace) {
+      setPresentedWorkspaceLayout('grid')
+    }
+  }, [presentedWorkspace])
 
   // Sidebar Panel: 'chat' | 'participants' | 'ai' | 'polls' | 'effects' | 'analytics' | 'dev' | 'timetravel' | 'focus' | 'interview' | 'scheduler' | 'abuse' | null
   const [activeSidebar, setActiveSidebar] = useState<string | null>(null)
@@ -1232,6 +1241,8 @@ function RoomPageContent() {
         else if (command === 'TOGGLE_CHAT_LOCK') setAdminSettings(prev => ({ ...prev, isChatDisabled: value }))
         else if (command === 'TOGGLE_AI_LOCK') setAdminSettings(prev => ({ ...prev, isAiDisabled: value }))
         else if (command === 'TOGGLE_SCREENSHARE_LOCK') setAdminSettings(prev => ({ ...prev, isScreenShareLocked: value }))
+        else if (command === 'TOGGLE_MIC_LOCK') setAdminSettings(prev => ({ ...prev, isMicLocked: value }))
+        else if (command === 'TOGGLE_CAMERA_LOCK') setAdminSettings(prev => ({ ...prev, isCameraLocked: value }))
         else if (command === 'SYNC_TERMINAL') window.dispatchEvent(new CustomEvent('sync_terminal'))
         else if (command === 'SET_MEETING_TYPE') {
           setMeetingType(value)
@@ -1715,6 +1726,32 @@ function RoomPageContent() {
             setAdminSettings(prev => ({ ...prev, isAiDisabled: parsed.value }))
           } else if (parsed.command === 'TOGGLE_SCREENSHARE_LOCK') {
             setAdminSettings(prev => ({ ...prev, isScreenShareLocked: parsed.value }))
+          } else if (parsed.command === 'TOGGLE_MIC_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isMicLocked: parsed.value }))
+            if (!isHostUser) {
+              if (parsed.value) {
+                room.localParticipant.setMicrophoneEnabled(false).catch(() => {})
+                setIsMuted(true)
+                displayCaption('System', 'The host has muted and locked everyone\'s microphone.')
+              } else {
+                room.localParticipant.setMicrophoneEnabled(true).catch(() => {})
+                setIsMuted(false)
+                displayCaption('System', 'The host has unlocked your microphone.')
+              }
+            }
+          } else if (parsed.command === 'TOGGLE_CAMERA_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isCameraLocked: parsed.value }))
+            if (!isHostUser) {
+              if (parsed.value) {
+                room.localParticipant.setCameraEnabled(false).catch(() => {})
+                setIsVideoOff(true)
+                displayCaption('System', 'The host has stopped and locked everyone\'s camera.')
+              } else {
+                room.localParticipant.setCameraEnabled(true).catch(() => {})
+                setIsVideoOff(false)
+                displayCaption('System', 'The host has unlocked everyone\'s camera.')
+              }
+            }
           } else if (parsed.command === 'SYNC_TERMINAL') {
             window.dispatchEvent(new CustomEvent('sync_terminal'))
           } else if (parsed.command === 'SET_ROLE') {
@@ -1913,10 +1950,16 @@ function RoomPageContent() {
 
     setStatusText('Connecting to video server...')
     const activeRoom = new Room({
-      adaptiveStream: false,
-      dynacast: false,
+      adaptiveStream: true,
+      dynacast: true,
+      videoCaptureDefaults: {
+        resolution: { width: 1280, height: 720, frameRate: 24 }
+      },
       publishDefaults: {
-        videoCodec: 'vp8'
+        videoCodec: 'vp8',
+        videoSimulcast: true,
+        screenShareSimulcast: true,
+        backupCodec: 'h264'
       }
     })
 
@@ -2160,6 +2203,10 @@ function RoomPageContent() {
   }, [room, isMuted, hasJoined, lobbyName, isHandRaised, isVideoOff, isCompanionMode])
 
   const handleMuteToggle = async () => {
+    if (adminSettings.isMicLocked && !isHostUser) {
+      alert("Your microphone has been locked by the host. You cannot unmute.")
+      return
+    }
     if (!room) { setIsMuted(!isMuted); return }
     try {
       await room.localParticipant.setMicrophoneEnabled(isMuted)
@@ -2171,6 +2218,10 @@ function RoomPageContent() {
   }
 
   const handleVideoToggle = async () => {
+    if (adminSettings.isCameraLocked && !isHostUser) {
+      alert("Your camera has been locked by the host. You cannot turn it on.")
+      return
+    }
     if (!room) {
       setIsVideoOff(!isVideoOff)
       if (!isVideoOff && previewVideoTrack) {
@@ -3570,28 +3621,77 @@ function RoomPageContent() {
                 )}
 
                 <div className="flex flex-col h-full">
+                  {presentedWorkspace && presentedWorkspaceLayout === 'minimized' && (
+                    <div className="bg-indigo-600/90 backdrop-blur-md border border-indigo-500/30 text-white px-4 py-2.5 rounded-xl flex items-center justify-between shadow-lg shadow-indigo-600/10 mb-3 animate-in slide-in-from-top duration-300">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                        <p className="text-xs font-semibold">
+                          <span className="font-extrabold">{presentedWorkspace.presenterName}</span> is sharing their {presentedWorkspace.type} workspace.
+                        </p>
+                      </div>
+                      <button 
+                        onClick={() => setPresentedWorkspaceLayout('grid')}
+                        className="bg-white text-indigo-700 text-xs px-3 py-1.5 rounded-lg font-extrabold hover:bg-indigo-50 shadow transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> View Presentation
+                      </button>
+                    </div>
+                  )}
+
                   <div className={`grid gap-3 w-full flex-1 min-h-0 ${
-                    isFeaturedPage
+                    isFeaturedPage || presentedWorkspaceLayout === 'maximized'
                       ? 'grid-cols-1 grid-rows-1'
                       : activeWorkspace !== 'none'
                         ? 'grid-cols-1'
-                        : (displayTiles.length + (presentedWorkspace ? 1 : 0)) === 1
+                        : (displayTiles.length + (presentedWorkspace && presentedWorkspaceLayout !== 'minimized' ? 1 : 0)) === 1
                           ? 'grid-cols-1'
-                          : (displayTiles.length + (presentedWorkspace ? 1 : 0)) === 2
+                          : (displayTiles.length + (presentedWorkspace && presentedWorkspaceLayout !== 'minimized' ? 1 : 0)) === 2
                             ? 'grid-cols-1 grid-rows-2 md:grid-cols-2 md:grid-rows-1'
-                            : (displayTiles.length + (presentedWorkspace ? 1 : 0)) <= 4
+                            : (displayTiles.length + (presentedWorkspace && presentedWorkspaceLayout !== 'minimized' ? 1 : 0)) <= 4
                               ? 'grid-cols-2 grid-rows-2'
-                              : (displayTiles.length + (presentedWorkspace ? 1 : 0)) <= 6
+                              : (displayTiles.length + (presentedWorkspace && presentedWorkspaceLayout !== 'minimized' ? 1 : 0)) <= 6
                                 ? 'grid-cols-3 grid-rows-2'
                                 : 'grid-cols-3 grid-rows-3'
                   } auto-rows-fr`}>
-                    {presentedWorkspace && (
-                      <div className="w-full h-full rounded-[20px] overflow-hidden min-h-0 bg-[#050816] relative border-2 border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.4)] flex flex-col group">
-                        <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/80 to-transparent p-4 pointer-events-none flex justify-between items-start">
+                    {presentedWorkspace && presentedWorkspaceLayout !== 'minimized' && (
+                      <div className={`w-full h-full rounded-[20px] overflow-hidden min-h-0 bg-[#050816] relative border-2 border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.4)] flex flex-col group ${
+                        presentedWorkspaceLayout === 'maximized' ? 'col-span-full row-span-full' : ''
+                      }`}>
+                        <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/80 to-transparent p-4 flex justify-between items-start">
                           <span className="bg-indigo-600 text-white text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
                             {presentedWorkspace.presenterName}'s {presentedWorkspace.type}
                           </span>
+
+                          <div className="flex gap-1.5">
+                            {presentedWorkspaceLayout !== 'grid' && (
+                              <button 
+                                onClick={() => setPresentedWorkspaceLayout('grid')}
+                                className="bg-white/10 hover:bg-white/20 text-white text-[10px] px-2.5 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm flex items-center gap-1 font-bold shadow-lg transition-all cursor-pointer"
+                                title="Show inside grid alongside other participants"
+                              >
+                                <Users className="w-3 h-3" /> Show in Grid
+                              </button>
+                            )}
+                            {presentedWorkspaceLayout !== 'maximized' && (
+                              <button 
+                                onClick={() => setPresentedWorkspaceLayout('maximized')}
+                                className="bg-white/10 hover:bg-white/20 text-white text-[10px] px-2.5 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm flex items-center gap-1 font-bold shadow-lg transition-all cursor-pointer"
+                                title="Maximize workspace view"
+                              >
+                                <Maximize2 className="w-3 h-3" /> Maximize
+                              </button>
+                            )}
+                            {presentedWorkspaceLayout !== 'minimized' && (
+                              <button 
+                                onClick={() => setPresentedWorkspaceLayout('minimized')}
+                                className="bg-white/10 hover:bg-white/20 text-white text-[10px] px-2.5 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm flex items-center gap-1 font-bold shadow-lg transition-all cursor-pointer"
+                                title="Minimize workspace to view full grid of meeting"
+                              >
+                                <Minimize2 className="w-3 h-3" /> Full Grid (Minimize)
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="flex-1 w-full h-full relative pointer-events-auto mt-10">
                           {presentedWorkspace.type === 'code' && (
@@ -3603,7 +3703,7 @@ function RoomPageContent() {
                         </div>
                       </div>
                     )}
-                    {displayTiles.map(tile => {
+                    {presentedWorkspaceLayout !== 'maximized' && displayTiles.map(tile => {
                       const pid = tile.id.split(':')[0]
                       return (
                         <div key={tile.id} className="w-full h-full rounded-[20px] overflow-hidden min-h-0 bg-black">
