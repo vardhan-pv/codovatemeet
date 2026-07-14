@@ -7,7 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { 
-  ArrowRight, Video, Terminal, GitBranch, Cpu, Sparkles, Layout, 
+  ArrowRight, Video, Terminal, GitBranch, Cpu, Zap, Layout, 
   MessageSquareCode, Rocket, Shield, Users, CheckCircle, Play, Menu, X
 } from 'lucide-react'
 
@@ -106,7 +106,7 @@ export default function LandingPage() {
         >
           <motion.div variants={fadeInUp}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/30 text-primary text-xs font-bold uppercase tracking-widest mb-8 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
-              <Sparkles className="w-3.5 h-3.5" />
+              <Zap className="w-3.5 h-3.5" />
               The Developer Communication & Collaboration Platform
             </div>
           </motion.div>
@@ -194,7 +194,7 @@ export default function LandingPage() {
                 </div>
                 <div className="p-3 border-t border-white/5 h-1/3 bg-card">
                   <div className="flex items-center gap-2 mb-2 text-xs text-primary font-semibold">
-                    <Sparkles className="w-3 h-3" /> AI Assistant
+                    <Zap className="w-3 h-3" /> AI Assistant
                   </div>
                   <div className="text-[11px] text-muted-foreground bg-white/5 p-2 rounded-md border border-white/5 font-mono">
                     I optimized the Database query on line 42. It should reduce latency by 40%.
@@ -288,7 +288,7 @@ export default function LandingPage() {
               desc: 'Pull repositories, create branches, review pull requests, and commit updates without leaving the session.',
             },
             {
-              icon: Sparkles,
+              icon: Zap,
               title: 'AI pair programming',
               desc: 'Draft unit tests, analyze code context, and resolve bugs instantly using our collaborative AI gateway.',
             },
@@ -362,7 +362,7 @@ export default function LandingPage() {
               <div className="glass-card p-6 relative z-10">
                 <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
                   <h3 className="font-bold text-white flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary" /> AI Summary
+                    <Zap className="w-4 h-4 text-primary" /> AI Summary
                   </h3>
                   <span className="text-xs text-muted-foreground bg-white/5 px-2 py-1 rounded">Just now</span>
                 </div>
