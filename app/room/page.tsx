@@ -1872,9 +1872,6 @@ function RoomPageContent() {
               state: parsed.state,
               presenterSid: parsed.senderSid,
               presenterName: parsed.sender
-            })
-          } else {
-            displayCaption('Debug', `Ignored presentation from self`)
           }
           return
         }
@@ -1936,7 +1933,6 @@ function RoomPageContent() {
           return
         }
       } catch (e: any) {
-        displayCaption('Error', `handleData failed: ${e.message}`)
         console.error('Failed to parse data message', e)
       }
     }
