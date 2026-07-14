@@ -50,6 +50,16 @@ export default function CookieBanner() {
         console.error("Could not parse cookie consent")
       }
     }
+
+    const handleOpenBanner = () => {
+      setShowBanner(true)
+      setShowPreferences(true)
+    }
+
+    window.addEventListener('open-cookie-banner', handleOpenBanner)
+    return () => {
+      window.removeEventListener('open-cookie-banner', handleOpenBanner)
+    }
   }, [])
 
   const savePreferences = (prefs: CookiePreferences) => {
