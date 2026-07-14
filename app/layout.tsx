@@ -4,6 +4,7 @@ import Script from 'next/script'
 import './globals.css'
 import { Providers } from './providers'
 import SplashScreen from '@/components/layout/splash-screen'
+import CookieBanner from '@/components/layout/cookie-banner'
 
 import { Inter, JetBrains_Mono } from 'next/font/google'
 
@@ -270,13 +271,24 @@ export default function RootLayout({
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
+            
+            // Default consent to 'denied'
+            gtag('consent', 'default', {
+              'analytics_storage': 'denied',
+              'personalization_storage': 'denied',
+              'ad_storage': 'denied',
+              'ad_user_data': 'denied',
+              'ad_personalization': 'denied',
+              'wait_for_update': 500
+            });
 
+            gtag('js', new Date());
             gtag('config', 'G-BMK8WZ22WV');
           `}
         </Script>
         <Providers>
           <SplashScreen />
+          <CookieBanner />
           {children}
         </Providers>
         {process.env.NODE_ENV === 'production' && <Analytics />}
