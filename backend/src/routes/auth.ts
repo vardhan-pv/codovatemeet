@@ -597,33 +597,7 @@ router.get('/livekit/token', async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'LiveKit server credentials not configured' })
     }
 
-    // Verify room size limit based on host plan
-    let maxAllowed = 100
-    let hostPlan = 'free'
-    try {
-      const meetingRes = await query('SELECT host_id FROM meetings WHERE meeting_code = $1', [room.toUpperCase()])
-      if (meetingRes.rows.length > 0) {
-        const hostId = meetingRes.rows[0].host_id
-        const hostRes = await query('SELECT plan FROM users WHERE id = $1', [hostId])
-        if (hostRes.rows.length > 0) {
-          hostPlan = hostRes.rows[0].plan || 'free'
-          if (hostPlan === 'pro') maxAllowed = 25
-          else if (hostPlan === 'team') maxAllowed = 100
-          else if (hostPlan === 'enterprise') maxAllowed = 1000
-        }
-      }
-      
-      const hostUrl = wsUrl ? wsUrl.replace('wss://', 'https://').replace('ws://', 'http://') : ''
-      if (hostUrl) {
-        const roomService = new RoomServiceClient(hostUrl, apiKey, apiSecret)
-        const activeParticipants = await roomService.listParticipants(room)
-        if (activeParticipants && activeParticipants.length >= maxAllowed) {
-          return res.status(403).json({ error: `Room is full. The host's plan (${hostPlan}) allows a maximum of ${maxAllowed} participants.` })
-        }
-      }
-    } catch (e) {
-      console.warn('Unable to query LiveKit participants count or host plan limits:', e)
-    }
+    // TODO: Add plan-based participant limits when billing is ready
 
     const at = new AccessToken(apiKey, apiSecret, {
       identity: identity
