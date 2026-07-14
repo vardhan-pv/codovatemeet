@@ -1220,7 +1220,7 @@ function RoomPageContent() {
       }
       const data = new TextEncoder().encode(JSON.stringify(dataObj))
       room.localParticipant.publishData(data, { reliable: true })
-
+      
       // Process commands locally since publishData doesn't trigger DataReceived for the sender
       if (type === 'FORCE_WORKSPACE') {
         displayCaption('System', `You shared the ${payload.workspace} workspace with everyone`)
@@ -1672,45 +1672,14 @@ function RoomPageContent() {
       adaptiveStream: false,
       dynacast: false,
       publishDefaults: {
-        videoCodec: 'vp8'
-      }
-    })
-
-    const updateParticipantList = () => {
-      setParticipants([
-        activeRoom.localParticipant,
-        ...Array.from(activeRoom.remoteParticipants.values())
-      ])
-    }
-
-    activeRoom.on(RoomEvent.Connected, () => {
-      setStatusText('')
-      const sid = activeRoom.localParticipant.sid
-      const identity = activeRoom.localParticipant.identity
-      if (localVideoFilter !== 'none') {
-        setParticipantFilters(prev => ({
-          ...prev,
-          [sid]: localVideoFilter,
-          [identity]: localVideoFilter
-        }))
-      }
-    })
-    activeRoom.on(RoomEvent.ParticipantConnected, updateParticipantList)
-    activeRoom.on(RoomEvent.ParticipantDisconnected, (p) => {
-      updateParticipantList()
-      const pid = p.sid || p.identity
-      setRaisedHands(prev => { const c = { ...prev }; delete c[pid]; return c })
-      setParticipantFilters(prev => { const c = { ...prev }; delete c[pid]; return c })
-    })
-    activeRoom.on(RoomEvent.TrackSubscribed, updateParticipantList)
-    activeRoom.on(RoomEvent.TrackUnsubscribed, updateParticipantList)
-    activeRoom.on(RoomEvent.LocalTrackPublished, updateParticipantList)
-    activeRoom.on(RoomEvent.LocalTrackUnpublished, updateParticipantList)
-
-    activeRoom.on(RoomEvent.DataReceived, (payload, participant) => {
-      const strData = new TextDecoder().decode(payload)
+  // WebRTC Data Channel Event Handlers
+  useEffect(() => {
+    if (!room) return
+    const handleData = (data: Uint8Array, participant: any) => {
       try {
-        const parsed = JSON.parse(strData)
+        const decoded = new TextDecoder().decode(data)
+        console.log(`Received Data: ${decoded}`)
+        const parsed = JSON.parse(decoded)
         const sender = parsed.sender || participant?.identity || 'Unknown'
         const senderSid = parsed.senderSid || participant?.sid || sender
 
@@ -1869,13 +1838,15 @@ function RoomPageContent() {
         if (parsed.type === 'PRESENT_WORKSPACE') {
           const localId = room.localParticipant.sid || room.localParticipant.identity
           if (parsed.senderSid !== localId) {
-            displayCaption('System', `Received ${parsed.workspaceType} workspace broadcast from ${parsed.sender}`)
+            displayCaption('System', `Received ${parsed.workspaceType} workspace from ${parsed.sender}`)
             setPresentedWorkspace({
               type: parsed.workspaceType,
               state: parsed.state,
               presenterSid: parsed.senderSid,
               presenterName: parsed.sender
             })
+          } else {
+            displayCaption('Debug', `Ignored presentation from self`)
           }
           return
         }
@@ -1936,8 +1907,58 @@ function RoomPageContent() {
           window.dispatchEvent(new CustomEvent('uno_win', { detail: parsed }))
           return
         }
-      } catch (e) {}
+      } catch (e: any) {
+        displayCaption('Error', `handleData failed: ${e.message}`)
+        console.error('Failed to parse data message', e)
+      }
+    }
+    room.on(RoomEvent.DataReceived, handleData)
+    return () => { room.off(RoomEvent.DataReceived, handleData) }
+  }, [room])
+
+  // LiveKit room connection
+  useEffect(() => {
+    if (!token || !hasJoined) return
+
+    setStatusText('Connecting to video server...')
+    const activeRoom = new Room({
+      adaptiveStream: false,
+      dynacast: false,
+      publishDefaults: {
+        videoCodec: 'vp8'
+      }
     })
+
+    const updateParticipantList = () => {
+      setParticipants([
+        activeRoom.localParticipant,
+        ...Array.from(activeRoom.remoteParticipants.values())
+      ])
+    }
+
+    activeRoom.on(RoomEvent.Connected, () => {
+      setStatusText('')
+      const sid = activeRoom.localParticipant.sid
+      const identity = activeRoom.localParticipant.identity
+      if (localVideoFilter !== 'none') {
+        setParticipantFilters(prev => ({
+          ...prev,
+          [sid]: localVideoFilter,
+          [identity]: localVideoFilter
+        }))
+      }
+    })
+    activeRoom.on(RoomEvent.ParticipantConnected, updateParticipantList)
+    activeRoom.on(RoomEvent.ParticipantDisconnected, (p) => {
+      updateParticipantList()
+      const pid = p.sid || p.identity
+      setRaisedHands(prev => { const c = { ...prev }; delete c[pid]; return c })
+      setParticipantFilters(prev => { const c = { ...prev }; delete c[pid]; return c })
+    })
+    activeRoom.on(RoomEvent.TrackSubscribed, updateParticipantList)
+    activeRoom.on(RoomEvent.TrackUnsubscribed, updateParticipantList)
+    activeRoom.on(RoomEvent.LocalTrackPublished, updateParticipantList)
+    activeRoom.on(RoomEvent.LocalTrackUnpublished, updateParticipantList)
 
     // Register transcription text stream handler
     activeRoom.registerTextStreamHandler('lk.transcription', async (reader, participant) => {
@@ -2122,7 +2143,8 @@ function RoomPageContent() {
         const data = new TextEncoder().encode(payload)
         try {
           await room.localParticipant.publishData(data, { reliable: true })
-        } catch (e) {
+        } catch (e: any) {
+          displayCaption('Error', `publishData failed: ${e.message}`)
           console.error('Failed to broadcast caption', e)
         }
         displayCaption(lobbyName, finalTranscript.trim())
@@ -2203,7 +2225,8 @@ function RoomPageContent() {
         setPinnedId(null)
       }
     } catch (e: any) {
-      console.error('Failed to share screen', e)
+      displayCaption('Error', `sendData failed: ${e.message}`)
+      console.error('Failed to send data', e)
       setShareError(e.message ?? 'Unable to start screen share. Ensure HTTPS is enabled.')
     }
   }
