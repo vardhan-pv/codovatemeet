@@ -14,4 +14,16 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Response error interceptor — handle expired/invalid tokens globally
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (typeof window !== 'undefined' && error.response?.status === 401) {
+      // Token has expired or is invalid — clear it and let the page handle redirect
+      localStorage.removeItem('token')
+    }
+    return Promise.reject(error)
+  }
+)
+
 export default api

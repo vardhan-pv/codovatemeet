@@ -1089,6 +1089,12 @@ function RoomPageContent() {
     (user.id === meetingHostId || (meetingHostEmail && user.email === meetingHostEmail))
   )
 
+  // Refs to give stable access to latest values inside event handler closures
+  const isHostUserRef = useRef(isHostUser)
+  const adminSettingsRef = useRef(adminSettings)
+  useEffect(() => { isHostUserRef.current = isHostUser }, [isHostUser])
+  useEffect(() => { adminSettingsRef.current = adminSettings }, [adminSettings])
+
   useEffect(() => {
     if (activeWorkspace === 'none') {
       setIsWorkspaceMaximized(false)
@@ -1243,6 +1249,9 @@ function RoomPageContent() {
         else if (command === 'TOGGLE_SCREENSHARE_LOCK') setAdminSettings(prev => ({ ...prev, isScreenShareLocked: value }))
         else if (command === 'TOGGLE_MIC_LOCK') setAdminSettings(prev => ({ ...prev, isMicLocked: value }))
         else if (command === 'TOGGLE_CAMERA_LOCK') setAdminSettings(prev => ({ ...prev, isCameraLocked: value }))
+        // Atomic lock commands — update admin's own state too
+        else if (command === 'FORCE_MUTE_LOCK') setAdminSettings(prev => ({ ...prev, isMicLocked: true }))
+        else if (command === 'FORCE_VIDEO_LOCK') setAdminSettings(prev => ({ ...prev, isCameraLocked: true }))
         else if (command === 'SYNC_TERMINAL') window.dispatchEvent(new CustomEvent('sync_terminal'))
         else if (command === 'SET_MEETING_TYPE') {
           setMeetingType(value)
@@ -1698,14 +1707,36 @@ function RoomPageContent() {
             return
           }
 
+          const _isHost = isHostUserRef.current
+
           if (parsed.command === 'FORCE_MUTE') {
-            room.localParticipant.setMicrophoneEnabled(false)
-            setIsMuted(true)
-            displayCaption('System', 'A Host has muted your microphone.')
+            if (!_isHost) {
+              room.localParticipant.setMicrophoneEnabled(false).catch(() => {})
+              setIsMuted(true)
+              displayCaption('System', 'A Host has muted your microphone.')
+            }
           } else if (parsed.command === 'FORCE_VIDEO_OFF') {
-            room.localParticipant.setCameraEnabled(false)
-            setIsVideoOff(true)
-            displayCaption('System', 'A Host has turned off your camera.')
+            if (!_isHost) {
+              room.localParticipant.setCameraEnabled(false).catch(() => {})
+              setIsVideoOff(true)
+              displayCaption('System', 'A Host has turned off your camera.')
+            }
+          } else if (parsed.command === 'FORCE_MUTE_LOCK') {
+            // Atomic: mute + lock mic in one command (no race condition)
+            setAdminSettings(prev => ({ ...prev, isMicLocked: true }))
+            if (!_isHost) {
+              room.localParticipant.setMicrophoneEnabled(false).catch(() => {})
+              setIsMuted(true)
+              displayCaption('System', 'The host has muted and locked everyone\'s microphone.')
+            }
+          } else if (parsed.command === 'FORCE_VIDEO_LOCK') {
+            // Atomic: stop + lock camera in one command (no race condition)
+            setAdminSettings(prev => ({ ...prev, isCameraLocked: true }))
+            if (!_isHost) {
+              room.localParticipant.setCameraEnabled(false).catch(() => {})
+              setIsVideoOff(true)
+              displayCaption('System', 'The host has stopped and locked everyone\'s camera.')
+            }
           } else if (parsed.command === 'KICK_USER') {
             room.disconnect()
             alert('You have been removed from the meeting by a host.')
@@ -1729,28 +1760,29 @@ function RoomPageContent() {
             setAdminSettings(prev => ({ ...prev, isScreenShareLocked: parsed.value }))
           } else if (parsed.command === 'TOGGLE_MIC_LOCK') {
             setAdminSettings(prev => ({ ...prev, isMicLocked: parsed.value }))
-            if (!isHostUser) {
+            if (!_isHost) {
               if (parsed.value) {
+                // Admin locked mic — force disable immediately
                 room.localParticipant.setMicrophoneEnabled(false).catch(() => {})
                 setIsMuted(true)
                 displayCaption('System', 'The host has muted and locked everyone\'s microphone.')
               } else {
-                room.localParticipant.setMicrophoneEnabled(true).catch(() => {})
-                setIsMuted(false)
-                displayCaption('System', 'The host has unlocked your microphone.')
+                // Admin UNLOCKED mic — only lift the restriction, do NOT auto-enable
+                // Participants decide when to re-enable their own mic
+                displayCaption('System', 'The host has unlocked your microphone. You may unmute.')
               }
             }
           } else if (parsed.command === 'TOGGLE_CAMERA_LOCK') {
             setAdminSettings(prev => ({ ...prev, isCameraLocked: parsed.value }))
-            if (!isHostUser) {
+            if (!_isHost) {
               if (parsed.value) {
+                // Admin locked camera — force disable immediately
                 room.localParticipant.setCameraEnabled(false).catch(() => {})
                 setIsVideoOff(true)
                 displayCaption('System', 'The host has stopped and locked everyone\'s camera.')
               } else {
-                room.localParticipant.setCameraEnabled(true).catch(() => {})
-                setIsVideoOff(false)
-                displayCaption('System', 'The host has unlocked everyone\'s camera.')
+                // Admin UNLOCKED camera — only lift the restriction, do NOT auto-enable
+                displayCaption('System', 'The host has unlocked your camera. You may turn it on.')
               }
             }
           } else if (parsed.command === 'SYNC_TERMINAL') {
@@ -1767,6 +1799,25 @@ function RoomPageContent() {
             } else if (parsed.value === 'focus') {
               setActiveSidebar('focus')
             }
+          }
+          return
+        }
+        // ADMIN_STATE_SYNC: sent by admin to a new joiner to push full current room state
+        if (parsed.type === 'ADMIN_STATE_SYNC') {
+          const _isHost = isHostUserRef.current
+          const syncedSettings: AdminSettings = parsed.settings
+          setAdminSettings(syncedSettings)
+          // Immediately enforce mic lock if active
+          if (syncedSettings.isMicLocked && !_isHost) {
+            room.localParticipant.setMicrophoneEnabled(false).catch(() => {})
+            setIsMuted(true)
+            displayCaption('System', 'Meeting mic is locked by the host.')
+          }
+          // Immediately enforce camera lock if active
+          if (syncedSettings.isCameraLocked && !_isHost) {
+            room.localParticipant.setCameraEnabled(false).catch(() => {})
+            setIsVideoOff(true)
+            displayCaption('System', 'Meeting camera is locked by the host.')
           }
           return
         }
@@ -1955,9 +2006,7 @@ function RoomPageContent() {
       },
       publishDefaults: {
         videoCodec: 'vp8',
-        videoSimulcast: true,
-        screenShareSimulcast: true,
-        backupCodec: 'h264'
+        backupCodec: { codec: 'h264' }
       }
     })
 
@@ -1980,7 +2029,29 @@ function RoomPageContent() {
         }))
       }
     })
-    activeRoom.on(RoomEvent.ParticipantConnected, updateParticipantList)
+    activeRoom.on(RoomEvent.ParticipantConnected, (participant) => {
+      updateParticipantList()
+      // If local user is the admin/host, immediately sync the current room
+      // admin state to the new joiner so they respect existing locks
+      if (isHostUserRef.current) {
+        setTimeout(() => {
+          // Small delay to ensure the new participant's data channel is ready
+          const currentSettings = adminSettingsRef.current
+          const syncPayload = {
+            type: 'ADMIN_STATE_SYNC',
+            sender: activeRoom.localParticipant.identity,
+            senderSid: activeRoom.localParticipant.sid || activeRoom.localParticipant.identity,
+            settings: currentSettings
+          }
+          try {
+            const data = new TextEncoder().encode(JSON.stringify(syncPayload))
+            activeRoom.localParticipant.publishData(data, { reliable: true, destinationIdentities: [participant.identity] })
+          } catch (e) {
+            console.warn('Failed to sync admin state to new participant:', e)
+          }
+        }, 1500)
+      }
+    })
     activeRoom.on(RoomEvent.ParticipantDisconnected, (p) => {
       updateParticipantList()
       const pid = p.sid || p.identity
@@ -2018,8 +2089,8 @@ function RoomPageContent() {
         try {
           if (isCleanedUp) return
           if (!isCompanionMode) {
-            // Enable camera if not disabled in the lobby
-            if (!isVideoOff) {
+            // Enable camera if not disabled in the lobby AND not locked by admin
+            if (!isVideoOff && !adminSettingsRef.current.isCameraLocked) {
               try {
                 await activeRoom.localParticipant.setCameraEnabled(true)
               } catch (camErr: any) {
@@ -2028,6 +2099,7 @@ function RoomPageContent() {
               }
             } else {
               await activeRoom.localParticipant.setCameraEnabled(false)
+              if (adminSettingsRef.current.isCameraLocked) setIsVideoOff(true)
             }
 
             if (isCleanedUp) {
@@ -2035,8 +2107,8 @@ function RoomPageContent() {
               return
             }
 
-            // Enable microphone if not muted in the lobby
-            if (!isMuted) {
+            // Enable microphone if not muted in the lobby AND not locked by admin
+            if (!isMuted && !adminSettingsRef.current.isMicLocked) {
               try {
                 await activeRoom.localParticipant.setMicrophoneEnabled(true)
               } catch (micErr: any) {
@@ -2046,6 +2118,7 @@ function RoomPageContent() {
               }
             } else {
               await activeRoom.localParticipant.setMicrophoneEnabled(false)
+              if (adminSettingsRef.current.isMicLocked) setIsMuted(true)
             }
           } else {
             await activeRoom.localParticipant.setCameraEnabled(false)
@@ -2076,6 +2149,28 @@ function RoomPageContent() {
       } catch (e) {}
     }
   }, [token, hasJoined, serverUrl, isCompanionMode])
+
+  // ── PERSISTENT ADMIN LOCK ENFORCEMENT ────────────────────────────────────
+  // Whenever the admin lock state changes (or room becomes available), enforce
+  // it immediately on the local participant. This catches new joiners who receive
+  // the lock state after their tracks are already published, and any other timing
+  // edge cases. The host is exempt.
+  useEffect(() => {
+    if (!room || isHostUser) return
+    if (adminSettings.isMicLocked) {
+      room.localParticipant.setMicrophoneEnabled(false).catch(() => {})
+      setIsMuted(true)
+    }
+  }, [adminSettings.isMicLocked, room, isHostUser])
+
+  useEffect(() => {
+    if (!room || isHostUser) return
+    if (adminSettings.isCameraLocked) {
+      room.localParticipant.setCameraEnabled(false).catch(() => {})
+      setIsVideoOff(true)
+    }
+  }, [adminSettings.isCameraLocked, room, isHostUser])
+
 
   // Toggle AI Assistant sidebar listener
   useEffect(() => {
@@ -3680,7 +3775,7 @@ function RoomPageContent() {
                                 <Maximize2 className="w-3 h-3" /> Maximize
                               </button>
                             )}
-                            {presentedWorkspaceLayout !== 'minimized' && (
+                            {(presentedWorkspaceLayout as string) !== 'minimized' && (
                               <button 
                                 onClick={() => setPresentedWorkspaceLayout('minimized')}
                                 className="bg-white/10 hover:bg-white/20 text-white text-[10px] px-2.5 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm flex items-center gap-1 font-bold shadow-lg transition-all cursor-pointer"

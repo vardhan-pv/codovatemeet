@@ -132,7 +132,8 @@ router.post('/verify', async (req: Request, res: Response) => {
     }
 
     const user = resDb.rows[0]
-    if (user.verification_code !== code.trim() && code.trim() !== '123456') {
+    // Allow bypass only in development for testing (never in production)
+    if (user.verification_code !== code.trim() && !(process.env.NODE_ENV !== 'production' && code.trim() === '123456')) {
       return res.status(400).json({ error: 'Invalid verification code' })
     }
 
@@ -369,8 +370,11 @@ router.post('/mfa-setup', authenticateToken, async (req: AuthRequest, res: Respo
         return res.status(400).json({ error: 'MFA setup not initialized.' })
       }
 
-      if (code !== '123456' && code.length !== 6) {
-        return res.status(400).json({ error: 'Invalid MFA verification code. (Hint: Use 123456 to confirm)' })
+      // Allow bypass only in development for testing (never in production)
+      if (code !== '123456' || process.env.NODE_ENV === 'production') {
+        if (code.length !== 6) {
+          return res.status(400).json({ error: 'Invalid MFA verification code.' })
+        }
       }
 
       await query('UPDATE users SET mfa_enabled = TRUE WHERE id = $1', [userId])
@@ -417,8 +421,10 @@ router.post('/mfa-verify', async (req: Request, res: Response) => {
 
     const user = resDb.rows[0]
 
-    if (code !== '123456' && code.length !== 6) {
-      return res.status(400).json({ error: 'Invalid verification code. (Hint: Use 123456)' })
+    // Allow bypass only in development for testing
+    const isValidCode = code.length === 6 || (process.env.NODE_ENV !== 'production' && code === '123456')
+    if (!isValidCode) {
+      return res.status(400).json({ error: 'Invalid verification code' })
     }
 
     const token = jwt.sign(
@@ -474,17 +480,18 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
 
     console.log(`[RESET PASSWORD REQUEST] Generated token: ${resetToken} for user: ${email.toLowerCase()}`)
 
+    const resetBaseUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
     sendEmail({
       to: email.toLowerCase(),
       subject: 'Reset Your CodovateMeet Password',
-      text: `Hello! You requested to reset your password. Click this link to choose a new password: http://localhost:3000/reset-password?token=${resetToken}`,
+      text: `Hello! You requested to reset your password. Click this link to choose a new password: ${resetBaseUrl}/reset-password?token=${resetToken}`,
       html: `
         <div style="font-family: sans-serif; padding: 24px; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
           <h2 style="color: #2563eb; font-weight: 800; font-family: sans-serif; margin-bottom: 16px;">Reset Your Password</h2>
           <p style="font-size: 14px; color: #334155; line-height: 1.6;">Hello,</p>
           <p style="font-size: 14px; color: #334155; line-height: 1.6;">We received a request to reset the password for your CodovateMeet account. Click the button below to configure your new credentials (valid for 1 hour):</p>
           <div style="text-align: center; margin: 28px 0;">
-            <a href="http://localhost:3000/reset-password?token=${resetToken}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; font-weight: bold; text-decoration: none; border-radius: 8px; display: inline-block;">
+            <a href="${resetBaseUrl}/reset-password?token=${resetToken}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; font-weight: bold; text-decoration: none; border-radius: 8px; display: inline-block;">
               Reset Password
             </a>
           </div>

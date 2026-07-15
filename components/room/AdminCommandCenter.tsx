@@ -75,8 +75,8 @@ export function AdminCommandCenter({
   }
 
   const handleForceMuteAll = () => {
-    broadcastAdminCommand('FORCE_MUTE', 'ALL')
-    broadcastAdminCommand('TOGGLE_MIC_LOCK', 'ALL', true)
+    // Atomic single command: mute + lock in one broadcast (no race condition)
+    broadcastAdminCommand('FORCE_MUTE_LOCK', 'ALL')
   }
 
   const handleAllowUnmuteAll = () => {
@@ -84,8 +84,8 @@ export function AdminCommandCenter({
   }
 
   const handleForceVideoOffAll = () => {
-    broadcastAdminCommand('FORCE_VIDEO_OFF', 'ALL')
-    broadcastAdminCommand('TOGGLE_CAMERA_LOCK', 'ALL', true)
+    // Atomic single command: stop + lock in one broadcast (no race condition)
+    broadcastAdminCommand('FORCE_VIDEO_LOCK', 'ALL')
   }
 
   const handleAllowVideoAll = () => {

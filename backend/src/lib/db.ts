@@ -2,7 +2,18 @@ import { Pool } from 'pg'
 
 let connectionString = process.env.DATABASE_URL
 if (connectionString) {
-  connectionString = connectionString.replace(/([\?&])sslmode=[^&]*/, '$1').replace(/\?&/, '?').replace(/\?\?/, '?').replace(/\?$/, '')
+  // Safely strip sslmode from the query string using URL parsing
+  try {
+    const url = new URL(connectionString)
+    url.searchParams.delete('sslmode')
+    connectionString = url.toString()
+  } catch {
+    // Fallback: strip sslmode with regex if URL parsing fails (e.g., non-standard format)
+    connectionString = connectionString
+      .replace(/([?&])sslmode=[^&]*/g, '$1')
+      .replace(/[?&]$/, '')
+      .replace(/\?&/, '?')
+  }
 }
 
 const pool = new Pool({

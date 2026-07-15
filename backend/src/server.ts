@@ -24,11 +24,16 @@ app.use(cors({
       origin.startsWith('http://localhost:') ||
       origin.startsWith('http://127.0.0.1:') ||
       origin.startsWith('http://10.') ||
-      origin.startsWith('http://192.168.')
+      origin.startsWith('http://192.168.') ||
+      origin.startsWith('https://meet.codovatesolutions.in')
     ) {
       return callback(null, true)
     }
-    return callback(null, true) // fallback allow for local ease of use
+    // Allow all origins in development, reject unrecognized origins in production
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true)
+    }
+    return callback(new Error(`CORS: Origin '${origin}' not allowed`))
   },
   credentials: true
 }))

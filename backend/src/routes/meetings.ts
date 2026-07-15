@@ -4,6 +4,7 @@ import { query } from '../lib/db'
 import { authenticateToken, AuthRequest } from './auth'
 import { sendEmail } from '../lib/email'
 import crypto from 'crypto'
+import jwt from 'jsonwebtoken'
 
 const router = Router()
 
@@ -44,7 +45,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     let decoded;
     try {
-      decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET || 'fallback_secret') as any
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as any
       if (!decoded || !decoded.id) {
         return res.status(401).json({ error: 'Unauthorized: Invalid token' })
       }
