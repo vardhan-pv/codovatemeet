@@ -2458,8 +2458,8 @@ function RoomPageContent() {
     setAiConversations(prev => [...prev, { sender: 'user', text: promptText }])
     setAiLoading(true)
     
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const token = useAuth.getState().token || localStorage.getItem('token')
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
       if (token) {
@@ -2481,10 +2481,17 @@ function RoomPageContent() {
         const data = await response.json()
         setAiConversations(prev => [...prev, { sender: 'ai', text: data.text }])
       } else {
-        throw new Error('AI response error')
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.error || errData.message || `HTTP ${response.status} Error`)
       }
-    } catch (err) {
-      setAiConversations(prev => [...prev, { sender: 'ai', text: "❌ AI failed to connect. Try asking summarizing tasks or notes." }])
+    } catch (err: any) {
+      setAiConversations(prev => [
+        ...prev, 
+        { 
+          sender: 'ai', 
+          text: `❌ AI failed to connect to ${backendUrl}/api/ai. Error: ${err.message || err}. Please check that backendUrl is configured and online.` 
+        }
+      ])
     } finally {
       setAiLoading(false)
     }
