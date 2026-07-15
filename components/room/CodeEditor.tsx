@@ -444,6 +444,32 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
       return
     }
 
+    let repoPath = githubRepo.trim()
+    // Extract owner/repo if full URL or .git path is provided
+    if (repoPath.startsWith('http://') || repoPath.startsWith('https://')) {
+      try {
+        const url = new URL(repoPath)
+        let pathname = url.pathname
+        if (pathname.startsWith('/')) {
+          pathname = pathname.substring(1)
+        }
+        if (pathname.endsWith('.git')) {
+          pathname = pathname.substring(0, pathname.length - 4)
+        }
+        // Ensure path splits into exactly 2 parts (owner/repo)
+        const parts = pathname.split('/')
+        if (parts.length >= 2) {
+          repoPath = `${parts[0]}/${parts[1]}`
+        }
+      } catch (e) {
+        // Fallback
+      }
+    } else {
+      if (repoPath.endsWith('.git')) {
+        repoPath = repoPath.substring(0, repoPath.length - 4)
+      }
+    }
+
     localStorage.setItem('codovate_github_token', githubToken)
     localStorage.setItem('codovate_github_repo', githubRepo)
 
@@ -468,7 +494,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
 
         let sha: string | undefined = undefined
         try {
-          const res = await fetch(`https://api.github.com/repos/${githubRepo}/contents/${fname}?ref=${githubBranch}`, { headers })
+          const res = await fetch(`https://api.github.com/repos/${repoPath}/contents/${fname}?ref=${githubBranch}`, { headers })
           if (res.status === 200) {
             const data = await res.json()
             sha = data.sha
@@ -477,7 +503,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
           // ignore
         }
 
-        const putRes = await fetch(`https://api.github.com/repos/${githubRepo}/contents/${fname}`, {
+        const putRes = await fetch(`https://api.github.com/repos/${repoPath}/contents/${fname}`, {
           method: 'PUT',
           headers,
           body: JSON.stringify({
@@ -495,7 +521,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
       }
 
       setGithubPushingStatus('success')
-      setGithubSuccessUrl(`https://github.com/${githubRepo}/tree/${githubBranch}`)
+      setGithubSuccessUrl(`https://github.com/${repoPath}/tree/${githubBranch}`)
     } catch (err: any) {
       setGithubErrorText(err.message || 'Push failed. Check repo owner/name structure and PAT scope.')
       setGithubPushingStatus('error')
