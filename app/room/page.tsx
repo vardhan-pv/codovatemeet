@@ -209,7 +209,10 @@ function VideoTile({
         autoPlay
         playsInline
         muted
-        style={{ filter: filterMap[filter] || '' }}
+        style={{
+          filter: filterMap[filter] || '',
+          transform: (participant.isLocal && source === 'camera') ? 'scaleX(-1)' : undefined
+        }}
         className={`w-full h-full transition-all ${source === 'screen_share' || isPinned ? 'object-contain bg-black' : 'object-cover'}`}
       />
 
@@ -1059,6 +1062,7 @@ function RoomPageContent() {
 
   // Video visual filters & virtual backgrounds
   const [localVideoFilter, setLocalVideoFilter] = useState('none')
+  const [isNoiseCancellationEnabled, setIsNoiseCancellationEnabled] = useState(true)
   const [participantFilters, setParticipantFilters] = useState<Record<string, string>>({})
   const [aiFraming, setAiFraming] = useState(false)
 
@@ -2007,6 +2011,11 @@ function RoomPageContent() {
       publishDefaults: {
         videoCodec: 'vp8',
         backupCodec: { codec: 'h264' }
+      },
+      audioCaptureDefaults: {
+        noiseSuppression: isNoiseCancellationEnabled,
+        echoCancellation: true,
+        autoGainControl: true,
       }
     })
 
@@ -2302,11 +2311,35 @@ function RoomPageContent() {
     }
     if (!room) { setIsMuted(!isMuted); return }
     try {
-      await room.localParticipant.setMicrophoneEnabled(isMuted)
+      await room.localParticipant.setMicrophoneEnabled(isMuted, {
+        noiseSuppression: isNoiseCancellationEnabled,
+        echoCancellation: true,
+        autoGainControl: true,
+      })
       setIsMuted(!isMuted)
     } catch (e: any) {
       console.error('Failed to toggle microphone:', e)
       alert('Could not toggle microphone: ' + (e.message || e) + '\n\nPlease ensure your microphone is connected and permissions are allowed.')
+    }
+  }
+
+  const toggleNoiseCancellation = async () => {
+    const newValue = !isNoiseCancellationEnabled
+    setIsNoiseCancellationEnabled(newValue)
+    if (room && !isMuted) {
+      try {
+        const publication = room.localParticipant.getTrackPublication('microphone' as any) || room.localParticipant.getTrackPublications().find(p => p.kind === 'audio')
+        const audioTrack = publication?.track
+        if (audioTrack && audioTrack.mediaStreamTrack) {
+          await audioTrack.mediaStreamTrack.applyConstraints({
+            noiseSuppression: newValue,
+            echoCancellation: true,
+            autoGainControl: true
+          })
+        }
+      } catch (err) {
+        console.warn("Failed to apply constraints dynamically:", err)
+      }
     }
   }
 
@@ -2976,6 +3009,32 @@ function RoomPageContent() {
                     {f.name}
                   </button>
                 ))}
+              </div>
+            </div>
+            <div className="space-y-2 pt-2 border-t border-border">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider select-none">Audio Effects</h3>
+              <div className="bg-slate-850 border border-border rounded-[20px] p-4 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className={`p-2 rounded-lg ${isNoiseCancellationEnabled ? 'bg-primary/20 text-primary' : 'bg-slate-800 text-slate-400'}`}>
+                    <Mic className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">AI Noise Cancellation</p>
+                    <p className="text-[10px] text-slate-400">Filter out background hums</p>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleNoiseCancellation}
+                  className={`w-10 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
+                    isNoiseCancellationEnabled ? 'bg-primary' : 'bg-slate-700'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                      isNoiseCancellationEnabled ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
             </div>
           </div>
