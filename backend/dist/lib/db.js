@@ -4,7 +4,19 @@ exports.query = query;
 const pg_1 = require("pg");
 let connectionString = process.env.DATABASE_URL;
 if (connectionString) {
-    connectionString = connectionString.replace(/([\?&])sslmode=[^&]*/, '$1').replace(/\?&/, '?').replace(/\?\?/, '?').replace(/\?$/, '');
+    // Safely strip sslmode from the query string using URL parsing
+    try {
+        const url = new URL(connectionString);
+        url.searchParams.delete('sslmode');
+        connectionString = url.toString();
+    }
+    catch {
+        // Fallback: strip sslmode with regex if URL parsing fails (e.g., non-standard format)
+        connectionString = connectionString
+            .replace(/([?&])sslmode=[^&]*/g, '$1')
+            .replace(/[?&]$/, '')
+            .replace(/\?&/, '?');
+    }
 }
 const pool = new pg_1.Pool({
     connectionString,
@@ -75,7 +87,7 @@ async function initDB() {
             // Add new columns if they don't exist for existing DBs
             await client.query(`
         ALTER TABLE meetings 
-        ADD COLUMN IF NOT EXISTS room_name VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS room_name TEXT,
         ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMP,
         ADD COLUMN IF NOT EXISTS type VARCHAR(50) DEFAULT 'technical',
         ADD COLUMN IF NOT EXISTS duration_minutes INT DEFAULT 60;

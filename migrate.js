@@ -11,7 +11,7 @@ async function migrate() {
     console.log('Connected. Running ALTER TABLE...');
     await client.query(`
       ALTER TABLE meetings 
-      ADD COLUMN IF NOT EXISTS room_name VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS room_name TEXT,
       ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMP;
     `);
     console.log('Migration successful.');

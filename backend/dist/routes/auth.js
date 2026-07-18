@@ -105,7 +105,8 @@ router.post('/verify', async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
         const user = resDb.rows[0];
-        if (user.verification_code !== code.trim() && code.trim() !== '123456') {
+        // Allow bypass only in development for testing (never in production)
+        if (user.verification_code !== code.trim() && !(process.env.NODE_ENV !== 'production' && code.trim() === '123456')) {
             return res.status(400).json({ error: 'Invalid verification code' });
         }
         await (0, db_1.query)('UPDATE users SET is_verified = TRUE, verification_code = NULL WHERE id = $1', [userId]);
@@ -279,8 +280,11 @@ router.post('/mfa-setup', authenticateToken, async (req, res) => {
             if (!user.mfa_secret) {
                 return res.status(400).json({ error: 'MFA setup not initialized.' });
             }
-            if (code !== '123456' && code.length !== 6) {
-                return res.status(400).json({ error: 'Invalid MFA verification code. (Hint: Use 123456 to confirm)' });
+            // Allow bypass only in development for testing (never in production)
+            if (code !== '123456' || process.env.NODE_ENV === 'production') {
+                if (code.length !== 6) {
+                    return res.status(400).json({ error: 'Invalid MFA verification code.' });
+                }
             }
             await (0, db_1.query)('UPDATE users SET mfa_enabled = TRUE WHERE id = $1', [userId]);
             await (0, db_1.query)('INSERT INTO security_logs (id, event_type, user_id, details) VALUES ($1, $2, $3, $4)', [crypto_1.default.randomUUID(), 'MFA_ENABLED', userId, `Two-Factor authentication successfully enabled.`]);
@@ -310,8 +314,10 @@ router.post('/mfa-verify', async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
         const user = resDb.rows[0];
-        if (code !== '123456' && code.length !== 6) {
-            return res.status(400).json({ error: 'Invalid verification code. (Hint: Use 123456)' });
+        // Allow bypass only in development for testing
+        const isValidCode = code.length === 6 || (process.env.NODE_ENV !== 'production' && code === '123456');
+        if (!isValidCode) {
+            return res.status(400).json({ error: 'Invalid verification code' });
         }
         const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, name: user.name, role: user.role || 'user' }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
         await (0, db_1.query)('INSERT INTO security_logs (id, event_type, user_id, details) VALUES ($1, $2, $3, $4)', [crypto_1.default.randomUUID(), 'SUCCESSFUL_LOGIN', user.id, `User completed 2FA challenge successfully.`]);
@@ -347,17 +353,18 @@ router.post('/forgot-password', async (req, res) => {
         const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
         await (0, db_1.query)('UPDATE users SET reset_token = $1, reset_expires = $2 WHERE id = $3', [resetToken, expiry, user.id]);
         console.log(`[RESET PASSWORD REQUEST] Generated token: ${resetToken} for user: ${email.toLowerCase()}`);
+        const resetBaseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         (0, email_1.sendEmail)({
             to: email.toLowerCase(),
             subject: 'Reset Your CodovateMeet Password',
-            text: `Hello! You requested to reset your password. Click this link to choose a new password: http://localhost:3000/reset-password?token=${resetToken}`,
+            text: `Hello! You requested to reset your password. Click this link to choose a new password: ${resetBaseUrl}/reset-password?token=${resetToken}`,
             html: `
         <div style="font-family: sans-serif; padding: 24px; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
           <h2 style="color: #2563eb; font-weight: 800; font-family: sans-serif; margin-bottom: 16px;">Reset Your Password</h2>
           <p style="font-size: 14px; color: #334155; line-height: 1.6;">Hello,</p>
           <p style="font-size: 14px; color: #334155; line-height: 1.6;">We received a request to reset the password for your CodovateMeet account. Click the button below to configure your new credentials (valid for 1 hour):</p>
           <div style="text-align: center; margin: 28px 0;">
-            <a href="http://localhost:3000/reset-password?token=${resetToken}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; font-weight: bold; text-decoration: none; border-radius: 8px; display: inline-block;">
+            <a href="${resetBaseUrl}/reset-password?token=${resetToken}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; font-weight: bold; text-decoration: none; border-radius: 8px; display: inline-block;">
               Reset Password
             </a>
           </div>
@@ -440,7 +447,6 @@ router.get('/livekit/token', async (req, res) => {
             return res.status(500).json({ error: 'LiveKit server credentials not configured' });
         }
         // TODO: Add plan-based participant limits when billing is ready
-
         const at = new livekit_server_sdk_1.AccessToken(apiKey, apiSecret, {
             identity: identity
         });

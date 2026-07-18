@@ -21,7 +21,7 @@ import { OnToGoOverlay } from '@/components/room/OnToGoOverlay'
 import {
   Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert,
   X, Maximize2, Minimize2, Subtitles, Expand, Shrink, Sparkles, Code, Paintbrush,
-  BarChart2, ShieldCheck, Trophy, Crown, Flag, Calendar, Heart, Send, Clock,
+  BarChart2, ShieldCheck, Crown, Flag, Calendar, Heart, Send, Clock,
   RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
@@ -803,7 +803,7 @@ interface UnoCard {
   value: string
 }
 
-function UnoGameWorkspace({ room, lobbyName, sendData, setXp }: { room: any; lobbyName: string; sendData: any; setXp: any }) {
+function UnoGame({ room, lobbyName, sendData }: { room: any; lobbyName: string; sendData: (type: string, payload?: any) => void }) {
   const [hand, setHand] = useState<UnoCard[]>([])
   const [discardTop, setDiscardTop] = useState<UnoCard | null>(null)
   const [gameStatus, setGameStatus] = useState<'lobby' | 'playing' | 'won'>('lobby')
@@ -854,7 +854,6 @@ function UnoGameWorkspace({ room, lobbyName, sendData, setXp }: { room: any; lob
       if (nextHand.length === 0) {
         setGameStatus('won')
         setWinnerName(lobbyName)
-        setXp((x: number) => x + 30)
         sendData('UNO_WIN', { winner: lobbyName })
       }
       return nextHand
@@ -1134,11 +1133,6 @@ function RoomPageContent() {
   // Active collaborative code state
   const [activeCode, setActiveCode] = useState('// Write live collaborative code here\nconsole.log("Welcome developers!");')
 
-  // Gamification & Speaker tracking
-  const [xp, setXp] = useState(0)
-  const [level, setLevel] = useState(1)
-  const [leaderboard, setLeaderboard] = useState<Record<string, { name: string; xp: number; level: number }>>({})
-  const [showLevelUpCelebration, setShowLevelUpCelebration] = useState<number | null>(null)
 
   // Invite sharing popup state
   const [showInvitePopup, setShowInvitePopup] = useState(true)
@@ -1476,29 +1470,7 @@ function RoomPageContent() {
     }
   }, [participants, pinnedId, room])
 
-  // Active speaker detection for XP rewards
-  useEffect(() => {
-    if (!room || !hasJoined) return
-    const interval = setInterval(() => {
-      if (room.localParticipant && room.localParticipant.isSpeaking && !isMuted && !isCompanionMode) {
-        setXp(prev => {
-          const newXp = prev + 3
-          const threshold = level * 100
-          if (newXp >= threshold) {
-            const nextL = level + 1
-            setLevel(nextL)
-            sendData('LEVEL_UP', { level: nextL })
-            setShowLevelUpCelebration(nextL)
-            setTimeout(() => setShowLevelUpCelebration(null), 3000)
-            return 0
-          }
-          return newXp
-        })
-      }
-    }, 1000)
 
-    return () => clearInterval(interval)
-  }, [room, hasJoined, level, isMuted, isCompanionMode])
 
   // Paste Event Listener for Plagiarism Risk checking
   useEffect(() => {
@@ -1586,19 +1558,7 @@ function RoomPageContent() {
     return () => clearTimeout(timer)
   }, [activeCode, messages])
 
-  // Broadcast local XP values for leaderboard ranking
-  useEffect(() => {
-    if (!room || !hasJoined) return
-    const interval = setInterval(() => {
-      sendData('XP_SYNC', { name: lobbyName, xp, level })
-      setLeaderboard(prev => ({
-        ...prev,
-        [room.localParticipant.sid || 'local']: { name: lobbyName, xp, level }
-      }))
-    }, 5005)
 
-    return () => clearInterval(interval)
-  }, [room, hasJoined, xp, level, lobbyName])
 
   // Keep track of active workspace code changes
   useEffect(() => {
@@ -1962,17 +1922,7 @@ function RoomPageContent() {
           })
           return
         }
-        if (parsed.type === 'XP_SYNC') {
-          setLeaderboard(prev => ({
-            ...prev,
-            [senderSid]: { name: parsed.name, xp: parsed.xp, level: parsed.level }
-          }))
-          return
-        }
-        if (parsed.type === 'LEVEL_UP') {
-          displayCaption('Level Up!', `🎉 ${sender} leveled up to Level ${parsed.level}!`)
-          return
-        }
+
         if (parsed.type === 'UNO_START') {
           window.dispatchEvent(new CustomEvent('uno_start', { detail: parsed }))
           return
@@ -2432,7 +2382,6 @@ function RoomPageContent() {
       sendData('CHAT_MESSAGE', { text: messageInput })
       setMessages(prev => [...prev, { sender: lobbyName, text: messageInput, time: new Date() }])
       
-      setXp(prev => prev + 5)
       if (useAuth.getState().token) {
         await meetingService.sendMessage(roomId, messageInput)
       }
@@ -2462,7 +2411,6 @@ function RoomPageContent() {
       setReactions(prev => prev.filter(r => r.id !== id))
     }, 3000)
 
-    setXp(prev => prev + 2)
     sendData('EMOJI_REACTION', { emoji })
     setShowReactionTray(false)
   }
@@ -3511,13 +3459,7 @@ function RoomPageContent() {
         />
       )}
 
-      {/* Floating level up alerts */}
-      {showLevelUpCelebration && (
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 bg-amber-500 border border-amber-400 text-white font-extrabold px-6 py-3 rounded-2xl shadow-2xl shadow-amber-500/30 z-50 flex items-center gap-2 select-none animate-bounce">
-          <Trophy className="h-6 w-6 text-white" />
-          <span>LEVEL UP! Reached Level {showLevelUpCelebration}!</span>
-        </div>
-      )}
+
 
       {/* Inline styles for reaction floating */}
       <style>{`
@@ -3713,7 +3655,6 @@ function RoomPageContent() {
               <Whiteboard activeWorkspace={activeWorkspace} room={room} lobbyName={lobbyName} sendData={sendData} readOnly={userRoles[lobbyName] === 'Guest' || (adminSettings.isWhiteboardLocked && !isHostUser)} />
             </div>
             <div className={activeWorkspace === 'uno' ? 'h-full w-full' : 'hidden'}>
-              <UnoGameWorkspace room={room} lobbyName={lobbyName} sendData={sendData} setXp={setXp} />
             </div>
             <div className={activeWorkspace === 'agenda' ? 'h-full w-full' : 'hidden'}>
               <AgendaWorkspace room={room} lobbyName={lobbyName} sendData={sendData} agenda={agenda} setAgenda={setAgenda} />

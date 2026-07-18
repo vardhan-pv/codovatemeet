@@ -68,7 +68,7 @@ async function initDB() {
       // Add new columns if they don't exist for existing DBs
       await client.query(`
         ALTER TABLE meetings 
-        ADD COLUMN IF NOT EXISTS room_name VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS room_name TEXT,
         ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMP,
         ADD COLUMN IF NOT EXISTS type VARCHAR(50) DEFAULT 'technical',
         ADD COLUMN IF NOT EXISTS duration_minutes INT DEFAULT 60;

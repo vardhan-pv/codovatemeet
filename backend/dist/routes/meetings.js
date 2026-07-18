@@ -8,6 +8,7 @@ const db_1 = require("../lib/db");
 const auth_1 = require("./auth");
 const email_1 = require("../lib/email");
 const crypto_1 = __importDefault(require("crypto"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const router = (0, express_1.Router)();
 // 1. GET /meetings - checks if a meeting exists or gets recent meetings for authenticated user
 router.get('/', async (req, res) => {
@@ -39,7 +40,7 @@ router.get('/', async (req, res) => {
         }
         let decoded;
         try {
-            decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET || 'fallback_secret');
+            decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'fallback_secret');
             if (!decoded || !decoded.id) {
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }

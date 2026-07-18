@@ -26,14 +26,20 @@ app.use((0, cors_1.default)({
             origin.startsWith('http://localhost:') ||
             origin.startsWith('http://127.0.0.1:') ||
             origin.startsWith('http://10.') ||
-            origin.startsWith('http://192.168.')) {
+            origin.startsWith('http://192.168.') ||
+            origin.startsWith('https://meet.codovatesolutions.in')) {
             return callback(null, true);
         }
-        return callback(null, true); // fallback allow for local ease of use
+        // Allow all origins in development, reject unrecognized origins in production
+        if (process.env.NODE_ENV !== 'production') {
+            return callback(null, true);
+        }
+        return callback(new Error(`CORS: Origin '${origin}' not allowed`));
     },
     credentials: true
 }));
-app.use(express_1.default.json());
+app.use(express_1.default.json({ limit: '50mb' }));
+app.use(express_1.default.urlencoded({ limit: '50mb', extended: true }));
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', service: 'codovate-meet-backend' });
