@@ -954,13 +954,13 @@ function UnoGame({ room, lobbyName, sendData }: { room: any; lobbyName: string; 
                 </Button>
               </div>
 
-              <ScrollArea className="w-full">
-                <div className="flex gap-2.5 pb-2 px-1">
+              <div className="w-full overflow-x-auto pb-2 px-1">
+                <div className="flex gap-2.5">
                   {hand.map(card => (
                     <button
                       key={card.id}
                       onClick={() => playCard(card)}
-                      className={`w-16 h-22 rounded-[20px] shrink-0 ${bgColors[card.color]} border border-white/40 flex flex-col justify-between p-2 text-white font-bold hover:scale-105 active:scale-95 transition-transform`}
+                      className={`w-16 h-24 rounded-[20px] shrink-0 ${bgColors[card.color]} border border-white/40 flex flex-col justify-between p-2 text-white font-bold hover:scale-105 active:scale-95 transition-transform cursor-pointer`}
                     >
                       <span className="text-[10px] text-left leading-none">{card.value}</span>
                       <span className="text-sm self-center font-extrabold">{card.value[0]}</span>
@@ -968,7 +968,7 @@ function UnoGame({ room, lobbyName, sendData }: { room: any; lobbyName: string; 
                     </button>
                   ))}
                 </div>
-              </ScrollArea>
+              </div>
             </div>
           </>
         )}
@@ -3707,6 +3707,7 @@ function RoomPageContent() {
               <Whiteboard activeWorkspace={activeWorkspace} room={room} lobbyName={lobbyName} sendData={sendData} readOnly={userRoles[lobbyName] === 'Guest' || (adminSettings.isWhiteboardLocked && !isHostUser)} />
             </div>
             <div className={activeWorkspace === 'uno' ? 'h-full w-full' : 'hidden'}>
+              <UnoGame room={room} lobbyName={lobbyName} sendData={sendData} />
             </div>
             <div className={activeWorkspace === 'agenda' ? 'h-full w-full' : 'hidden'}>
               <AgendaWorkspace room={room} lobbyName={lobbyName} sendData={sendData} agenda={agenda} setAgenda={setAgenda} />
