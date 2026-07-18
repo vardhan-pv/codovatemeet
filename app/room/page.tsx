@@ -1402,12 +1402,7 @@ function RoomPageContent() {
         setValidationError(errMsg)
       }
 
-      if (useAuth.getState().token) {
-        try {
-          const history = await meetingService.fetchMessages(roomId)
-          setMessages(history.map((m: any) => ({ sender: m.sender_name, text: m.message, time: new Date(m.created_at) })))
-        } catch (e) { console.error('No message history', e) }
-      }
+
 
       try {
         const track = await createLocalVideoTrack()
