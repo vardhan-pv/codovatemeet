@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, Suspense } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Room, RoomEvent, LocalVideoTrack, createLocalVideoTrack } from 'livekit-client'
@@ -1047,7 +1048,7 @@ function RoomPageContent() {
   const [userRoles, setUserRoles] = useState<Record<string, string>>({})
 
   // Captions state
-  const [showCaptions, setShowCaptions] = useState(true)
+  const [showCaptions, setShowCaptions] = useState(false)
   const [activeCaption, setActiveCaption] = useState<{ participantId: string; text: string } | null>(null)
   const showCaptionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -1113,6 +1114,18 @@ function RoomPageContent() {
 
   // Sidebar Panel: 'chat' | 'participants' | 'ai' | 'polls' | 'effects' | 'analytics' | 'dev' | 'timetravel' | 'focus' | 'interview' | 'scheduler' | 'abuse' | null
   const [activeSidebar, setActiveSidebar] = useState<string | null>(null)
+
+  // Chat Toast notification popup state
+  const [chatToast, setChatToast] = useState<{ sender: string; text: string } | null>(null)
+  const chatToastTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (chatToastTimeoutRef.current) {
+        clearTimeout(chatToastTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Translation lang
   const [translationLang, setTranslationLang] = useState('none')
@@ -1635,6 +1648,10 @@ function RoomPageContent() {
         }
         ctx.close().catch(() => {})
       }
+      // LiveKit official way to unlock and resume audio playback
+      if (room) {
+        room.startAudio().catch((e) => console.warn('Failed to start LiveKit audio:', e))
+      }
       // Also try to play all existing <audio> elements
       document.querySelectorAll('audio').forEach(a => {
         if (a.paused) a.play().catch(() => {})
@@ -1646,7 +1663,7 @@ function RoomPageContent() {
       document.removeEventListener('touchstart', unlockAudio)
       document.removeEventListener('click', unlockAudio)
     }
-  }, [hasJoined])
+  }, [hasJoined, room])
 
   // WebRTC Data Channel Event Handlers
   useEffect(() => {
@@ -1792,6 +1809,16 @@ function RoomPageContent() {
         if (parsed.type === 'CHAT_MESSAGE') {
           setMessages(prev => [...prev, { sender, text: parsed.text, time: new Date() }])
           setMetrics(prev => ({ ...prev, chatMsgs: prev.chatMsgs + 1 }))
+          // Show chat toast if chat panel is not open
+          if (activeSidebar !== 'chat') {
+            setChatToast({ sender, text: parsed.text })
+            if (chatToastTimeoutRef.current) {
+              clearTimeout(chatToastTimeoutRef.current)
+            }
+            chatToastTimeoutRef.current = setTimeout(() => {
+              setChatToast(null)
+            }, 4000)
+          }
           return
         }
         if (parsed.type === 'NEW_POLL') {
@@ -3447,6 +3474,36 @@ function RoomPageContent() {
   return (
     <div className="relative h-[100dvh] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#111827] via-[#050816] to-[#050816] text-foreground flex flex-col justify-between overflow-hidden font-sans">
       
+      {/* Chat Notification Popup Toast */}
+      <AnimatePresence>
+        {chatToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed top-6 right-6 z-[100] w-80 bg-slate-900/90 border border-slate-800 backdrop-blur-md rounded-2xl p-4 shadow-2xl flex items-start gap-3 text-white"
+          >
+            <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl shrink-0 mt-0.5">
+              <MessageSquare className="h-4.5 w-4.5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-extrabold text-xs text-slate-200 truncate">{chatToast.sender}</span>
+                <span className="text-[10px] text-slate-500 font-medium shrink-0">New Message</span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 line-clamp-2 break-words leading-relaxed">{chatToast.text}</p>
+            </div>
+            <button 
+              onClick={() => setChatToast(null)} 
+              className="text-slate-500 hover:text-white transition p-0.5 rounded-lg hover:bg-white/5 shrink-0"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* On-the-Go Mode Overlay */}
       {isOnToGoMode && (
         <OnToGoOverlay 
@@ -3623,7 +3680,7 @@ function RoomPageContent() {
              We use absolute positioning instead of display:none because iOS/Safari
              blocks audio playback for elements with display: none.
         ── */}
-        <div className="absolute w-0 h-0 overflow-hidden opacity-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute left-[-9999px] top-[-9999px] w-[1px] h-[1px] overflow-hidden pointer-events-none" aria-hidden="true">
           {participants
             .filter(p => !p.isLocal)
             .map(p => {

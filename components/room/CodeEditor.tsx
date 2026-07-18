@@ -848,7 +848,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
         </div>
       </div>
       
-      <div className="flex-grow flex flex-col md:flex-row min-h-0 relative">
+      <div className="flex-grow flex flex-row min-h-0 relative">
         {/* Activity Bar & Sidebar pane Wrapper */}
         {showExplorer && (
           <div className="flex h-full shrink-0 border-r border-white/5">
