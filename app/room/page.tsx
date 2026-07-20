@@ -3664,31 +3664,19 @@ function RoomPageContent() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
-            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
-              activeSidebar === 'chat'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-300 hover:bg-white/5 hover:text-white'
-            }`}
+            onClick={() => window.open('https://github.com/vardhan-pv/codovatemeet', '_blank')}
+            className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-slate-300 hover:bg-white/5 hover:text-white"
           >
-            <MessageSquare className="w-3.5 h-3.5 text-blue-400" /> Chat
+            <GitBranch className="w-3.5 h-3.5 text-slate-400" /> GitHub
           </Button>
 
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
-            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
-              activeSidebar === 'participants'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-300 hover:bg-white/5 hover:text-white'
-            }`}
+            onClick={() => window.open('https://vercel.com/dashboard', '_blank')}
+            className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-slate-300 hover:bg-white/5 hover:text-white"
           >
-            <Users className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Participants</span>
-            <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-[10px] font-mono text-slate-300">
-              {participants.length}
-            </span>
+            <Rocket className="w-3.5 h-3.5 text-slate-400" /> Deploy
           </Button>
 
           <Button
