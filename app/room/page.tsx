@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, Suspense } from 'react'
+import { useEffect, useState, useRef, Suspense, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
@@ -819,11 +819,12 @@ function UnoGame({ room, lobbyName, sendData }: { room: any; lobbyName: string; 
   const [discardTop, setDiscardTop] = useState<UnoCard | null>(null)
   const [gameStatus, setGameStatus] = useState<'lobby' | 'playing' | 'won'>('lobby')
   const [winnerName, setWinnerName] = useState('')
+  const [gameLog, setGameLog] = useState<string[]>([])
 
   const colors = ['red', 'blue', 'green', 'yellow']
   const values = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Skip', 'Reverse', 'Draw 2']
 
-  const generateCard = (): UnoCard => {
+  const generateCard = useCallback((): UnoCard => {
     const isWild = Math.random() < 0.08
     if (isWild) {
       return { id: Math.random().toString(), color: 'wild', value: 'Wild' }
@@ -831,7 +832,9 @@ function UnoGame({ room, lobbyName, sendData }: { room: any; lobbyName: string; 
     const color = colors[Math.floor(Math.random() * colors.length)] as any
     const value = values[Math.floor(Math.random() * values.length)]
     return { id: Math.random().toString(), color, value }
-  }
+  }, [])
+
+  const addLog = (msg: string) => setGameLog(prev => [`${new Date().toLocaleTimeString()}: ${msg}`, ...prev.slice(0, 9)])
 
   const startGame = () => {
     const initialHand = Array.from({ length: 7 }, generateCard)
@@ -839,7 +842,8 @@ function UnoGame({ room, lobbyName, sendData }: { room: any; lobbyName: string; 
     setHand(initialHand)
     setDiscardTop(initialDiscard)
     setGameStatus('playing')
-
+    setGameLog([])
+    addLog(`${lobbyName} started the game`)
     sendData('UNO_START', { discard: initialDiscard })
   }
 
@@ -847,6 +851,7 @@ function UnoGame({ room, lobbyName, sendData }: { room: any; lobbyName: string; 
     if (gameStatus !== 'playing') return
     const card = generateCard()
     setHand(prev => [...prev, card])
+    addLog(`${lobbyName} drew a card`)
     sendData('UNO_DRAW', { player: lobbyName })
   }
 
@@ -865,11 +870,15 @@ function UnoGame({ room, lobbyName, sendData }: { room: any; lobbyName: string; 
       if (nextHand.length === 0) {
         setGameStatus('won')
         setWinnerName(lobbyName)
+        addLog(`🎉 ${lobbyName} wins!`)
         sendData('UNO_WIN', { winner: lobbyName })
+      } else if (nextHand.length === 1) {
+        addLog(`${lobbyName} says UNO!`)
       }
       return nextHand
     })
     setDiscardTop(card)
+    addLog(`${lobbyName} played ${card.color} ${card.value}`)
     sendData('UNO_PLAY', { card })
   }
 
@@ -879,16 +888,21 @@ function UnoGame({ room, lobbyName, sendData }: { room: any; lobbyName: string; 
       setDiscardTop(discard)
       setHand(Array.from({ length: 7 }, generateCard))
       setGameStatus('playing')
+      addLog('Game started by another player!')
     }
     const handlePlay = (e: CustomEvent) => {
       const { card } = e.detail
       setDiscardTop(card)
+      addLog(`Opponent played ${card.color} ${card.value}`)
     }
-    const handleDraw = (e: CustomEvent) => {}
+    const handleDraw = (e: CustomEvent) => {
+      addLog(`${e.detail.player} drew a card`)
+    }
     const handleWin = (e: CustomEvent) => {
       const { winner } = e.detail
       setWinnerName(winner)
       setGameStatus('won')
+      addLog(`🎉 ${winner} wins!`)
     }
 
     window.addEventListener('uno_start' as any, handleStart)
@@ -902,7 +916,7 @@ function UnoGame({ room, lobbyName, sendData }: { room: any; lobbyName: string; 
       window.removeEventListener('uno_draw' as any, handleDraw)
       window.removeEventListener('uno_win' as any, handleWin)
     }
-  }, [])
+  }, [generateCard])
 
   const bgColors: Record<string, string> = {
     red: 'bg-red-600',
@@ -958,7 +972,7 @@ function UnoGame({ room, lobbyName, sendData }: { room: any; lobbyName: string; 
 
             <div className="w-full space-y-4 mt-6">
               <div className="flex justify-between items-center px-2">
-                <span className="text-xs font-bold text-slate-300">Your Hand ({hand.length} cards)</span>
+                <span className="text-xs font-bold text-slate-300">Your Hand ({hand.length} cards){hand.length === 1 ? ' 🎉 UNO!' : ''}</span>
                 <Button onClick={drawCard} size="sm" className="h-7 text-[10px] bg-slate-800 hover:bg-slate-700 text-white font-bold">
                   ➕ Draw Card
                 </Button>
@@ -979,6 +993,15 @@ function UnoGame({ room, lobbyName, sendData }: { room: any; lobbyName: string; 
                   ))}
                 </div>
               </div>
+
+              {/* Game Activity Log */}
+              {gameLog.length > 0 && (
+                <div className="mx-2 p-2 bg-slate-900/60 rounded-xl border border-white/5 text-[10px] text-slate-400 space-y-0.5 max-h-20 overflow-y-auto">
+                  {gameLog.map((log, i) => (
+                    <p key={i} className={i === 0 ? 'text-slate-200 font-semibold' : ''}>{log}</p>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}
@@ -1093,12 +1116,31 @@ function RoomPageContent() {
   const [metrics, setMetrics] = useState({ codeEdits: 0, chatMsgs: 0, aiRequests: 0 })
   const [userRoles, setUserRoles] = useState<Record<string, string>>({})
   const [userRecordingPermissions, setUserRecordingPermissions] = useState<Record<string, boolean>>({})
+  const [canRecord, setCanRecord] = useState(false) // Set to true for host, or when admin grants permission
+  const [showProfilePopup, setShowProfilePopup] = useState(false)
 
   const handleToggleUserRecordingPermission = (userId: string) => {
+    const nextValue = !userRecordingPermissions[userId]
     setUserRecordingPermissions((prev) => ({
       ...prev,
-      [userId]: !prev[userId]
+      [userId]: nextValue
     }))
+    // Broadcast permission change over data channel so the target user knows
+    if (room) {
+      try {
+        const payload = {
+          type: 'RECORDING_PERMISSION',
+          sender: lobbyName,
+          senderSid: room.localParticipant.sid || room.localParticipant.identity,
+          targetUserId: userId,
+          allowed: nextValue
+        }
+        const data = new TextEncoder().encode(JSON.stringify(payload))
+        room.localParticipant.publishData(data, { reliable: true })
+      } catch (e) {
+        console.warn('Failed to broadcast recording permission:', e)
+      }
+    }
   }
 
   // Captions state
@@ -1141,6 +1183,7 @@ function RoomPageContent() {
     isMicLocked: false,
     isCameraLocked: false,
     isRecordingLocked: false,
+    waitingRoom: false,
   })
 
   const isHostUser = Boolean(
@@ -1316,6 +1359,7 @@ function RoomPageContent() {
         else if (command === 'TOGGLE_SCREENSHARE_LOCK') setAdminSettings(prev => ({ ...prev, isScreenShareLocked: value }))
         else if (command === 'TOGGLE_MIC_LOCK') setAdminSettings(prev => ({ ...prev, isMicLocked: value }))
         else if (command === 'TOGGLE_CAMERA_LOCK') setAdminSettings(prev => ({ ...prev, isCameraLocked: value }))
+        else if (command === 'TOGGLE_WAITING_ROOM') setAdminSettings(prev => ({ ...prev, waitingRoom: value }))
         // Atomic lock commands — update admin's own state too
         else if (command === 'FORCE_MUTE_LOCK') setAdminSettings(prev => ({ ...prev, isMicLocked: true }))
         else if (command === 'FORCE_VIDEO_LOCK') setAdminSettings(prev => ({ ...prev, isCameraLocked: true }))
@@ -2017,6 +2061,52 @@ function RoomPageContent() {
           window.dispatchEvent(new CustomEvent('uno_win', { detail: parsed }))
           return
         }
+
+        // ── Recording Permission ──
+        if (parsed.type === 'RECORDING_PERMISSION') {
+          const myIdentity = room.localParticipant.identity
+          const myName = room.localParticipant.name || myIdentity
+          if (parsed.targetUserId === myIdentity || parsed.targetUserId === myName) {
+            setCanRecord(parsed.allowed)
+            displayCaption('System', parsed.allowed
+              ? '🎙️ Host has granted you recording permission'
+              : '🚫 Host has revoked your recording permission'
+            )
+          }
+          return
+        }
+
+        // ── Waiting Room Protocol ──
+        if (parsed.type === 'JOIN_REQUEST') {
+          if (isHostUserRef.current) {
+            setWaitingParticipants(prev => {
+              if (prev.some(p => p.identity === parsed.identity)) return prev
+              return [...prev, {
+                identity: parsed.identity,
+                name: parsed.name,
+                email: parsed.email || '',
+                requestedAt: Date.now()
+              }]
+            })
+          }
+          return
+        }
+        if (parsed.type === 'ADMITTED') {
+          const myIdentity = room.localParticipant.identity
+          if (parsed.targetIdentity === myIdentity) {
+            setIsInWaitingRoom(false)
+            displayCaption('System', '✅ You have been admitted to the meeting!')
+          }
+          return
+        }
+        if (parsed.type === 'REJECTED') {
+          const myIdentity = room.localParticipant.identity
+          if (parsed.targetIdentity === myIdentity) {
+            alert('You were not admitted to this meeting by the host.')
+            window.location.href = '/'
+          }
+          return
+        }
       } catch (e: any) {
         console.error('Failed to parse data message', e)
       }
@@ -2064,6 +2154,26 @@ function RoomPageContent() {
           [sid]: localVideoFilter,
           [identity]: localVideoFilter
         }))
+      }
+      // If waiting room is enabled and user is NOT the host, send JOIN_REQUEST
+      if (!isHostUserRef.current && adminSettingsRef.current.waitingRoom) {
+        setIsInWaitingRoom(true)
+        setTimeout(() => {
+          const joinReqPayload = {
+            type: 'JOIN_REQUEST',
+            sender: activeRoom.localParticipant.identity,
+            senderSid: activeRoom.localParticipant.sid || activeRoom.localParticipant.identity,
+            identity: activeRoom.localParticipant.identity,
+            name: activeRoom.localParticipant.name || activeRoom.localParticipant.identity,
+            email: ''
+          }
+          try {
+            const data = new TextEncoder().encode(JSON.stringify(joinReqPayload))
+            activeRoom.localParticipant.publishData(data, { reliable: true })
+          } catch (e) {
+            console.warn('Failed to send JOIN_REQUEST:', e)
+          }
+        }, 1000)
       }
     })
     activeRoom.on(RoomEvent.ParticipantConnected, (participant) => {
@@ -2207,6 +2317,13 @@ function RoomPageContent() {
       setIsVideoOff(true)
     }
   }, [adminSettings.isCameraLocked, room, isHostUser])
+
+  // Hosts can always record; participants need explicit permission
+  useEffect(() => {
+    if (isHostUser) {
+      setCanRecord(true)
+    }
+  }, [isHostUser])
 
 
   // Toggle AI Assistant sidebar listener
@@ -3757,13 +3874,53 @@ function RoomPageContent() {
             <Timer className="w-3.5 h-3.5 text-orange-400" /> Focus
           </Button>
 
-          <button
-            onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
-            className="w-8 h-8 rounded-full bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs hover:scale-105 transition ml-1"
-            title="User Profile & Settings"
-          >
-            {(lobbyName || 'U').charAt(0).toUpperCase()}
-          </button>
+          <div className="relative ml-1">
+            <button
+              onClick={() => setShowProfilePopup(prev => !prev)}
+              className="w-8 h-8 rounded-full bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs hover:scale-105 transition"
+              title="Your Profile"
+            >
+              {(lobbyName || 'U').charAt(0).toUpperCase()}
+            </button>
+            {showProfilePopup && (
+              <div className="absolute right-0 top-10 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-4 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-full bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300 font-black text-lg">
+                    {(lobbyName || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white truncate">{lobbyName || 'You'}</p>
+                    <p className="text-xs text-slate-400 truncate">{user?.email || 'Guest'}</p>
+                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      isHostUser ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-700 text-slate-300'
+                    }`}>
+                      {isHostUser ? '👑 Host' : '👤 Participant'}
+                    </span>
+                  </div>
+                </div>
+                <div className="border-t border-white/5 pt-3 space-y-1">
+                  <button
+                    onClick={() => { setActiveSidebar('effects'); setShowProfilePopup(false) }}
+                    className="w-full text-left text-xs text-slate-300 hover:text-white px-3 py-2 rounded-xl hover:bg-white/5 transition flex items-center gap-2"
+                  >
+                    <Settings className="w-3.5 h-3.5 text-slate-400" /> Device & Audio Settings
+                  </button>
+                  <button
+                    onClick={() => { setShowProfilePopup(false); handleLeaveCall() }}
+                    className="w-full text-left text-xs text-rose-400 hover:text-rose-300 px-3 py-2 rounded-xl hover:bg-rose-500/10 transition flex items-center gap-2"
+                  >
+                    <PhoneOff className="w-3.5 h-3.5" /> Leave Meeting
+                  </button>
+                </div>
+                <button
+                  onClick={() => setShowProfilePopup(false)}
+                  className="absolute top-2 right-2 text-slate-500 hover:text-slate-300 transition"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -4229,16 +4386,24 @@ function RoomPageContent() {
             {/* Floating Popover Menu */}
             {showMoreMenu && (
               <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-slate-200 text-xs font-semibold">
-                {/* Record Session Button */}
-                <button
-                  onClick={() => { setIsRecorderModalOpen(true); setShowMoreMenu(false); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition text-left ${
-                    isRecording ? 'bg-rose-600/30 text-rose-400 font-bold animate-pulse' : 'hover:bg-white/10 text-rose-400 font-semibold'
-                  }`}
-                >
-                  <Radio className="w-4 h-4 text-rose-400" />
-                  <span>{isRecording ? 'Recording in Progress...' : 'Record Session'}</span>
-                </button>
+                {/* Record Session Button — respects admin recording permission */}
+                {canRecord ? (
+                  <button
+                    onClick={() => { setIsRecorderModalOpen(true); setShowMoreMenu(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition text-left ${
+                      isRecording ? 'bg-rose-600/30 text-rose-400 font-bold animate-pulse' : 'hover:bg-white/10 text-rose-400 font-semibold'
+                    }`}
+                  >
+                    <Radio className="w-4 h-4 text-rose-400" />
+                    <span>{isRecording ? 'Recording in Progress...' : 'Record Session'}</span>
+                  </button>
+                ) : (
+                  <div className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-slate-500 cursor-not-allowed" title="Recording not permitted — ask the host to grant you permission">
+                    <Radio className="w-4 h-4 text-slate-600" />
+                    <span>Record Session</span>
+                    <span className="ml-auto text-[9px] bg-slate-800 px-1.5 py-0.5 rounded-full text-slate-500">No Permission</span>
+                  </div>
+                )}
 
                 {/* Admin Command Center (Admin / Host ONLY!) */}
                 {isHostUser && (
@@ -4469,9 +4634,63 @@ function RoomPageContent() {
       {isHostUser && (
         <HostAdmissionBanner
           waitingList={waitingParticipants}
-          onAdmit={(id) => setWaitingParticipants((prev) => prev.filter((p) => p.identity !== id))}
-          onReject={(id) => setWaitingParticipants((prev) => prev.filter((p) => p.identity !== id))}
-          onAdmitAll={() => setWaitingParticipants([])}
+          onAdmit={(id) => {
+            // Remove from waiting list
+            setWaitingParticipants((prev) => prev.filter((p) => p.identity !== id))
+            // Send ADMITTED signal to that participant over data channel
+            if (room) {
+              try {
+                const payload = {
+                  type: 'ADMITTED',
+                  sender: room.localParticipant.identity,
+                  senderSid: room.localParticipant.sid || room.localParticipant.identity,
+                  targetIdentity: id
+                }
+                const data = new TextEncoder().encode(JSON.stringify(payload))
+                room.localParticipant.publishData(data, { reliable: true })
+              } catch (e) {
+                console.warn('Failed to send ADMITTED signal:', e)
+              }
+            }
+          }}
+          onReject={(id) => {
+            setWaitingParticipants((prev) => prev.filter((p) => p.identity !== id))
+            // Send REJECTED signal
+            if (room) {
+              try {
+                const payload = {
+                  type: 'REJECTED',
+                  sender: room.localParticipant.identity,
+                  senderSid: room.localParticipant.sid || room.localParticipant.identity,
+                  targetIdentity: id
+                }
+                const data = new TextEncoder().encode(JSON.stringify(payload))
+                room.localParticipant.publishData(data, { reliable: true })
+              } catch (e) {
+                console.warn('Failed to send REJECTED signal:', e)
+              }
+            }
+          }}
+          onAdmitAll={() => {
+            // Admit all — send ADMITTED to each waiting participant
+            waitingParticipants.forEach(p => {
+              if (room) {
+                try {
+                  const payload = {
+                    type: 'ADMITTED',
+                    sender: room.localParticipant.identity,
+                    senderSid: room.localParticipant.sid || room.localParticipant.identity,
+                    targetIdentity: p.identity
+                  }
+                  const data = new TextEncoder().encode(JSON.stringify(payload))
+                  room.localParticipant.publishData(data, { reliable: true })
+                } catch (e) {
+                  console.warn('Failed to send ADMITTED signal:', e)
+                }
+              }
+            })
+            setWaitingParticipants([])
+          }}
         />
       )}
 

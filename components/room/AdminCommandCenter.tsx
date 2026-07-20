@@ -31,6 +31,7 @@ export interface AdminSettings {
   isMicLocked: boolean
   isCameraLocked: boolean
   isRecordingLocked: boolean
+  waitingRoom: boolean
 }
 
 interface AdminCommandCenterProps {
@@ -255,6 +256,22 @@ export function AdminCommandCenter({
                     <Switch 
                       checked={!adminSettings.isRecordingLocked}
                       onCheckedChange={() => toggleSetting('isRecordingLocked', 'TOGGLE_RECORDING_LOCK')}
+                    />
+                  </div>
+
+                  <div className="bg-secondary/40 border border-blue-500/30 bg-blue-950/20 rounded-xl p-5 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-white text-sm sm:text-base flex items-center gap-1.5">
+                        <Users className="w-4 h-4 text-blue-400" />
+                        Waiting Room
+                      </h4>
+                      <p className="text-xs text-slate-300 mt-1">
+                        Require host approval before participants enter the meeting
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={adminSettings.waitingRoom}
+                      onCheckedChange={() => toggleSetting('waitingRoom', 'TOGGLE_WAITING_ROOM')}
                     />
                   </div>
                 </div>
