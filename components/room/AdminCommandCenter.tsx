@@ -7,8 +7,10 @@ import {
   ShieldAlert, Settings, Users, Code, Paintbrush, 
   MessageSquare, HardDrive, Video, Activity,
   Lock, StopCircle, UserMinus, MicOff, VideoOff, Mic,
-  Terminal, X, ChevronRight, Share2, Play, Sparkles
+  Terminal, X, ChevronRight, Share2, Play, Sparkles,
+  Wifi, Gauge, Zap, Radio
 } from 'lucide-react'
+import { NetworkStats, NetworkOptimizationConfig } from '@/lib/network-adaptive-engine'
 
 const typeLabels: Record<string, string> = {
   technical: 'Technical / Code Review',
@@ -43,15 +45,32 @@ interface AdminCommandCenterProps {
   userRoles?: Record<string, string>
   meetingType: string
   setMeetingType: (type: string) => void
+  adaptiveStats?: NetworkStats
+  adaptiveConfig?: NetworkOptimizationConfig
+  onUpdateAdaptiveConfig?: (config: Partial<NetworkOptimizationConfig>) => void
 }
 
 export function AdminCommandCenter({ 
-  room, participants, sendData, adminSettings, onClose, meetingHostId, user, metrics, userRoles = {}, meetingType, setMeetingType 
+  room,
+  participants,
+  sendData,
+  adminSettings,
+  onClose,
+  meetingHostId,
+  user,
+  metrics,
+  userRoles = {},
+  meetingType,
+  setMeetingType,
+  adaptiveStats,
+  adaptiveConfig,
+  onUpdateAdaptiveConfig
 }: AdminCommandCenterProps) {
   const [activeTab, setActiveTab] = useState('meeting')
 
   const tabs = [
     { id: 'meeting', label: 'Meeting Control', icon: Settings },
+    { id: 'network', label: 'Network Quality', icon: Wifi },
     { id: 'participants', label: 'Participants', icon: Users },
     { id: 'code', label: 'Live Code', icon: Code },
     { id: 'whiteboard', label: 'Whiteboard', icon: Paintbrush },
@@ -76,193 +95,89 @@ export function AdminCommandCenter({
   }
 
   const handleForceMuteAll = () => {
-    // Atomic single command: mute + lock in one broadcast (no race condition)
     broadcastAdminCommand('FORCE_MUTE_LOCK', 'ALL')
   }
 
-  const handleAllowUnmuteAll = () => {
-    broadcastAdminCommand('TOGGLE_MIC_LOCK', 'ALL', false)
+  const handleForceCameraOffAll = () => {
+    broadcastAdminCommand('FORCE_CAMERA_LOCK', 'ALL')
   }
 
-  const handleForceVideoOffAll = () => {
-    // Atomic single command: stop + lock in one broadcast (no race condition)
-    broadcastAdminCommand('FORCE_VIDEO_LOCK', 'ALL')
+  const handleMuteUser = (targetId: string) => {
+    broadcastAdminCommand('MUTE_USER', targetId)
   }
 
-  const handleAllowVideoAll = () => {
-    broadcastAdminCommand('TOGGLE_CAMERA_LOCK', 'ALL', false)
+  const handleTurnOffCameraUser = (targetId: string) => {
+    broadcastAdminCommand('CAMERA_OFF_USER', targetId)
   }
 
-  const handleKickParticipant = (participantId: string) => {
-    broadcastAdminCommand('KICK_USER', participantId)
+  const handleKickUser = (targetId: string) => {
+    broadcastAdminCommand('KICK_USER', targetId)
   }
 
-  const handleForceMute = (participantId: string) => {
-    broadcastAdminCommand('FORCE_MUTE', participantId)
-  }
-
-  const handleRoleChange = (participantId: string, role: string) => {
-    broadcastAdminCommand('SET_ROLE', participantId, role)
+  const handleToggleRole = (targetId: string, currentRole: string) => {
+    const nextRole = currentRole === 'cohost' ? 'participant' : 'cohost'
+    broadcastAdminCommand('SET_ROLE', targetId, nextRole)
   }
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
-      style={{ zIndex: 9999 }}
-    >
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
       <motion.div 
-        initial={{ scale: 0.95, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        className="premium-card w-full max-w-6xl h-[85vh] rounded-2xl flex flex-col lg:flex-row overflow-hidden border border-white/10 shadow-2xl relative"
-        style={{ zIndex: 10000 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-4xl max-h-[90vh] bg-background border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-white"
       >
-        {/* Mobile Header & Tabs */}
-        <div className="lg:hidden w-full flex flex-col shrink-0 bg-secondary/80 border-b border-white/5">
-          <div className="p-4 flex items-center justify-between border-b border-white/5">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <ShieldAlert className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <h2 className="font-bold text-white text-xs leading-tight">Command Center</h2>
-                <p className="text-[9px] text-muted-foreground">Admin Privileges</p>
-              </div>
-            </div>
-            <Button onClick={onClose} size="xs" variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
-              <X className="h-3 w-3 mr-1" /> Close
-            </Button>
-          </div>
-          
-          <div className="flex overflow-x-auto p-2 gap-1.5 scrollbar-none scroll-smooth">
-            {tabs.map(tab => {
-              const Icon = tab.icon
-              const isActive = activeTab === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                    isActive 
-                      ? 'bg-primary text-white shadow-md shadow-primary/20' 
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Left Sidebar (Desktop) */}
-        <div className="hidden lg:flex w-64 bg-secondary/80 border-r border-white/5 flex-col shrink-0">
-          <div className="p-5 border-b border-white/5 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <ShieldAlert className="h-5 w-5 text-white" />
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-secondary/30">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/20 text-primary rounded-xl">
+              <ShieldAlert className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="font-bold text-white text-sm leading-tight">Command Center</h2>
-              <p className="text-[10px] text-muted-foreground">Admin Privileges</p>
+              <h2 className="text-lg font-bold">Admin Command Center</h2>
+              <p className="text-xs text-muted-foreground">Comprehensive host governance and meeting moderation</p>
             </div>
           </div>
+          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-white/10">
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
-            {tabs.map(tab => {
+        {/* Layout Grid */}
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+          {/* Sidebar Tabs */}
+          <div className="w-full md:w-56 bg-secondary/10 border-r border-white/5 p-3 flex md:flex-col gap-1.5 overflow-x-auto md:overflow-y-auto">
+            {tabs.map((tab) => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
                     isActive 
-                      ? 'bg-primary text-white shadow-md shadow-primary/20' 
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-primary text-white shadow-md' 
+                      : 'text-muted-foreground hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                  {isActive && <ChevronRight className="h-4 w-4 ml-auto opacity-50" />}
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span>{tab.label}</span>
                 </button>
               )
             })}
           </div>
 
-          <div className="p-4 border-t border-white/5">
-            <Button onClick={onClose} variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10">
-              <X className="h-4 w-4 mr-2" /> Close Dashboard
-            </Button>
-          </div>
-        </div>
-
-        {/* Right Content Area */}
-        <div className="flex-1 bg-background/50 overflow-y-auto custom-scrollbar relative">
-          
-          {/* Header */}
-          <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-white/5 p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between items-start sm:items-center">
-            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              {tabs.find(t => t.id === activeTab)?.label}
-            </h3>
-            
-            {/* Live Metrics Header */}
-            <div className="flex gap-3 w-full sm:w-auto justify-between sm:justify-start">
-              <div className="flex-1 sm:flex-initial bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2.5 sm:gap-3">
-                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-400" />
-                <div>
-                  <p className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold uppercase tracking-widest leading-none">Participants</p>
-                  <p className="text-xs sm:text-sm font-bold text-white leading-tight mt-1">{participants.length}</p>
-                </div>
-              </div>
-              <div className="flex-1 sm:flex-initial bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2.5 sm:gap-3">
-                <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400" />
-                <div>
-                  <p className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold uppercase tracking-widest leading-none">Meeting Mode</p>
-                  <p className="text-xs sm:text-sm font-bold text-white leading-tight mt-1">
-                    {typeLabels[meetingType] || meetingType || 'Standard'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex-1 sm:flex-initial bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2.5 sm:gap-3">
-                <Code className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-400" />
-                <div>
-                  <p className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold uppercase tracking-widest leading-none">Status</p>
-                  <p className="text-xs sm:text-sm font-bold text-white leading-tight mt-1">
-                    {adminSettings.isRoomLocked ? <span className="text-red-400">Locked</span> : <span className="text-emerald-400">Open</span>}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 sm:p-6">
+          {/* Tab Content Area */}
+          <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
             
             {/* ── MEETING CONTROL ── */}
             {activeTab === 'meeting' && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between col-span-1 md:col-span-2 hidden">
-                    <div>
-                      <h4 className="font-bold text-white text-sm sm:text-base">Meeting Mode</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Change the workspace layout dynamically based on meeting intent.</p>
-                    </div>
-                    <select
-                      className="bg-background border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none font-semibold focus:border-primary transition-colors cursor-pointer"
-                      value={meetingType}
-                      onChange={(e) => setMeetingType(e.target.value)}
-                    >
-                      <option value="technical">Technical / Code Review</option>
-                      <option value="interview">Technical Interview</option>
-                      <option value="business">Business / Standup</option>
-                      <option value="education">Classroom / Education</option>
-                    </select>
-                  </div>
-
                   <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-white text-sm sm:text-base">Lock Meeting</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Prevent new participants from joining</p>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Lock Meeting Room</h4>
+                      <p className="text-xs text-muted-foreground mt-1">Block new participants from joining</p>
                     </div>
                     <Switch 
                       checked={adminSettings.isRoomLocked}
@@ -272,171 +187,225 @@ export function AdminCommandCenter({
 
                   <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-white text-sm sm:text-base">End Meeting For All</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Terminate session and disconnect everyone</p>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Lock Microphone (Mute All)</h4>
+                      <p className="text-xs text-muted-foreground mt-1">Prevent non-hosts from unmuting</p>
                     </div>
-                    <Button onClick={() => broadcastAdminCommand('END_MEETING_ALL', 'ALL')} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 font-bold">
-                      Force End
+                    <Switch 
+                      checked={adminSettings.isMicLocked}
+                      onCheckedChange={() => toggleSetting('isMicLocked', 'TOGGLE_MIC_LOCK')}
+                    />
+                  </div>
+
+                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Lock Video Cameras</h4>
+                      <p className="text-xs text-muted-foreground mt-1">Prevent non-hosts from enabling camera</p>
+                    </div>
+                    <Switch 
+                      checked={adminSettings.isCameraLocked}
+                      onCheckedChange={() => toggleSetting('isCameraLocked', 'TOGGLE_CAMERA_LOCK')}
+                    />
+                  </div>
+
+                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Allow Meeting Recording</h4>
+                      <p className="text-xs text-muted-foreground mt-1">Control session recording access</p>
+                    </div>
+                    <Switch 
+                      checked={!adminSettings.isRecordingLocked}
+                      onCheckedChange={() => toggleSetting('isRecordingLocked', 'TOGGLE_RECORDING_LOCK')}
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Global Actions */}
+                <div className="pt-4 border-t border-white/10">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Global Moderation Commands</h4>
+                  <div className="flex flex-wrap gap-3">
+                    <Button onClick={handleForceMuteAll} variant="destructive" className="text-xs gap-2">
+                      <MicOff className="h-4 w-4" /> Mute & Lock All Mics
+                    </Button>
+                    <Button onClick={handleForceCameraOffAll} variant="destructive" className="text-xs gap-2">
+                      <VideoOff className="h-4 w-4" /> Turn Off All Cameras
                     </Button>
                   </div>
                 </div>
+              </div>
+            )}
 
-                <div>
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Mass Actions</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Audio Controls */}
-                    <div className="bg-secondary/20 p-4 rounded-xl border border-white/5 space-y-3">
-                      <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Audio Management</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Button 
-                          onClick={handleForceMuteAll} 
-                          className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 text-xs font-bold shrink-0 transition-colors"
-                          size="sm"
-                        >
-                          <MicOff className="h-3.5 w-3.5 mr-1.5" /> Mute & Lock Everyone
-                        </Button>
-                        <Button 
-                          onClick={handleAllowUnmuteAll} 
-                          className="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white border border-emerald-500/20 text-xs font-bold shrink-0 transition-colors"
-                          size="sm"
-                        >
-                          <Mic className="h-3.5 w-3.5 mr-1.5" /> Unmute & Unlock Everyone
-                        </Button>
-                      </div>
+            {/* ── NETWORK QUALITY & ADAPTIVE CENTER ── */}
+            {activeTab === 'network' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                <div className="p-5 rounded-2xl bg-slate-900/80 border border-indigo-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                      <Wifi className="w-6 h-6 animate-pulse" />
                     </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-white text-base">Adaptive Network & Quality Center</h4>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                          adaptiveStats?.level === 'EXCELLENT' || adaptiveStats?.level === 'GOOD'
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : adaptiveStats?.level === 'FAIR'
+                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                            : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                        }`}>
+                          {adaptiveStats?.level || 'EXCELLENT'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Real-time WebRTC telemetry monitoring and adaptive quality enforcement
+                      </p>
+                    </div>
+                  </div>
 
-                    {/* Video Controls */}
-                    <div className="bg-secondary/20 p-4 rounded-xl border border-white/5 space-y-3">
-                      <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Video Management</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Button 
-                          onClick={handleForceVideoOffAll} 
-                          className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 text-xs font-bold shrink-0 transition-colors"
-                          size="sm"
-                        >
-                          <VideoOff className="h-3.5 w-3.5 mr-1.5" /> Stop & Lock Video
-                        </Button>
-                        <Button 
-                          onClick={handleAllowVideoAll} 
-                          className="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white border border-emerald-500/20 text-xs font-bold shrink-0 transition-colors"
-                          size="sm"
-                        >
-                          <Video className="h-3.5 w-3.5 mr-1.5" /> Start & Unlock Video
-                        </Button>
-                      </div>
-                    </div>
+                  {/* Enforce Low Bandwidth Broadcast Button */}
+                  <Button
+                    onClick={() => {
+                      if (onUpdateAdaptiveConfig) {
+                        const newMode = adaptiveConfig?.mode === 'low_bandwidth' ? 'auto' : 'low_bandwidth'
+                        onUpdateAdaptiveConfig({ mode: newMode })
+                        broadcastAdminCommand('SET_NETWORK_MODE', 'ALL', newMode)
+                      }
+                    }}
+                    className={`h-10 px-4 font-bold text-xs rounded-xl shadow-lg gap-2 shrink-0 ${
+                      adaptiveConfig?.mode === 'low_bandwidth'
+                        ? 'bg-rose-600 hover:bg-rose-500 text-white'
+                        : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                    }`}
+                  >
+                    <Zap className="w-4 h-4" />
+                    {adaptiveConfig?.mode === 'low_bandwidth' ? 'Disable Low Bandwidth Mode' : 'Enforce Room Low-Bandwidth Mode'}
+                  </Button>
+                </div>
+
+                {/* Telemetry Metrics Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="p-4 rounded-xl bg-secondary/40 border border-white/5 text-center">
+                    <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400 block font-bold">Latency (RTT)</span>
+                    <span className="text-xl font-mono font-black text-white block mt-1">{adaptiveStats?.rtt || 35} ms</span>
+                    <span className="text-[10px] text-emerald-400 font-mono block">Jitter: {adaptiveStats?.jitter || 4} ms</span>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-secondary/40 border border-white/5 text-center">
+                    <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400 block font-bold">Packet Loss</span>
+                    <span className="text-xl font-mono font-black text-white block mt-1">{((adaptiveStats?.packetLoss || 0.1) * 100).toFixed(1)}%</span>
+                    <span className="text-[10px] text-blue-400 font-mono block">WebRTC Stability</span>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-secondary/40 border border-white/5 text-center">
+                    <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400 block font-bold">Recommended Res</span>
+                    <span className="text-xl font-mono font-black text-indigo-400 block mt-1">{adaptiveStats?.recommendedResolution || '720p'}</span>
+                    <span className="text-[10px] text-slate-400 font-mono block">@{adaptiveStats?.recommendedFps || 24} fps</span>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-secondary/40 border border-white/5 text-center">
+                    <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400 block font-bold">Downlink Speed</span>
+                    <span className="text-xl font-mono font-black text-emerald-400 block mt-1">{adaptiveStats?.downlinkKbps || 2500} Kbps</span>
+                    <span className="text-[10px] text-slate-400 font-mono block">Up: {adaptiveStats?.uplinkKbps || 1800} Kbps</span>
                   </div>
                 </div>
 
+                {/* Adaptive Mode Selection Cards */}
+                <div className="grid md:grid-cols-3 gap-3">
+                  <button
+                    onClick={() => onUpdateAdaptiveConfig && onUpdateAdaptiveConfig({ mode: 'auto' })}
+                    className={`p-4 rounded-xl border text-left transition ${
+                      adaptiveConfig?.mode === 'auto'
+                        ? 'bg-indigo-600/20 border-indigo-500 text-white'
+                        : 'bg-secondary/40 border-white/5 text-slate-400 hover:border-white/10'
+                    }`}
+                  >
+                    <Activity className="w-5 h-5 text-indigo-400 mb-2" />
+                    <span className="text-xs font-bold block">Auto Adaptive Mode</span>
+                    <span className="text-[10px] text-slate-400 block mt-1">
+                      Dynamic 1080p-180p resolution tuning based on live network quality
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => onUpdateAdaptiveConfig && onUpdateAdaptiveConfig({ mode: 'low_bandwidth' })}
+                    className={`p-4 rounded-xl border text-left transition ${
+                      adaptiveConfig?.mode === 'low_bandwidth'
+                        ? 'bg-rose-600/20 border-rose-500 text-white'
+                        : 'bg-secondary/40 border-white/5 text-slate-400 hover:border-white/10'
+                    }`}
+                  >
+                    <Gauge className="w-5 h-5 text-rose-400 mb-2" />
+                    <span className="text-xs font-bold block">Low Bandwidth Mode</span>
+                    <span className="text-[10px] text-slate-400 block mt-1">
+                      Caps video bitrate to 250 Kbps, 360p resolution, audio prioritized
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => onUpdateAdaptiveConfig && onUpdateAdaptiveConfig({ mode: 'audio_only' })}
+                    className={`p-4 rounded-xl border text-left transition ${
+                      adaptiveConfig?.mode === 'audio_only'
+                        ? 'bg-purple-600/20 border-purple-500 text-white'
+                        : 'bg-secondary/40 border-white/5 text-slate-400 hover:border-white/10'
+                    }`}
+                  >
+                    <Mic className="w-4 h-4 text-purple-400 mb-2" />
+                    <span className="text-xs font-bold block">Audio-Only Mode</span>
+                    <span className="text-[10px] text-slate-400 block mt-1">
+                      Pauses video streams completely to guarantee crystal-clear conversations
+                    </span>
+                  </button>
+                </div>
               </div>
             )}
 
             {/* ── PARTICIPANTS ── */}
             {activeTab === 'participants' && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                {/* Mobile View: Cards */}
-                <div className="space-y-3 md:hidden">
-                  {participants.map(p => (
-                    <div key={p.sid || p.identity} className="bg-secondary/40 border border-white/5 rounded-xl p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
-                            {(p.identity || '?').charAt(0).toUpperCase()}
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <span className="font-bold text-white text-sm truncate">{p.identity || 'Unknown'}</span>
-                            <span className="text-[10px] text-slate-400">
-                              Joined {p.joinedAt ? new Date(p.joinedAt).toLocaleTimeString() : 'Just now'}
-                            </span>
-                          </div>
-                        </div>
-                        {p.identity === meetingHostId && (
-                          <span className="text-[9px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20 uppercase font-bold shrink-0">Host</span>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center justify-between gap-4 pt-2 border-t border-white/5">
-                        <div className="flex-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Role</label>
-                          <select 
-                            className="w-full bg-background border border-white/10 rounded px-2 py-1.5 text-xs text-white outline-none"
-                            value={userRoles?.[p.identity] || 'Participant'}
-                            onChange={(e) => handleRoleChange(p.identity, e.target.value)}
-                          >
-                            <option value="Participant">Participant</option>
-                            <option value="Co-host">Co-host</option>
-                            <option value="Guest">Guest (View Only)</option>
-                          </select>
-                        </div>
-                        
-                        <div className="flex items-end gap-1.5 self-end">
-                          <Button size="icon" variant="ghost" onClick={() => handleForceMute(p.identity)} className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/10 shrink-0" title="Force Mute">
-                            <MicOff className="h-4 w-4" />
-                          </Button>
-                          {p.identity !== meetingHostId && (
-                            <Button size="icon" variant="ghost" onClick={() => handleKickParticipant(p.identity)} className="h-8 w-8 text-red-400 hover:text-white hover:bg-red-500/20 shrink-0" title="Remove User">
-                              <UserMinus className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Connected Participants ({participants.length})</h4>
                 </div>
 
-                {/* Desktop View: Table */}
-                <div className="hidden md:block bg-secondary/40 border border-white/5 rounded-xl overflow-hidden">
-                  <table className="w-full text-left">
-                    <thead className="bg-black/20 border-b border-white/5 text-xs text-slate-400 uppercase tracking-wider">
-                      <tr>
-                        <th className="p-4 font-bold">Participant</th>
-                        <th className="p-4 font-bold">Role</th>
-                        <th className="p-4 font-bold">Joined At</th>
-                        <th className="p-4 font-bold text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {participants.map(p => (
-                        <tr key={p.sid || p.identity} className="hover:bg-white/5 transition-colors">
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-xs font-bold text-white">
-                                {(p.identity || '?').charAt(0).toUpperCase()}
-                              </div>
-                              <span className="font-bold text-white text-sm">{p.identity || 'Unknown'}</span>
-                              {p.identity === meetingHostId && (
-                                <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20 uppercase font-bold">Host</span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4 text-sm text-slate-300">
-                            <select 
-                              className="bg-background border border-white/10 rounded px-2 py-1 text-xs text-white outline-none"
-                              value={userRoles?.[p.identity] || 'Participant'}
-                              onChange={(e) => handleRoleChange(p.identity, e.target.value)}
-                            >
-                              <option value="Participant">Participant</option>
-                              <option value="Co-host">Co-host</option>
-                              <option value="Guest">Guest (View Only)</option>
-                            </select>
-                          </td>
-                          <td className="p-4 text-xs text-slate-400">
-                            {p.joinedAt ? new Date(p.joinedAt).toLocaleTimeString() : 'Just now'}
-                          </td>
-                          <td className="p-4 text-right flex items-center justify-end gap-2">
-                            <Button size="icon" variant="ghost" onClick={() => handleForceMute(p.identity)} className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/10" title="Force Mute">
-                              <MicOff className="h-4 w-4" />
+                <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar pr-1">
+                  {participants.map((p) => {
+                    const id = p.identity || p.sid
+                    const isCoHost = userRoles[id] === 'cohost'
+                    const isHost = id === meetingHostId
+
+                    return (
+                      <div key={id} className="bg-secondary/30 border border-white/5 rounded-xl p-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                            {(p.identity || 'U').charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-white truncate flex items-center gap-1.5">
+                              <span>{(p.identity || 'User').split('_')[0]}</span>
+                              {isHost && <span className="bg-amber-500/20 text-amber-400 text-[9px] px-1.5 py-0.5 rounded font-mono">HOST</span>}
+                              {isCoHost && <span className="bg-indigo-500/20 text-indigo-400 text-[9px] px-1.5 py-0.5 rounded font-mono">CO-HOST</span>}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground font-mono truncate">{id}</p>
+                          </div>
+                        </div>
+
+                        {!isHost && (
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button size="sm" variant="ghost" onClick={() => handleMuteUser(id)} title="Mute Participant" className="h-8 w-8 p-0 text-slate-400 hover:text-white">
+                              <MicOff className="h-3.5 w-3.5" />
                             </Button>
-                            {p.identity !== meetingHostId && (
-                              <Button size="icon" variant="ghost" onClick={() => handleKickParticipant(p.identity)} className="h-8 w-8 text-red-400 hover:text-white hover:bg-red-500/20" title="Remove User">
-                                <UserMinus className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                            <Button size="sm" variant="ghost" onClick={() => handleTurnOffCameraUser(id)} title="Turn Off Camera" className="h-8 w-8 p-0 text-slate-400 hover:text-white">
+                              <VideoOff className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleToggleRole(id, userRoles[id] || 'participant')} title={isCoHost ? "Demote from Co-Host" : "Make Co-Host"} className="h-8 px-2 text-[10px] text-indigo-400 hover:bg-indigo-500/10">
+                              {isCoHost ? 'Demote' : '+ CoHost'}
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleKickUser(id)} title="Remove Participant" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10">
+                              <UserMinus className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -444,31 +413,15 @@ export function AdminCommandCenter({
             {/* ── LIVE CODE ── */}
             {activeTab === 'code' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-secondary/40 border border-emerald-500/20 rounded-xl p-5 flex items-center justify-between shadow-[0_0_15px_rgba(16,185,129,0.05)]">
-                    <div>
-                      <h4 className="font-bold text-white text-sm sm:text-base">Lock Code Editor</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Make code read-only for participants</p>
-                    </div>
-                    <Switch 
-                      checked={adminSettings.isCodeLocked}
-                      onCheckedChange={() => toggleSetting('isCodeLocked', 'TOGGLE_CODE_LOCK')}
-                    />
+                <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-white text-sm sm:text-base">Lock Code Workspace</h4>
+                    <p className="text-xs text-muted-foreground mt-1">Restrict code editing to hosts only</p>
                   </div>
-                  
-                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-white text-sm sm:text-base">Force Terminal Sync</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Sync everyone's terminal view to host</p>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20"
-                      onClick={() => broadcastAdminCommand('SYNC_TERMINAL', 'ALL')}
-                    >
-                      Sync Now
-                    </Button>
-                  </div>
+                  <Switch 
+                    checked={adminSettings.isCodeLocked}
+                    onCheckedChange={() => toggleSetting('isCodeLocked', 'TOGGLE_CODE_LOCK')}
+                  />
                 </div>
               </div>
             )}
@@ -476,31 +429,15 @@ export function AdminCommandCenter({
             {/* ── WHITEBOARD ── */}
             {activeTab === 'whiteboard' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-secondary/40 border border-orange-500/20 rounded-xl p-5 flex items-center justify-between shadow-[0_0_15px_rgba(249,115,22,0.05)]">
-                    <div>
-                      <h4 className="font-bold text-white text-sm sm:text-base">Lock Whiteboard</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Only host can draw</p>
-                    </div>
-                    <Switch 
-                      checked={adminSettings.isWhiteboardLocked}
-                      onCheckedChange={() => toggleSetting('isWhiteboardLocked', 'TOGGLE_WHITEBOARD_LOCK')}
-                    />
+                <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-white text-sm sm:text-base">Lock Whiteboard Workspace</h4>
+                    <p className="text-xs text-muted-foreground mt-1">Restrict whiteboard drawing to hosts only</p>
                   </div>
-                  
-                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-white text-sm sm:text-base">Clear Board for All</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Wipe canvas data permanently</p>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20"
-                      onClick={() => broadcastAdminCommand('WHITEBOARD_CLEAR', 'ALL')}
-                    >
-                      Clear Board
-                    </Button>
-                  </div>
+                  <Switch 
+                    checked={adminSettings.isWhiteboardLocked}
+                    onCheckedChange={() => toggleSetting('isWhiteboardLocked', 'TOGGLE_WHITEBOARD_LOCK')}
+                  />
                 </div>
               </div>
             )}
@@ -561,13 +498,6 @@ export function AdminCommandCenter({
                       <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground font-bold">{stat.label}</p>
                     </div>
                   ))}
-                </div>
-                
-                <div className="bg-secondary/40 border border-white/5 rounded-xl p-6 h-64 flex items-center justify-center">
-                  <p className="text-slate-500 font-mono text-xs text-center">
-                    [Live Engagement Graph Placeholder]<br/>
-                    Tracking audio activity, code contributions, and AI usage over time.
-                  </p>
                 </div>
               </div>
             )}

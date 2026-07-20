@@ -4468,6 +4468,9 @@ function RoomPageContent() {
           userRoles={userRoles}
           meetingType={meetingType}
           setMeetingType={changeMeetingType}
+          adaptiveStats={adaptiveStats}
+          adaptiveConfig={adaptiveConfig}
+          onUpdateAdaptiveConfig={updateAdaptiveConfig}
         />
       )}
 
