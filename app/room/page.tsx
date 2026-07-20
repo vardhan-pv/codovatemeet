@@ -4265,46 +4265,6 @@ function RoomPageContent() {
                 </button>
 
                 <button
-                  onClick={() => { setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks'); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
-                >
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Tasks & Agenda</span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveSidebar(activeSidebar === 'polls' ? null : 'polls'); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
-                >
-                  <BarChart2 className="w-4 h-4 text-indigo-400" />
-                  <span>Polls & Surveys</span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel'); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
-                >
-                  <Clock className="w-4 h-4 text-sky-400" />
-                  <span>AI Time Travel & Timeline</span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveSidebar(activeSidebar === 'focus' ? null : 'focus'); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
-                >
-                  <Timer className="w-4 h-4 text-purple-400" />
-                  <span>Focus & Pomodoro Timer</span>
-                </button>
-
-                <button
-                  onClick={() => { setIsExportModalOpen(true); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
-                >
-                  <Archive className="w-4 h-4 text-sky-400" />
-                  <span>Export Package</span>
-                </button>
-
-                <button
                   onClick={() => { setIsOnToGoMode(true); setShowMoreMenu(false); }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
                 >
