@@ -3743,6 +3743,32 @@ function RoomPageContent() {
             <Target className="w-3.5 h-3.5 text-purple-400" /> Interview Mode
           </Button>
 
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')}
+            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
+              activeSidebar === 'timetravel'
+                ? 'bg-sky-600 text-white shadow-md'
+                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5 text-sky-400" /> Timeline
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setActiveSidebar(activeSidebar === 'focus' ? null : 'focus')}
+            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
+              activeSidebar === 'focus'
+                ? 'bg-orange-600 text-white shadow-md'
+                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <Timer className="w-3.5 h-3.5 text-orange-400" /> Focus
+          </Button>
+
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
             className="w-8 h-8 rounded-full bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs hover:scale-105 transition ml-1"
