@@ -1144,9 +1144,8 @@ function RoomPageContent() {
   })
 
   const isHostUser = Boolean(
-    (meetingHostId && user && (user.id === meetingHostId || user.email === meetingHostEmail)) ||
-    (userRoles[lobbyName] === 'Host' || userRoles[lobbyName] === 'Co-Host') ||
-    (meetingHostName && lobbyName && meetingHostName === lobbyName)
+    (meetingHostId && user && (user.id === meetingHostId || (meetingHostEmail && user.email === meetingHostEmail))) ||
+    (userRoles[lobbyName] === 'Host' || userRoles[lobbyName] === 'Co-Host')
   )
 
   // Refs to give stable access to latest values inside event handler closures

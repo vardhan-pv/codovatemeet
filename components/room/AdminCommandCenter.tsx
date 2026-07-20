@@ -71,7 +71,7 @@ export function AdminCommandCenter({
   onToggleUserRecordingPermission
 }: AdminCommandCenterProps) {
   const isHost = Boolean(
-    (meetingHostId && user && (user.id === meetingHostId || user.email === meetingHostId)) ||
+    (meetingHostId && user && (user.id === meetingHostId || (user.email && user.email === meetingHostId))) ||
     (userRoles[user?.name || ''] === 'Host') ||
     (userRoles[user?.name || ''] === 'Co-Host')
   )
