@@ -4119,52 +4119,46 @@ function RoomPageContent() {
         </div>
       )}
 
-      {/* ── ONE SINGLE FLOATING ACTION DOCK (Single Row - Zero Duplicates) ── */}
+      {/* ── ONE SINGLE FLOATING ACTION DOCK (Replaced according to user images - Zero Duplicates) ── */}
       <footer className="px-4 py-3 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 flex flex-wrap items-center justify-between gap-3 z-40 shrink-0 shadow-2xl select-none relative">
         
-        {/* Left Group: Security & Room Info (Admin Security Restricted) */}
+        {/* Left Card: Replaced with Code, Whiteboard, UNO Game (1st image instruction) */}
         <div className="flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
-          {/* Security button (Visible ONLY to Meeting Host / Admin) */}
-          {isHostUser && (
-            <button
-              onClick={() => setShowAdminCenter(true)}
-              className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-              title="Admin Security Controls"
-            >
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span className="text-[9px] font-bold mt-0.5">Security</span>
-            </button>
-          )}
-
-          {/* Invite Link */}
           <button
-            onClick={() => setShowInvitePopup(true)}
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="Invite People"
+            onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
+            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+              activeWorkspace === 'code' ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+            }`}
+            title="Code Workspace Editor"
           >
-            <Share2 className="w-4 h-4 text-slate-300" />
-            <span className="text-[9px] font-bold mt-0.5">Invite</span>
+            <Code className="w-4 h-4 text-emerald-400" />
+            <span className="text-[9px] font-bold mt-0.5">Code</span>
           </button>
 
-          {/* Waiting Room (Visible ONLY to Meeting Host / Admin) */}
-          {isHostUser && (
-            <button
-              onClick={() => setShowAdminCenter(true)}
-              className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition relative"
-              title="Manage Waiting Room"
-            >
-              <Users className="w-4 h-4 text-amber-400" />
-              {waitingParticipants.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white font-bold text-[9px] rounded-full flex items-center justify-center animate-pulse">
-                  {waitingParticipants.length}
-                </span>
-              )}
-              <span className="text-[9px] font-bold mt-0.5">Waiting Room</span>
-            </button>
-          )}
+          <button
+            onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
+            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+              activeWorkspace === 'whiteboard' ? 'bg-amber-600/30 text-amber-400 border border-amber-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+            }`}
+            title="Whiteboard Workspace"
+          >
+            <Paintbrush className="w-4 h-4 text-amber-400" />
+            <span className="text-[9px] font-bold mt-0.5">Whiteboard</span>
+          </button>
+
+          <button
+            onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
+            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+              activeWorkspace === 'uno' ? 'bg-orange-600/30 text-orange-400 border border-orange-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+            }`}
+            title="UNO! Game"
+          >
+            <span className="text-sm">🃏</span>
+            <span className="text-[9px] font-bold mt-0.5">UNO Game</span>
+          </button>
         </div>
 
-        {/* Center Group: Primary Call Controls (No Duplicates) */}
+        {/* Center Group: Primary Call Media Controls */}
         <div className="flex items-center gap-2 relative">
           {/* Mic Button */}
           <button
@@ -4226,7 +4220,7 @@ function RoomPageContent() {
             <span className="text-[9px] font-bold mt-0.5">Record</span>
           </button>
 
-          {/* ••• More Button (Dropdown Menu for all Workspaces & Secondary Tools) */}
+          {/* ••• More Button (Dropdown Popover Menu) */}
           <div className="relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
@@ -4239,7 +4233,7 @@ function RoomPageContent() {
               <span className="text-[9px] font-bold mt-0.5">More</span>
             </button>
 
-            {/* Floating Popover Menu for Workspaces & Extra Features */}
+            {/* Floating Popover Menu (2nd image instruction: Security/Invite/Waiting Room added here, Code/Whiteboard/UNO removed) */}
             {showMoreMenu && (
               <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-slate-200 text-xs font-semibold">
                 {/* Admin Command Center (Admin / Host ONLY!) */}
@@ -4253,20 +4247,40 @@ function RoomPageContent() {
                   </button>
                 )}
 
-                <button
-                  onClick={() => { setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code'); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
-                >
-                  <Code className="w-4 h-4 text-emerald-400" />
-                  <span>Code Workspace Editor</span>
-                </button>
+                {/* Security (Host ONLY!) */}
+                {isHostUser && (
+                  <button
+                    onClick={() => { setShowAdminCenter(true); setShowMoreMenu(false); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-emerald-400 transition text-left"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Security & Lock Controls</span>
+                  </button>
+                )}
 
+                {/* Waiting Room (Host ONLY!) */}
+                {isHostUser && (
+                  <button
+                    onClick={() => { setShowAdminCenter(true); setShowMoreMenu(false); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-amber-400 transition text-left relative"
+                  >
+                    <Users className="w-4 h-4 text-amber-400" />
+                    <span>Waiting Room</span>
+                    {waitingParticipants.length > 0 && (
+                      <span className="ml-auto px-1.5 py-0.5 bg-rose-500 text-white font-bold text-[10px] rounded-full">
+                        {waitingParticipants.length}
+                      </span>
+                    )}
+                  </button>
+                )}
+
+                {/* Invite Link */}
                 <button
-                  onClick={() => { setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard'); setShowMoreMenu(false); }}
+                  onClick={() => { setShowInvitePopup(true); setShowMoreMenu(false); }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
                 >
-                  <Paintbrush className="w-4 h-4 text-amber-400" />
-                  <span>Whiteboard Workspace</span>
+                  <Share2 className="w-4 h-4 text-slate-300" />
+                  <span>Invite Link & Share</span>
                 </button>
 
                 <button
@@ -4308,54 +4322,6 @@ function RoomPageContent() {
                   <Timer className="w-4 h-4 text-purple-400" />
                   <span>Focus & Pomodoro Timer</span>
                 </button>
-
-                <button
-                  onClick={() => { setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno'); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
-                >
-                  <span className="text-sm">🃏</span>
-                  <span>UNO! Multiplayer Game</span>
-                </button>
-
-                <button
-                  onClick={() => { setIsExportModalOpen(true); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
-                >
-                  <Archive className="w-4 h-4 text-sky-400" />
-                  <span>Export Package</span>
-                </button>
-
-                <button
-                  onClick={() => { setIsOnToGoMode(true); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
-                >
-                  <span className="text-sm">🚶</span>
-                  <span>On-The-Go Low Data Mode</span>
-                </button>
-
-                <button
-                  onClick={() => { setIsAnnotationActive(!isAnnotationActive); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
-                >
-                  <Paintbrush className="w-4 h-4 text-blue-400" />
-                  <span>Screen Annotation & Draw</span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse'); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-rose-400 transition text-left"
-                >
-                  <Flag className="w-4 h-4 text-rose-400" />
-                  <span>Report Abuse</span>
-                </button>
-
-                <button
-                  onClick={() => { setShowOnboardingTour(true); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-300 transition text-left border-t border-white/5 mt-1 pt-2"
-                >
-                  <HelpCircle className="w-4 h-4 text-slate-400" />
-                  <span>Help & Walkthrough Tour</span>
-                </button>
               </div>
             )}
           </div>
@@ -4370,30 +4336,50 @@ function RoomPageContent() {
           </Button>
         </div>
 
-        {/* Right Group: Telemetry & Device Settings */}
+        {/* Right Card: Replaced 3rd image (Network/Device/Help) with 4th image options (Export/On-The-Go/Annotate/Abuse/Help) */}
         <div className="flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
           <button
-            onClick={() => setIsStatsModalOpen(true)}
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="Network Status"
+            onClick={() => setIsExportModalOpen(true)}
+            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
+            title="Export Package"
           >
-            <Activity className="w-4 h-4 text-emerald-400" />
-            <span className="text-[9px] font-bold mt-0.5">Network</span>
+            <Archive className="w-4 h-4 text-sky-400" />
+            <span className="text-[9px] font-bold mt-0.5">Export</span>
           </button>
 
           <button
-            onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="Device & Audio Effects"
+            onClick={() => setIsOnToGoMode(true)}
+            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
+            title="On-The-Go Low Data Mode"
           >
-            <Settings className="w-4 h-4 text-slate-300" />
-            <span className="text-[9px] font-bold mt-0.5">Device</span>
+            <span className="text-sm">🚶</span>
+            <span className="text-[9px] font-bold mt-0.5">On-the-Go</span>
+          </button>
+
+          <button
+            onClick={() => setIsAnnotationActive(!isAnnotationActive)}
+            className={`flex flex-col items-center justify-center px-2.5 py-1 rounded-xl transition ${
+              isAnnotationActive ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+            }`}
+            title="Screen Annotation & Draw"
+          >
+            <Paintbrush className="w-4 h-4 text-blue-400" />
+            <span className="text-[9px] font-bold mt-0.5">Annotate</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse')}
+            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
+            title="Report Abuse"
+          >
+            <Flag className="w-4 h-4 text-rose-400" />
+            <span className="text-[9px] font-bold mt-0.5">Abuse</span>
           </button>
 
           <button
             onClick={() => setShowOnboardingTour(true)}
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="Help & Tour"
+            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
+            title="Help & Onboarding Tour"
           >
             <HelpCircle className="w-4 h-4 text-slate-300" />
             <span className="text-[9px] font-bold mt-0.5">Help</span>
