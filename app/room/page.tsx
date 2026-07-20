@@ -4119,140 +4119,10 @@ function RoomPageContent() {
         </div>
       )}
 
-      {/* ── SUB-TOOLBAR (Row 1: Workspace & Interactivity - Zero Duplicates) ── */}
-      <div className="px-4 py-2 bg-slate-950/80 backdrop-blur-md border-t border-white/5 flex flex-wrap items-center justify-between gap-3 text-slate-300 z-30 select-none">
-        
-        {/* Left Card: Workspace Tools */}
-        <div className="flex items-center gap-1 bg-slate-900/90 border border-white/10 rounded-2xl p-1.5 shadow-lg overflow-x-auto custom-scrollbar">
-          <button
-            onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
-            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeWorkspace === 'code' ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title="Code Editor"
-          >
-            <Code className="w-4 h-4 text-emerald-400" />
-            <span className="text-[10px] font-bold mt-0.5">Code</span>
-          </button>
-
-          <button
-            onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
-            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeWorkspace === 'whiteboard' ? 'bg-amber-600/30 text-amber-400 border border-amber-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title="Whiteboard Workspace"
-          >
-            <Paintbrush className="w-4 h-4 text-amber-400" />
-            <span className="text-[10px] font-bold mt-0.5">Whiteboard</span>
-          </button>
-
-          <button
-            onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
-            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeWorkspace === 'notes' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title="Shared Notes"
-          >
-            <FileText className="w-4 h-4 text-blue-400" />
-            <span className="text-[10px] font-bold mt-0.5">Notes</span>
-          </button>
-
-          <button
-            onClick={() => setIsExportModalOpen(true)}
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl transition hover:bg-white/5 text-slate-300"
-            title="Export Documents Package"
-          >
-            <Archive className="w-4 h-4 text-sky-400" />
-            <span className="text-[10px] font-bold mt-0.5">Documents</span>
-          </button>
-
-          <button
-            onClick={handleScreenShareToggle}
-            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              isScreenSharing ? 'bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title="Screen Share Workspace"
-          >
-            <MonitorUp className="w-4 h-4 text-indigo-400" />
-            <span className="text-[10px] font-bold mt-0.5">Screenshare</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
-            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeSidebar === 'ai' ? 'bg-purple-600/30 text-purple-300 border border-purple-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title="AI Assistant"
-          >
-            <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
-            <span className="text-[10px] font-bold mt-0.5">AI Assistant</span>
-          </button>
-        </div>
-
-        {/* Right Card: Interactivity Bar */}
-        <div className="flex items-center gap-1 bg-slate-900/90 border border-white/10 rounded-2xl p-1.5 shadow-lg overflow-x-auto custom-scrollbar">
-          <button
-            onClick={toggleHandRaise}
-            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              isHandRaised ? 'bg-amber-600/30 text-amber-400 border border-amber-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title={isHandRaised ? "Lower Hand" : "Raise Hand"}
-          >
-            <span className="text-xs">🖐️</span>
-            <span className="text-[10px] font-bold mt-0.5">Raise Hand</span>
-          </button>
-
-          <button
-            onClick={() => setShowReactionTray(!showReactionTray)}
-            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              showReactionTray ? 'bg-purple-600/30 text-purple-400 border border-purple-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title="Send Reaction"
-          >
-            <Heart className="w-4 h-4 text-rose-400" />
-            <span className="text-[10px] font-bold mt-0.5">Reactions</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
-            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeSidebar === 'participants' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title="Participants List"
-          >
-            <div className="flex items-center gap-1">
-              <Users className="w-4 h-4 text-blue-400" />
-              <span className="text-xs font-mono font-bold">{participants.length}</span>
-            </div>
-            <span className="text-[10px] font-bold mt-0.5">Participants</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
-            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeSidebar === 'chat' ? 'bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title="In-Call Chat"
-          >
-            <MessageSquare className="w-4 h-4 text-indigo-400" />
-            <span className="text-[10px] font-bold mt-0.5">Chat</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl transition hover:bg-white/5 text-slate-300"
-            title="Device & Audio Settings"
-          >
-            <Settings className="w-4 h-4 text-slate-400" />
-            <span className="text-[10px] font-bold mt-0.5">Settings</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ── BOTTOM FLOATING ACTION DOCK (Row 2: Primary Actions - No Duplicates) ── */}
+      {/* ── ONE SINGLE FLOATING ACTION DOCK (Single Row - Zero Duplicates) ── */}
       <footer className="px-4 py-3 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 flex flex-wrap items-center justify-between gap-3 z-40 shrink-0 shadow-2xl select-none relative">
         
-        {/* Left Group (Security & Room Info - Admin Security Restricted) */}
+        {/* Left Group: Security & Room Info (Admin Security Restricted) */}
         <div className="flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
           {/* Security button (Visible ONLY to Meeting Host / Admin) */}
           {isHostUser && (
@@ -4294,7 +4164,7 @@ function RoomPageContent() {
           )}
         </div>
 
-        {/* Center Group (Media & Primary Call Actions) */}
+        {/* Center Group: Primary Call Controls (No Duplicates) */}
         <div className="flex items-center gap-2 relative">
           {/* Mic Button */}
           <button
@@ -4332,6 +4202,18 @@ function RoomPageContent() {
             <span className="text-[9px] font-bold mt-0.5">Share Screen</span>
           </button>
 
+          {/* Raise Hand Button */}
+          <button
+            onClick={toggleHandRaise}
+            className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
+              isHandRaised ? 'bg-amber-600 text-white shadow-amber-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
+            }`}
+            title={isHandRaised ? "Lower Hand" : "Raise Hand"}
+          >
+            <span className="text-sm">🖐️</span>
+            <span className="text-[9px] font-bold mt-0.5">Raise Hand</span>
+          </button>
+
           {/* Record Session Button */}
           <button
             onClick={() => setIsRecorderModalOpen(true)}
@@ -4344,20 +4226,20 @@ function RoomPageContent() {
             <span className="text-[9px] font-bold mt-0.5">Record</span>
           </button>
 
-          {/* ••• More Button (Dropdown Menu for all remaining secondary features) */}
+          {/* ••• More Button (Dropdown Menu for all Workspaces & Secondary Tools) */}
           <div className="relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
                 showMoreMenu ? 'bg-indigo-600 text-white shadow-indigo-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
               }`}
-              title="More Options & Features"
+              title="More Workspaces & Tools"
             >
               <span className="text-base font-bold leading-none">•••</span>
               <span className="text-[9px] font-bold mt-0.5">More</span>
             </button>
 
-            {/* Floating Popover Menu for More Features */}
+            {/* Floating Popover Menu for Workspaces & Extra Features */}
             {showMoreMenu && (
               <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-slate-200 text-xs font-semibold">
                 {/* Admin Command Center (Admin / Host ONLY!) */}
@@ -4370,6 +4252,30 @@ function RoomPageContent() {
                     <span>Admin Command Center</span>
                   </button>
                 )}
+
+                <button
+                  onClick={() => { setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code'); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <Code className="w-4 h-4 text-emerald-400" />
+                  <span>Code Workspace Editor</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard'); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <Paintbrush className="w-4 h-4 text-amber-400" />
+                  <span>Whiteboard Workspace</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes'); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <FileText className="w-4 h-4 text-blue-400" />
+                  <span>Shared Notes Workspace</span>
+                </button>
 
                 <button
                   onClick={() => { setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks'); setShowMoreMenu(false); }}
@@ -4464,7 +4370,7 @@ function RoomPageContent() {
           </Button>
         </div>
 
-        {/* Right Group (Telemetry & Help) */}
+        {/* Right Group: Telemetry & Device Settings */}
         <div className="flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
           <button
             onClick={() => setIsStatsModalOpen(true)}
