@@ -1229,6 +1229,7 @@ function RoomPageContent() {
   const [interviewObjectives, setInterviewObjectives] = useState('Verify core JS concepts, problem-solving, and clean coding practices.')
   const [interviewPurpose, setInterviewPurpose] = useState('Senior Frontend Developer Role')
   const [isEditingObjectives, setIsEditingObjectives] = useState(false)
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
 
   // Smart Scheduler states
   const [schedTitle, setSchedTitle] = useState('')
@@ -4118,7 +4119,7 @@ function RoomPageContent() {
         </div>
       )}
 
-      {/* ── SUB-TOOLBAR (Workspace Tools & Interactivity Bar) ── */}
+      {/* ── SUB-TOOLBAR (Row 1: Workspace & Interactivity - Zero Duplicates) ── */}
       <div className="px-4 py-2 bg-slate-950/80 backdrop-blur-md border-t border-white/5 flex flex-wrap items-center justify-between gap-3 text-slate-300 z-30 select-none">
         
         {/* Left Card: Workspace Tools */}
@@ -4126,8 +4127,9 @@ function RoomPageContent() {
           <button
             onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
             className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeWorkspace === 'code' ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500/40' : 'hover:bg-white/5 text-slate-300'
+              activeWorkspace === 'code' ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
             }`}
+            title="Code Editor"
           >
             <Code className="w-4 h-4 text-emerald-400" />
             <span className="text-[10px] font-bold mt-0.5">Code</span>
@@ -4136,8 +4138,9 @@ function RoomPageContent() {
           <button
             onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
             className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeWorkspace === 'whiteboard' ? 'bg-amber-600/30 text-amber-400 border border-amber-500/40' : 'hover:bg-white/5 text-slate-300'
+              activeWorkspace === 'whiteboard' ? 'bg-amber-600/30 text-amber-400 border border-amber-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
             }`}
+            title="Whiteboard Workspace"
           >
             <Paintbrush className="w-4 h-4 text-amber-400" />
             <span className="text-[10px] font-bold mt-0.5">Whiteboard</span>
@@ -4146,8 +4149,9 @@ function RoomPageContent() {
           <button
             onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
             className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeWorkspace === 'notes' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40' : 'hover:bg-white/5 text-slate-300'
+              activeWorkspace === 'notes' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
             }`}
+            title="Shared Notes"
           >
             <FileText className="w-4 h-4 text-blue-400" />
             <span className="text-[10px] font-bold mt-0.5">Notes</span>
@@ -4156,6 +4160,7 @@ function RoomPageContent() {
           <button
             onClick={() => setIsExportModalOpen(true)}
             className="flex flex-col items-center justify-center px-3 py-1 rounded-xl transition hover:bg-white/5 text-slate-300"
+            title="Export Documents Package"
           >
             <Archive className="w-4 h-4 text-sky-400" />
             <span className="text-[10px] font-bold mt-0.5">Documents</span>
@@ -4164,8 +4169,9 @@ function RoomPageContent() {
           <button
             onClick={handleScreenShareToggle}
             className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              isScreenSharing ? 'bg-indigo-600/30 text-indigo-400 border border-indigo-500/40' : 'hover:bg-white/5 text-slate-300'
+              isScreenSharing ? 'bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
             }`}
+            title="Screen Share Workspace"
           >
             <MonitorUp className="w-4 h-4 text-indigo-400" />
             <span className="text-[10px] font-bold mt-0.5">Screenshare</span>
@@ -4174,8 +4180,9 @@ function RoomPageContent() {
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
             className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeSidebar === 'ai' ? 'bg-purple-600/30 text-purple-300 border border-purple-500/40' : 'hover:bg-white/5 text-slate-300'
+              activeSidebar === 'ai' ? 'bg-purple-600/30 text-purple-300 border border-purple-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
             }`}
+            title="AI Assistant"
           >
             <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
             <span className="text-[10px] font-bold mt-0.5">AI Assistant</span>
@@ -4187,8 +4194,9 @@ function RoomPageContent() {
           <button
             onClick={toggleHandRaise}
             className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              isHandRaised ? 'bg-amber-600/30 text-amber-400 border border-amber-500/40' : 'hover:bg-white/5 text-slate-300'
+              isHandRaised ? 'bg-amber-600/30 text-amber-400 border border-amber-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
             }`}
+            title={isHandRaised ? "Lower Hand" : "Raise Hand"}
           >
             <span className="text-xs">🖐️</span>
             <span className="text-[10px] font-bold mt-0.5">Raise Hand</span>
@@ -4197,8 +4205,9 @@ function RoomPageContent() {
           <button
             onClick={() => setShowReactionTray(!showReactionTray)}
             className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              showReactionTray ? 'bg-purple-600/30 text-purple-400 border border-purple-500/40' : 'hover:bg-white/5 text-slate-300'
+              showReactionTray ? 'bg-purple-600/30 text-purple-400 border border-purple-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
             }`}
+            title="Send Reaction"
           >
             <Heart className="w-4 h-4 text-rose-400" />
             <span className="text-[10px] font-bold mt-0.5">Reactions</span>
@@ -4207,8 +4216,9 @@ function RoomPageContent() {
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
             className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeSidebar === 'participants' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40' : 'hover:bg-white/5 text-slate-300'
+              activeSidebar === 'participants' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
             }`}
+            title="Participants List"
           >
             <div className="flex items-center gap-1">
               <Users className="w-4 h-4 text-blue-400" />
@@ -4220,16 +4230,18 @@ function RoomPageContent() {
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
             className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeSidebar === 'chat' ? 'bg-indigo-600/30 text-indigo-400 border border-indigo-500/40' : 'hover:bg-white/5 text-slate-300'
+              activeSidebar === 'chat' ? 'bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
             }`}
+            title="In-Call Chat"
           >
             <MessageSquare className="w-4 h-4 text-indigo-400" />
             <span className="text-[10px] font-bold mt-0.5">Chat</span>
           </button>
 
           <button
-            onClick={() => setShowAdminCenter(true)}
+            onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
             className="flex flex-col items-center justify-center px-3 py-1 rounded-xl transition hover:bg-white/5 text-slate-300"
+            title="Device & Audio Settings"
           >
             <Settings className="w-4 h-4 text-slate-400" />
             <span className="text-[10px] font-bold mt-0.5">Settings</span>
@@ -4237,20 +4249,24 @@ function RoomPageContent() {
         </div>
       </div>
 
-      {/* ── BOTTOM FLOATING ACTION DOCK (Reference Image Alignment) ── */}
-      <footer className="px-4 py-3 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 flex flex-wrap items-center justify-between gap-3 z-40 shrink-0 shadow-2xl select-none">
+      {/* ── BOTTOM FLOATING ACTION DOCK (Row 2: Primary Actions - No Duplicates) ── */}
+      <footer className="px-4 py-3 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 flex flex-wrap items-center justify-between gap-3 z-40 shrink-0 shadow-2xl select-none relative">
         
-        {/* Left Group (Security & Invite Controls) */}
+        {/* Left Group (Security & Room Info - Admin Security Restricted) */}
         <div className="flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
-          <button
-            onClick={() => isHostUser && setShowAdminCenter(true)}
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="Security Controls"
-          >
-            <ShieldCheck className="w-4 h-4 text-slate-300" />
-            <span className="text-[9px] font-bold mt-0.5">Security</span>
-          </button>
+          {/* Security button (Visible ONLY to Meeting Host / Admin) */}
+          {isHostUser && (
+            <button
+              onClick={() => setShowAdminCenter(true)}
+              className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
+              title="Admin Security Controls"
+            >
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span className="text-[9px] font-bold mt-0.5">Security</span>
+            </button>
+          )}
 
+          {/* Invite Link */}
           <button
             onClick={() => setShowInvitePopup(true)}
             className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
@@ -4260,23 +4276,26 @@ function RoomPageContent() {
             <span className="text-[9px] font-bold mt-0.5">Invite</span>
           </button>
 
-          <button
-            onClick={() => isHostUser && setShowAdminCenter(true)}
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition relative"
-            title="Waiting Room"
-          >
-            <Users className="w-4 h-4 text-slate-300" />
-            {waitingParticipants.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white font-bold text-[9px] rounded-full flex items-center justify-center animate-pulse">
-                {waitingParticipants.length}
-              </span>
-            )}
-            <span className="text-[9px] font-bold mt-0.5">Waiting Room</span>
-          </button>
+          {/* Waiting Room (Visible ONLY to Meeting Host / Admin) */}
+          {isHostUser && (
+            <button
+              onClick={() => setShowAdminCenter(true)}
+              className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition relative"
+              title="Manage Waiting Room"
+            >
+              <Users className="w-4 h-4 text-amber-400" />
+              {waitingParticipants.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white font-bold text-[9px] rounded-full flex items-center justify-center animate-pulse">
+                  {waitingParticipants.length}
+                </span>
+              )}
+              <span className="text-[9px] font-bold mt-0.5">Waiting Room</span>
+            </button>
+          )}
         </div>
 
-        {/* Center Group (Primary Action Controls) */}
-        <div className="flex items-center gap-2">
+        {/* Center Group (Media & Primary Call Actions) */}
+        <div className="flex items-center gap-2 relative">
           {/* Mic Button */}
           <button
             onClick={handleMuteToggle}
@@ -4313,18 +4332,6 @@ function RoomPageContent() {
             <span className="text-[9px] font-bold mt-0.5">Share Screen</span>
           </button>
 
-          {/* Raise Hand Button */}
-          <button
-            onClick={toggleHandRaise}
-            className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
-              isHandRaised ? 'bg-amber-600 text-white shadow-amber-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
-            }`}
-            title={isHandRaised ? "Lower Hand" : "Raise Hand"}
-          >
-            <span className="text-sm">🖐️</span>
-            <span className="text-[9px] font-bold mt-0.5">Raise Hand</span>
-          </button>
-
           {/* Record Session Button */}
           <button
             onClick={() => setIsRecorderModalOpen(true)}
@@ -4337,15 +4344,115 @@ function RoomPageContent() {
             <span className="text-[9px] font-bold mt-0.5">Record</span>
           </button>
 
-          {/* More Actions Button */}
-          <button
-            onClick={() => isHostUser && setShowAdminCenter(true)}
-            className="flex flex-col items-center justify-center w-11 h-11 rounded-2xl bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800 transition shadow-md"
-            title="More Options & Admin Center"
-          >
-            <span className="text-base font-bold leading-none">•••</span>
-            <span className="text-[9px] font-bold mt-0.5">More</span>
-          </button>
+          {/* ••• More Button (Dropdown Menu for all remaining secondary features) */}
+          <div className="relative">
+            <button
+              onClick={() => setShowMoreMenu(!showMoreMenu)}
+              className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
+                showMoreMenu ? 'bg-indigo-600 text-white shadow-indigo-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
+              }`}
+              title="More Options & Features"
+            >
+              <span className="text-base font-bold leading-none">•••</span>
+              <span className="text-[9px] font-bold mt-0.5">More</span>
+            </button>
+
+            {/* Floating Popover Menu for More Features */}
+            {showMoreMenu && (
+              <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-slate-200 text-xs font-semibold">
+                {/* Admin Command Center (Admin / Host ONLY!) */}
+                {isHostUser && (
+                  <button
+                    onClick={() => { setShowAdminCenter(true); setShowMoreMenu(false); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-indigo-400 font-bold transition text-left"
+                  >
+                    <ShieldAlert className="w-4 h-4 text-indigo-400" />
+                    <span>Admin Command Center</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => { setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks'); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>Tasks & Agenda</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveSidebar(activeSidebar === 'polls' ? null : 'polls'); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <BarChart2 className="w-4 h-4 text-indigo-400" />
+                  <span>Polls & Surveys</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel'); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <Clock className="w-4 h-4 text-sky-400" />
+                  <span>AI Time Travel & Timeline</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveSidebar(activeSidebar === 'focus' ? null : 'focus'); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <Timer className="w-4 h-4 text-purple-400" />
+                  <span>Focus & Pomodoro Timer</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno'); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <span className="text-sm">🃏</span>
+                  <span>UNO! Multiplayer Game</span>
+                </button>
+
+                <button
+                  onClick={() => { setIsExportModalOpen(true); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <Archive className="w-4 h-4 text-sky-400" />
+                  <span>Export Package</span>
+                </button>
+
+                <button
+                  onClick={() => { setIsOnToGoMode(true); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <span className="text-sm">🚶</span>
+                  <span>On-The-Go Low Data Mode</span>
+                </button>
+
+                <button
+                  onClick={() => { setIsAnnotationActive(!isAnnotationActive); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <Paintbrush className="w-4 h-4 text-blue-400" />
+                  <span>Screen Annotation & Draw</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse'); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-rose-400 transition text-left"
+                >
+                  <Flag className="w-4 h-4 text-rose-400" />
+                  <span>Report Abuse</span>
+                </button>
+
+                <button
+                  onClick={() => { setShowOnboardingTour(true); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-300 transition text-left border-t border-white/5 mt-1 pt-2"
+                >
+                  <HelpCircle className="w-4 h-4 text-slate-400" />
+                  <span>Help & Walkthrough Tour</span>
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Red Leave Meeting Pill Button */}
           <Button
@@ -4357,7 +4464,7 @@ function RoomPageContent() {
           </Button>
         </div>
 
-        {/* Right Group (Network & Settings) */}
+        {/* Right Group (Telemetry & Help) */}
         <div className="flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
           <button
             onClick={() => setIsStatsModalOpen(true)}
@@ -4378,12 +4485,12 @@ function RoomPageContent() {
           </button>
 
           <button
-            onClick={() => isHostUser && setShowAdminCenter(true)}
+            onClick={() => setShowOnboardingTour(true)}
             className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="Settings & Admin"
+            title="Help & Tour"
           >
-            <Settings className="w-4 h-4 text-slate-300" />
-            <span className="text-[9px] font-bold mt-0.5">Settings</span>
+            <HelpCircle className="w-4 h-4 text-slate-300" />
+            <span className="text-[9px] font-bold mt-0.5">Help</span>
           </button>
         </div>
       </footer>
