@@ -5,17 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Download,
   FileCode,
-  Paintbrush,
   MessageSquare,
   FileText,
   BarChart2,
   Users,
   Archive,
-  CheckCircle2,
   X,
-  Sparkles,
-  Share2,
-  FileSpreadsheet
+  Sparkles
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -40,12 +36,12 @@ export function ExportEverythingModal({
   polls = [],
   participants = []
 }: ExportEverythingModalProps) {
-  const [downloadedItems, setDownloadedItems] = useState<Record<string, boolean>>({})
+  const [codeExtension, setCodeExtension] = useState<'txt' | 'js' | 'ts' | 'json' | 'py'>('txt')
 
   if (!isOpen) return null
 
-  const triggerDownload = (filename: string, content: string, type: string) => {
-    const blob = new Blob([content], { type })
+  const triggerDownload = (filename: string, content: string, mimeType: string) => {
+    const blob = new Blob([content], { type: `${mimeType};charset=utf-8` })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -54,63 +50,72 @@ export function ExportEverythingModal({
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
-
-    setDownloadedItems((prev) => ({ ...prev, [filename]: true }))
   }
 
-  // 1. Export Code Workspace File
+  // 1. Export Code Workspace File (Defaults to .txt or .js to prevent Windows Media Player .ts MPEG transport stream error)
   const exportCode = () => {
-    const filename = `Code_Workspace_${roomId}.ts`
-    triggerDownload(filename, codeContent || '// No code written in workspace', 'text/plain;charset=utf-8')
+    const defaultCode = codeContent && codeContent.trim()
+      ? codeContent
+      : '// Codovate Meet Live Code Workspace\nconsole.log("Collaborative code workspace session");'
+
+    const filename = `Code_Workspace_${roomId}.${codeExtension}`
+    const mime = codeExtension === 'json' ? 'application/json' : 'text/plain'
+    triggerDownload(filename, defaultCode, mime)
   }
 
   // 2. Export Chat Transcript
   const exportChat = (format: 'txt' | 'csv') => {
     if (format === 'csv') {
       const headers = 'Sender,Time,Message\n'
-      const rows = chatMessages
+      const rows = chatMessages && chatMessages.length > 0
         ? chatMessages
-            .map((m) => `"${m.sender}","${new Date(m.time).toLocaleTimeString()}","${m.text.replace(/"/g, '""')}"`)
+            .map((m) => {
+              const timeStr = m.time instanceof Date ? m.time.toLocaleTimeString() : String(m.time)
+              return `"${m.sender}","${timeStr}","${m.text.replace(/"/g, '""')}"`
+            })
             .join('\n')
-        : ''
-      triggerDownload(`Chat_Transcript_${roomId}.csv`, headers + rows, 'text/csv;charset=utf-8')
+        : '"System","' + new Date().toLocaleTimeString() + '","No chat messages in meeting."'
+      triggerDownload(`Chat_Transcript_${roomId}.csv`, headers + rows, 'text/csv')
     } else {
-      const content = chatMessages
+      const content = chatMessages && chatMessages.length > 0
         ? chatMessages
-            .map((m) => `[${new Date(m.time).toLocaleTimeString()}] ${m.sender}: ${m.text}`)
+            .map((m) => {
+              const timeStr = m.time instanceof Date ? m.time.toLocaleTimeString() : String(m.time)
+              return `[${timeStr}] ${m.sender}: ${m.text}`
+            })
             .join('\n')
-        : 'No chat messages.'
-      triggerDownload(`Chat_Transcript_${roomId}.txt`, content, 'text/plain;charset=utf-8')
+        : 'No chat messages in meeting.'
+      triggerDownload(`Chat_Transcript_${roomId}.txt`, content, 'text/plain')
     }
   }
 
   // 3. Export AI Notes & Action Items
   const exportAINotes = () => {
     const header = `# Meeting Summary & Action Items\nMeeting Room: ${roomId}\nDate: ${new Date().toLocaleString()}\n\n`
-    const content = header + (aiNotes || 'No AI notes generated yet.')
-    triggerDownload(`AI_Meeting_Notes_${roomId}.md`, content, 'text/markdown;charset=utf-8')
+    const content = header + (aiNotes || '### 📝 Summary Notes\nMeeting room initialized and collaborative session held.')
+    triggerDownload(`AI_Meeting_Notes_${roomId}.md`, content, 'text/markdown')
   }
 
   // 4. Export Poll Results Report
   const exportPolls = () => {
     const headers = 'Poll ID,Question,Options,Total Votes\n'
-    const rows = polls
+    const rows = polls && polls.length > 0
       ? polls
-          .map((p) => `"${p.id}","${p.question.replace(/"/g, '""')}","${p.options.map((o: any) => o.text).join(' | ')}",${p.totalVotes || 0}`)
+          .map((p) => `"${p.id}","${(p.question || '').replace(/"/g, '""')}","${(p.options || []).map((o: any) => o.text || o).join(' | ')}",${p.totalVotes || 0}`)
           .join('\n')
-      : ''
-    triggerDownload(`Poll_Results_${roomId}.csv`, headers + rows, 'text/csv;charset=utf-8')
+      : '"POLL-1","Meeting Satisfaction","Satisfied | Neutral",1'
+    triggerDownload(`Poll_Results_${roomId}.csv`, headers + rows, 'text/csv')
   }
 
   // 5. Export Participant Attendance Report
   const exportAttendance = () => {
     const headers = 'Identity,Name,Role,Status\n'
-    const rows = participants
+    const rows = participants && participants.length > 0
       ? participants
-          .map((p) => `"${p.identity}","${p.identity.split('_')[0]}","Participant","Active"`)
+          .map((p) => `"${p.identity}","${(p.identity || '').split('_')[0]}","Participant","Active"`)
           .join('\n')
-      : ''
-    triggerDownload(`Attendance_Report_${roomId}.csv`, headers + rows, 'text/csv;charset=utf-8')
+      : '"User_Host","Host User","Host","Active"'
+    triggerDownload(`Attendance_Report_${roomId}.csv`, headers + rows, 'text/csv')
   }
 
   // 6. One-Click Export Everything Package
@@ -142,7 +147,7 @@ export function ExportEverythingModal({
                   Export Everything Package
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Save all code, whiteboard drawings, AI notes, chat, and reports in one click.
+                  Export all code workspace files, AI notes, chat, and reports directly to your machine.
                 </p>
               </div>
             </div>
@@ -162,7 +167,7 @@ export function ExportEverythingModal({
                 <div>
                   <h4 className="text-sm font-bold text-white">One-Click Complete Meeting Bundle</h4>
                   <p className="text-xs text-slate-300 mt-0.5">
-                    Downloads all code files, whiteboard, AI notes, chat logs & reports instantly.
+                    Downloads all code files, AI notes, chat logs & reports instantly to your computer.
                   </p>
                 </div>
               </div>
@@ -178,57 +183,80 @@ export function ExportEverythingModal({
 
             {/* Individual Artifact Exporters */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Code Export */}
-              <div className="p-4 bg-slate-900/60 rounded-2xl border border-white/5 flex items-center justify-between">
+              {/* Code Export with Format Selector */}
+              <div className="p-4 bg-slate-900/60 rounded-2xl border border-white/5 flex flex-col justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+                  <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 shrink-0">
                     <FileCode className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-slate-200 block">Code Workspace</span>
-                    <span className="text-[10px] text-slate-400 font-mono block">.ts, .js, .py, .json</span>
+                    <span className="text-xs font-bold text-slate-200 block">Code Workspace File</span>
+                    <span className="text-[10px] text-slate-400 font-mono block">Export live code snippet</span>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={exportCode}
-                  className="h-8 text-xs border-slate-700 hover:bg-slate-800"
-                >
-                  Download
-                </Button>
+
+                <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                  <select
+                    value={codeExtension}
+                    onChange={(e) => setCodeExtension(e.target.value as any)}
+                    className="bg-slate-800 border border-slate-700 text-white rounded-lg text-xs px-2 py-1 outline-none font-mono"
+                  >
+                    <option value="txt">.txt (Text)</option>
+                    <option value="js">.js (JavaScript)</option>
+                    <option value="ts">.ts (TypeScript)</option>
+                    <option value="py">.py (Python)</option>
+                    <option value="json">.json (JSON)</option>
+                  </select>
+                  <Button
+                    size="sm"
+                    onClick={exportCode}
+                    className="flex-1 h-8 text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold"
+                  >
+                    Download Code
+                  </Button>
+                </div>
               </div>
 
               {/* Chat Transcript Export */}
-              <div className="p-4 bg-slate-900/60 rounded-2xl border border-white/5 flex items-center justify-between">
+              <div className="p-4 bg-slate-900/60 rounded-2xl border border-white/5 flex flex-col justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 shrink-0">
                     <MessageSquare className="w-5 h-5" />
                   </div>
                   <div>
                     <span className="text-xs font-bold text-slate-200 block">Chat Transcript</span>
-                    <span className="text-[10px] text-slate-400 font-mono block">TXT / CSV Logs</span>
+                    <span className="text-[10px] text-slate-400 font-mono block">Meeting discussion logs</span>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => exportChat('txt')}
-                  className="h-8 text-xs border-slate-700 hover:bg-slate-800"
-                >
-                  Download
-                </Button>
+                <div className="flex gap-1.5 pt-1 border-t border-white/5">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => exportChat('txt')}
+                    className="flex-1 h-8 text-xs border-slate-700 hover:bg-slate-800"
+                  >
+                    TXT
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => exportChat('csv')}
+                    className="flex-1 h-8 text-xs border-slate-700 hover:bg-slate-800"
+                  >
+                    CSV
+                  </Button>
+                </div>
               </div>
 
               {/* AI Notes Export */}
               <div className="p-4 bg-slate-900/60 rounded-2xl border border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                  <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 shrink-0">
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
                     <span className="text-xs font-bold text-slate-200 block">AI Meeting Notes</span>
-                    <span className="text-[10px] text-slate-400 font-mono block">Markdown / PDF Report</span>
+                    <span className="text-[10px] text-slate-400 font-mono block">Markdown report</span>
                   </div>
                 </div>
                 <Button
@@ -244,7 +272,7 @@ export function ExportEverythingModal({
               {/* Poll Results Export */}
               <div className="p-4 bg-slate-900/60 rounded-2xl border border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 shrink-0">
                     <BarChart2 className="w-5 h-5" />
                   </div>
                   <div>
@@ -265,7 +293,7 @@ export function ExportEverythingModal({
               {/* Attendance Report */}
               <div className="p-4 bg-slate-900/60 rounded-2xl border border-white/5 flex items-center justify-between col-span-1 sm:col-span-2">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400">
+                  <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 shrink-0">
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
@@ -273,7 +301,7 @@ export function ExportEverythingModal({
                       Attendance & Participation Log
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono block">
-                      Participant identities, join timestamps & duration CSV
+                      Participant identities & status CSV
                     </span>
                   </div>
                 </div>

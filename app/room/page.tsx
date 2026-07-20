@@ -1085,7 +1085,8 @@ function RoomPageContent() {
     stopRecording,
     pauseRecording,
     resumeRecording,
-    downloadRecording
+    downloadRecording,
+    resetRecorder
   } = useMeetingRecorder()
 
   // Live Data & Admin
@@ -4501,7 +4502,7 @@ function RoomPageContent() {
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         roomId={roomId}
-        codeContent=""
+        codeContent={activeCode}
         chatMessages={messages}
         aiNotes=""
         polls={polls}
@@ -4548,6 +4549,7 @@ function RoomPageContent() {
         onPauseRecording={pauseRecording}
         onResumeRecording={resumeRecording}
         onDownloadLocal={downloadRecording}
+        onResetRecorder={resetRecorder}
         isRecordingLocked={adminSettings.isRecordingLocked}
         isHost={isHostUser}
         roomId={roomId}
