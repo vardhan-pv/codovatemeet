@@ -3733,40 +3733,14 @@ function RoomPageContent() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
+            onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')}
             className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
-              activeWorkspace === 'whiteboard'
-                ? 'bg-amber-600 text-white shadow-md'
+              activeSidebar === 'interview'
+                ? 'bg-purple-600 text-white shadow-md'
                 : 'text-slate-300 hover:bg-white/5 hover:text-white'
             }`}
           >
-            <Paintbrush className="w-3.5 h-3.5 text-amber-400" /> Whiteboard
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')}
-            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
-              activeSidebar === 'timetravel'
-                ? 'bg-sky-600 text-white shadow-md'
-                : 'text-slate-300 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5 text-sky-400" /> Timeline
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsRecorderModalOpen(true)}
-            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
-              isRecording
-                ? 'bg-rose-600 text-white animate-pulse'
-                : 'text-slate-300 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <Radio className="w-3.5 h-3.5 text-rose-400" /> Record
+            <Target className="w-3.5 h-3.5 text-purple-400" /> Interview Mode
           </Button>
 
           <button
@@ -4322,6 +4296,46 @@ function RoomPageContent() {
                   <Timer className="w-4 h-4 text-purple-400" />
                   <span>Focus & Pomodoro Timer</span>
                 </button>
+
+                <button
+                  onClick={() => { setIsExportModalOpen(true); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <Archive className="w-4 h-4 text-sky-400" />
+                  <span>Export Package</span>
+                </button>
+
+                <button
+                  onClick={() => { setIsOnToGoMode(true); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <span className="text-sm">🚶</span>
+                  <span>On-The-Go Low Data Mode</span>
+                </button>
+
+                <button
+                  onClick={() => { setIsAnnotationActive(!isAnnotationActive); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
+                >
+                  <Paintbrush className="w-4 h-4 text-blue-400" />
+                  <span>Screen Annotation & Draw</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse'); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-rose-400 transition text-left"
+                >
+                  <Flag className="w-4 h-4 text-rose-400" />
+                  <span>Report Abuse</span>
+                </button>
+
+                <button
+                  onClick={() => { setShowOnboardingTour(true); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-300 transition text-left border-t border-white/5 mt-1 pt-2"
+                >
+                  <HelpCircle className="w-4 h-4 text-slate-400" />
+                  <span>Help & Walkthrough Tour</span>
+                </button>
               </div>
             )}
           </div>
@@ -4365,50 +4379,30 @@ function RoomPageContent() {
           </Button>
         </div>
 
-        {/* Right Card: Replaced 3rd image (Network/Device/Help) with 4th image options (Export/On-The-Go/Annotate/Abuse/Help) */}
+        {/* Right Card: Telemetry & Device Controls */}
         <div className="flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
           <button
-            onClick={() => setIsExportModalOpen(true)}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="Export Package"
+            onClick={() => setIsStatsModalOpen(true)}
+            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
+            title="Network Status"
           >
-            <Archive className="w-4 h-4 text-sky-400" />
-            <span className="text-[9px] font-bold mt-0.5">Export</span>
+            <Activity className="w-4 h-4 text-emerald-400" />
+            <span className="text-[9px] font-bold mt-0.5">Network</span>
           </button>
 
           <button
-            onClick={() => setIsOnToGoMode(true)}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="On-The-Go Low Data Mode"
+            onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
+            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
+            title="Device & Audio Effects"
           >
-            <span className="text-sm">🚶</span>
-            <span className="text-[9px] font-bold mt-0.5">On-the-Go</span>
-          </button>
-
-          <button
-            onClick={() => setIsAnnotationActive(!isAnnotationActive)}
-            className={`flex flex-col items-center justify-center px-2.5 py-1 rounded-xl transition ${
-              isAnnotationActive ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title="Screen Annotation & Draw"
-          >
-            <Paintbrush className="w-4 h-4 text-blue-400" />
-            <span className="text-[9px] font-bold mt-0.5">Annotate</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse')}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="Report Abuse"
-          >
-            <Flag className="w-4 h-4 text-rose-400" />
-            <span className="text-[9px] font-bold mt-0.5">Abuse</span>
+            <Settings className="w-4 h-4 text-slate-300" />
+            <span className="text-[9px] font-bold mt-0.5">Device</span>
           </button>
 
           <button
             onClick={() => setShowOnboardingTour(true)}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="Help & Onboarding Tour"
+            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
+            title="Help & Tour"
           >
             <HelpCircle className="w-4 h-4 text-slate-300" />
             <span className="text-[9px] font-bold mt-0.5">Help</span>
