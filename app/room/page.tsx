@@ -4182,18 +4182,6 @@ function RoomPageContent() {
             <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Raise Hand</span>
           </button>
 
-          {/* Record Session Button */}
-          <button
-            onClick={() => setIsRecorderModalOpen(true)}
-            className={`flex flex-col items-center justify-center min-w-[64px] h-[58px] px-3 py-1.5 rounded-2xl transition shadow-md active:scale-95 ${
-              isRecording ? 'bg-rose-600 text-white animate-pulse shadow-rose-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
-            }`}
-            title="Record Session & Export Local File"
-          >
-            <Radio className="w-5 h-5 text-rose-400" />
-            <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Record</span>
-          </button>
-
           {/* ••• More Button */}
           <div className="relative">
             <button
@@ -4210,6 +4198,17 @@ function RoomPageContent() {
             {/* Floating Popover Menu */}
             {showMoreMenu && (
               <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-slate-200 text-xs font-semibold">
+                {/* Record Session Button */}
+                <button
+                  onClick={() => { setIsRecorderModalOpen(true); setShowMoreMenu(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition text-left ${
+                    isRecording ? 'bg-rose-600/30 text-rose-400 font-bold animate-pulse' : 'hover:bg-white/10 text-rose-400 font-semibold'
+                  }`}
+                >
+                  <Radio className="w-4 h-4 text-rose-400" />
+                  <span>{isRecording ? 'Recording in Progress...' : 'Record Session'}</span>
+                </button>
+
                 {/* Admin Command Center (Admin / Host ONLY!) */}
                 {isHostUser && (
                   <button
@@ -4340,19 +4339,7 @@ function RoomPageContent() {
             )}
           </div>
 
-          {/* Admin Command Center Button (Visible ONLY to Host / Admin, before End/Leave Meeting) */}
-          {isHostUser && (
-            <button
-              onClick={() => setShowAdminCenter(true)}
-              className="flex flex-col items-center justify-center min-w-[64px] h-[58px] px-3 py-1.5 rounded-2xl bg-indigo-600/30 border border-indigo-500/50 text-indigo-300 hover:bg-indigo-600 hover:text-white transition shadow-md active:scale-95"
-              title="Open Admin Command Center"
-            >
-              <ShieldAlert className="w-5 h-5 text-indigo-400" />
-              <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Admin</span>
-            </button>
-          )}
-
-          {/* End Meeting Button (Visible ONLY to Host / Admin, permanently ends meeting for all) */}
+          {/* End Button (Visible ONLY to Host / Admin, permanently ends meeting for all) */}
           {isHostUser && (
             <Button
               onClick={() => {
@@ -4360,22 +4347,22 @@ function RoomPageContent() {
                   handleEndMeetingForAll()
                 }
               }}
-              className="h-[58px] px-4 rounded-2xl bg-rose-700 hover:bg-rose-800 text-white font-extrabold text-xs shadow-lg shadow-rose-700/40 flex items-center gap-2 active:scale-95 transition-all"
+              className="h-11 px-3.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white font-extrabold text-xs shadow-md shadow-rose-700/30 flex items-center gap-1.5 active:scale-95 transition-all"
               title="Permanently End Meeting for Everyone"
             >
-              <StopCircle className="w-5 h-5 text-white" />
-              <span className="whitespace-nowrap">End Meeting</span>
+              <StopCircle className="w-4 h-4 text-white" />
+              <span>End</span>
             </Button>
           )}
 
-          {/* Leave Meeting Button */}
+          {/* Leave Button */}
           <Button
             onClick={handleLeaveCall}
-            className="h-[58px] px-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-lg shadow-rose-600/30 flex items-center gap-2 active:scale-95 transition-all"
+            className="h-11 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md shadow-rose-600/30 flex items-center gap-1.5 active:scale-95 transition-all"
             title="Leave Meeting"
           >
-            <PhoneOff className="w-5 h-5 fill-current" />
-            <span className="whitespace-nowrap">Leave Meeting</span>
+            <PhoneOff className="w-4 h-4 fill-current" />
+            <span>Leave</span>
           </Button>
         </div>
 
