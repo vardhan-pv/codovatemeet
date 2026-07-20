@@ -23,7 +23,7 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert,
   X, Maximize2, Minimize2, Subtitles, Expand, Shrink, Sparkles, Code, Paintbrush,
   BarChart2, ShieldCheck, Crown, Flag, Calendar, Heart, Send, Clock,
-  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio, Settings
+  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio, Settings, StopCircle
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const CodeEditor = dynamic(() => import('@/components/room/CodeEditor').then(m => ({ default: m.CodeEditor })), { ssr: false })
@@ -1143,9 +1143,10 @@ function RoomPageContent() {
     isRecordingLocked: false,
   })
 
-  const isHostUser = !!(
-    meetingHostId && user && 
-    (user.id === meetingHostId || (meetingHostEmail && user.email === meetingHostEmail))
+  const isHostUser = Boolean(
+    (meetingHostId && user && (user.id === meetingHostId || user.email === meetingHostEmail)) ||
+    (userRoles[lobbyName] === 'Host' || userRoles[lobbyName] === 'Co-Host') ||
+    (meetingHostName && lobbyName && meetingHostName === lobbyName)
   )
 
   // Refs to give stable access to latest values inside event handler closures
@@ -3770,9 +3771,9 @@ function RoomPageContent() {
           </Button>
 
           <button
-            onClick={() => isHostUser && setShowAdminCenter(true)}
+            onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
             className="w-8 h-8 rounded-full bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs hover:scale-105 transition ml-1"
-            title="User Profile & Host Admin"
+            title="User Profile & Settings"
           >
             {(lobbyName || 'U').charAt(0).toUpperCase()}
           </button>
@@ -4158,84 +4159,84 @@ function RoomPageContent() {
           </button>
         </div>
 
-        {/* Center Group: Primary Call Media Controls */}
-        <div className="flex items-center gap-2 relative">
+        {/* Center Group: Primary Call Controls (Enlarged Buttons with Full Text Visibility) */}
+        <div className="flex items-center gap-2.5 relative flex-wrap justify-center">
           {/* Mic Button */}
           <button
             onClick={handleMuteToggle}
-            className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
+            className={`flex flex-col items-center justify-center min-w-[64px] h-[58px] px-3 py-1.5 rounded-2xl transition shadow-md active:scale-95 ${
               isMuted ? 'bg-rose-600 text-white shadow-rose-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
             }`}
             title={isMuted ? "Unmute Mic" : "Mute Mic"}
           >
-            {isMuted ? <MicOff className="w-4.5 h-4.5" /> : <Mic className="w-4.5 h-4.5 text-emerald-400" />}
-            <span className="text-[9px] font-bold mt-0.5">Mic</span>
+            {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 text-emerald-400" />}
+            <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Mic</span>
           </button>
 
           {/* Camera Button */}
           <button
             onClick={handleVideoToggle}
-            className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
+            className={`flex flex-col items-center justify-center min-w-[64px] h-[58px] px-3 py-1.5 rounded-2xl transition shadow-md active:scale-95 ${
               isVideoOff ? 'bg-rose-600 text-white shadow-rose-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
             }`}
             title={isVideoOff ? "Turn Camera On" : "Turn Camera Off"}
           >
-            {isVideoOff ? <VideoOff className="w-4.5 h-4.5" /> : <Video className="w-4.5 h-4.5 text-blue-400" />}
-            <span className="text-[9px] font-bold mt-0.5">Camera</span>
+            {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5 text-blue-400" />}
+            <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Camera</span>
           </button>
 
           {/* Share Screen Button */}
           <button
             onClick={handleScreenShareToggle}
-            className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
+            className={`flex flex-col items-center justify-center min-w-[76px] h-[58px] px-3 py-1.5 rounded-2xl transition shadow-md active:scale-95 ${
               isScreenSharing ? 'bg-indigo-600 text-white shadow-indigo-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
             }`}
             title={isScreenSharing ? "Stop Sharing" : "Share Screen"}
           >
-            <MonitorUp className="w-4.5 h-4.5 text-indigo-400" />
-            <span className="text-[9px] font-bold mt-0.5">Share Screen</span>
+            <MonitorUp className="w-5 h-5 text-indigo-400" />
+            <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Share Screen</span>
           </button>
 
           {/* Raise Hand Button */}
           <button
             onClick={toggleHandRaise}
-            className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
+            className={`flex flex-col items-center justify-center min-w-[68px] h-[58px] px-3 py-1.5 rounded-2xl transition shadow-md active:scale-95 ${
               isHandRaised ? 'bg-amber-600 text-white shadow-amber-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
             }`}
             title={isHandRaised ? "Lower Hand" : "Raise Hand"}
           >
-            <span className="text-sm">🖐️</span>
-            <span className="text-[9px] font-bold mt-0.5">Raise Hand</span>
+            <span className="text-base leading-none">🖐️</span>
+            <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Raise Hand</span>
           </button>
 
           {/* Record Session Button */}
           <button
             onClick={() => setIsRecorderModalOpen(true)}
-            className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
+            className={`flex flex-col items-center justify-center min-w-[64px] h-[58px] px-3 py-1.5 rounded-2xl transition shadow-md active:scale-95 ${
               isRecording ? 'bg-rose-600 text-white animate-pulse shadow-rose-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
             }`}
             title="Record Session & Export Local File"
           >
-            <Radio className="w-4.5 h-4.5 text-rose-400" />
-            <span className="text-[9px] font-bold mt-0.5">Record</span>
+            <Radio className="w-5 h-5 text-rose-400" />
+            <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Record</span>
           </button>
 
-          {/* ••• More Button (Dropdown Popover Menu) */}
+          {/* ••• More Button */}
           <div className="relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
+              className={`flex flex-col items-center justify-center min-w-[64px] h-[58px] px-3 py-1.5 rounded-2xl transition shadow-md active:scale-95 ${
                 showMoreMenu ? 'bg-indigo-600 text-white shadow-indigo-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
               }`}
               title="More Workspaces & Tools"
             >
               <span className="text-base font-bold leading-none">•••</span>
-              <span className="text-[9px] font-bold mt-0.5">More</span>
+              <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">More</span>
             </button>
 
-            {/* Floating Popover Menu (2nd image instruction: Security/Invite/Waiting Room added here, Code/Whiteboard/UNO removed) */}
+            {/* Floating Popover Menu */}
             {showMoreMenu && (
-              <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-slate-200 text-xs font-semibold">
+              <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-slate-200 text-xs font-semibold">
                 {/* Admin Command Center (Admin / Host ONLY!) */}
                 {isHostUser && (
                   <button
@@ -4326,13 +4327,42 @@ function RoomPageContent() {
             )}
           </div>
 
-          {/* Red Leave Meeting Pill Button */}
+          {/* Admin Command Center Button (Visible ONLY to Host / Admin, before End/Leave Meeting) */}
+          {isHostUser && (
+            <button
+              onClick={() => setShowAdminCenter(true)}
+              className="flex flex-col items-center justify-center min-w-[64px] h-[58px] px-3 py-1.5 rounded-2xl bg-indigo-600/30 border border-indigo-500/50 text-indigo-300 hover:bg-indigo-600 hover:text-white transition shadow-md active:scale-95"
+              title="Open Admin Command Center"
+            >
+              <ShieldAlert className="w-5 h-5 text-indigo-400" />
+              <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Admin</span>
+            </button>
+          )}
+
+          {/* End Meeting Button (Visible ONLY to Host / Admin, permanently ends meeting for all) */}
+          {isHostUser && (
+            <Button
+              onClick={() => {
+                if (confirm("Are you sure you want to permanently END this meeting for all participants?")) {
+                  handleEndMeetingForAll()
+                }
+              }}
+              className="h-[58px] px-4 rounded-2xl bg-rose-700 hover:bg-rose-800 text-white font-extrabold text-xs shadow-lg shadow-rose-700/40 flex items-center gap-2 active:scale-95 transition-all"
+              title="Permanently End Meeting for Everyone"
+            >
+              <StopCircle className="w-5 h-5 text-white" />
+              <span className="whitespace-nowrap">End Meeting</span>
+            </Button>
+          )}
+
+          {/* Leave Meeting Button */}
           <Button
             onClick={handleLeaveCall}
-            className="h-11 px-5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-lg shadow-rose-600/30 flex items-center gap-2 active:scale-95 transition-all ml-1"
+            className="h-[58px] px-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-lg shadow-rose-600/30 flex items-center gap-2 active:scale-95 transition-all"
+            title="Leave Meeting"
           >
-            <PhoneOff className="w-4 h-4 fill-current" />
-            <span>Leave Meeting</span>
+            <PhoneOff className="w-5 h-5 fill-current" />
+            <span className="whitespace-nowrap">Leave Meeting</span>
           </Button>
         </div>
 
