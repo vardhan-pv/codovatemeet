@@ -23,7 +23,7 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert,
   X, Maximize2, Minimize2, Subtitles, Expand, Shrink, Sparkles, Code, Paintbrush,
   BarChart2, ShieldCheck, Crown, Flag, Calendar, Heart, Send, Clock,
-  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2
+  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const CodeEditor = dynamic(() => import('@/components/room/CodeEditor').then(m => ({ default: m.CodeEditor })), { ssr: false })
@@ -34,6 +34,11 @@ import { DeployPanel } from '@/components/room/DeployPanel'
 import { useAdaptiveNetwork } from '@/hooks/useAdaptiveNetwork'
 import { NetworkSignalBadge, NetworkAlertBanner } from '@/components/room/NetworkOptimizationHUD'
 import { NetworkStatsModal } from '@/components/room/NetworkStatsModal'
+import { ScreenAnnotationLayer } from '@/components/room/ScreenAnnotationLayer'
+import { DirectMessageDrawer } from '@/components/room/DirectMessageDrawer'
+import { WaitingRoomScreen, HostAdmissionBanner, WaitingParticipant } from '@/components/room/WaitingRoomOverlay'
+import { ExportEverythingModal } from '@/components/room/ExportEverythingModal'
+import { OnboardingTour } from '@/components/room/OnboardingTour'
 
 interface RoomPageProps {
   params: Promise<{
@@ -1057,6 +1062,14 @@ function RoomPageContent() {
   const [meetingDuration, setMeetingDuration] = useState<number | null>(null)
   const [meetingScheduledAt, setMeetingScheduledAt] = useState<string | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
+
+  // Enterprise Feature States
+  const [isAnnotationActive, setIsAnnotationActive] = useState(false)
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false)
+  const [isInWaitingRoom, setIsInWaitingRoom] = useState(false)
+  const [waitingParticipants, setWaitingParticipants] = useState<WaitingParticipant[]>([])
+  const [showOnboardingTour, setShowOnboardingTour] = useState(false)
+  const [activeChatTab, setActiveChatTab] = useState<'public' | 'dm'>('public')
 
   // Live Data & Admin
   const [metrics, setMetrics] = useState({ codeEdits: 0, chatMsgs: 0, aiRequests: 0 })
@@ -2699,14 +2712,48 @@ function RoomPageContent() {
       case 'chat':
         return (
           <div className="flex flex-col h-full bg-popover/50">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <div className="bg-blue-950/40 border border-blue-900/50 rounded-[20px] p-3 text-xs text-blue-300 flex items-start gap-2 select-none">
-                <span>🛡️</span>
-                <div>
-                  <p className="font-bold">Messages won't be saved</p>
-                  <p className="opacity-80">This chat history is temporary and will be cleared when the session ends.</p>
-                </div>
-              </div>
+            {/* Public Chat vs DM Sub-tabs */}
+            <div className="flex border-b border-border bg-slate-900/60 p-1 gap-1">
+              <button
+                onClick={() => setActiveChatTab('public')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${
+                  activeChatTab === 'public'
+                    ? 'bg-blue-600 text-white shadow'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                }`}
+              >
+                Public Chat
+              </button>
+              <button
+                onClick={() => setActiveChatTab('dm')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${
+                  activeChatTab === 'dm'
+                    ? 'bg-blue-600 text-white shadow'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                }`}
+              >
+                Direct Messages (DMs)
+              </button>
+            </div>
+
+            {activeChatTab === 'dm' ? (
+              <DirectMessageDrawer
+                room={room}
+                participants={participants}
+                currentIdentity={room?.localParticipant?.identity || lobbyName}
+                currentName={lobbyName}
+                isHost={isHostUser}
+              />
+            ) : (
+              <>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  <div className="bg-blue-950/40 border border-blue-900/50 rounded-[20px] p-3 text-xs text-blue-300 flex items-start gap-2 select-none">
+                    <span>🛡️</span>
+                    <div>
+                      <p className="font-bold">Messages won't be saved</p>
+                      <p className="opacity-80">This chat history is temporary and will be cleared when the session ends.</p>
+                    </div>
+                  </div>
               
               <div className="flex items-center justify-between border-b border-border pb-3 gap-2">
                 <span className="text-xs font-semibold text-slate-400">Live Translation</span>
@@ -2774,8 +2821,10 @@ function RoomPageContent() {
                 </form>
               )}
             </div>
-          </div>
-        )
+          </>
+        )}
+      </div>
+    )
       case 'participants':
         return (
           <div className="flex flex-col h-full p-4 space-y-4 bg-popover/50">
@@ -4290,11 +4339,38 @@ function RoomPageContent() {
           >
             <Subtitles className="h-4.5 w-4.5" />
           </Button>
+
+          {/* Screen Annotation Toggle */}
+          <Button
+            size="icon"
+            onClick={() => setIsAnnotationActive(!isAnnotationActive)}
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-105 active:scale-95 ${
+              isAnnotationActive
+                ? 'bg-blue-600 border-transparent text-white shadow-lg shadow-blue-500/20'
+                : 'bg-zinc-900 border border-border text-zinc-300 hover:bg-zinc-800 hover:text-white'
+            }`}
+            title="Screen Annotation & Draw"
+          >
+            <Paintbrush className="h-4.5 w-4.5" />
+          </Button>
+
+          {/* Export Everything Package */}
+          <Button
+            size="icon"
+            onClick={() => setIsExportModalOpen(true)}
+            className="h-10 w-10 sm:h-11 sm:w-11 rounded-full border border-border bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all duration-300 hover:scale-105 active:scale-95"
+            title="Export Everything Package"
+          >
+            <Archive className="h-4.5 w-4.5 text-blue-400" />
+          </Button>
         </div>
 
         {/* Right footer: Desktop utilities & call actions */}
         <div className="hidden md:flex items-center gap-2 flex-shrink-0 order-3">
           <div className="hidden lg:flex gap-1.5">
+            <Button size="icon" onClick={() => setShowOnboardingTour(true)} className="h-8 w-8 rounded bg-zinc-900 border border-border text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 hover:scale-105" title="Help & Tour">
+              <HelpCircle className="h-4 w-4" />
+            </Button>
             <Button size="icon" onClick={() => setIsOnToGoMode(true)} className="h-8 w-8 rounded bg-zinc-900 border border-border text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 hover:scale-105" title="On-the-Go Mode">
               🚶
             </Button>
@@ -4365,6 +4441,53 @@ function RoomPageContent() {
         stats={adaptiveStats}
         config={adaptiveConfig}
         onUpdateConfig={updateAdaptiveConfig}
+      />
+
+      {/* Screen Annotation Layer */}
+      <ScreenAnnotationLayer
+        room={room}
+        isActive={isAnnotationActive}
+        onClose={() => setIsAnnotationActive(false)}
+        isPresenter={true}
+        senderName={lobbyName}
+      />
+
+      {/* Export Everything Package Modal */}
+      <ExportEverythingModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        roomId={roomId}
+        codeContent=""
+        chatMessages={messages}
+        aiNotes=""
+        polls={polls}
+        participants={participants}
+      />
+
+      {/* Host Admission Banner */}
+      {isHostUser && (
+        <HostAdmissionBanner
+          waitingList={waitingParticipants}
+          onAdmit={(id) => setWaitingParticipants((prev) => prev.filter((p) => p.identity !== id))}
+          onReject={(id) => setWaitingParticipants((prev) => prev.filter((p) => p.identity !== id))}
+          onAdmitAll={() => setWaitingParticipants([])}
+        />
+      )}
+
+      {/* Non-host Waiting Room Screen */}
+      {isInWaitingRoom && !isHostUser && (
+        <WaitingRoomScreen
+          meetingTitle={meetingTitle || 'Codovate Meeting'}
+          roomId={roomId}
+          hostName={meetingHostName || 'Host'}
+          onLeave={handleLeaveCall}
+        />
+      )}
+
+      {/* First-Time User Onboarding Walkthrough */}
+      <OnboardingTour
+        isOpen={showOnboardingTour}
+        onComplete={() => setShowOnboardingTour(false)}
       />
 
       {typeof window !== 'undefined' && !window.isSecureContext && (
