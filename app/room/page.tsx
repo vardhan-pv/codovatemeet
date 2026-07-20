@@ -3614,18 +3614,30 @@ function RoomPageContent() {
         }
       `}</style>
 
-      {/* Meeting Room Header */}
-      <header className="px-4 sm:px-6 py-2.5 bg-background/80 backdrop-blur-xl flex items-center justify-between z-40 shrink-0 border-b border-white/5 shadow-sm select-none">
-        <div className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-            <Video className="h-4 w-4 text-indigo-400" strokeWidth={2.5} />
-          </div>
-          <div className="flex flex-col leading-none">
-            <span className="font-black text-xs text-white tracking-tight">Codovate-Meet</span>
-            <span className="font-mono text-[9px] font-bold tracking-widest text-slate-400 mt-0.5">{roomId}</span>
+      {/* Meeting Room Header (Reference Mockup Design) */}
+      <header className="px-4 py-2 bg-slate-950/95 backdrop-blur-xl flex items-center justify-between z-40 shrink-0 border-b border-white/10 shadow-lg select-none">
+        {/* Left: Brand + Room Code + Telemetry */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-md shadow-blue-600/30">
+              <Video className="h-4.5 w-4.5 text-white" strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="font-black text-xs text-white tracking-tight">Codovate-Meet</span>
+              <div className="flex items-center gap-1">
+                <span className="font-mono text-[10px] font-bold text-slate-400">{roomId}</span>
+                <button
+                  onClick={() => navigator.clipboard.writeText(roomId)}
+                  className="text-slate-500 hover:text-slate-300 transition"
+                  title="Copy Room ID"
+                >
+                  <Clipboard className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Network Quality Badge & HUD */}
+          {/* Green Network Telemetry Pill Badge */}
           <NetworkSignalBadge
             stats={adaptiveStats}
             config={adaptiveConfig}
@@ -3633,12 +3645,12 @@ function RoomPageContent() {
             onToggleMode={setAdaptiveMode}
           />
 
-          {/* Live Recording Status Indicator */}
+          {/* Live Recording Pulsating Badge */}
           {isRecording && (
             <button
               onClick={() => setIsRecorderModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 text-xs font-mono font-bold animate-pulse shadow-sm"
-              title="Recording in Progress - Click to manage"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-600/20 text-rose-400 border border-rose-500/40 text-xs font-mono font-bold animate-pulse shadow-sm"
+              title="Recording in Progress"
             >
               <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
               <span>REC {Math.floor(recordingTimeSecs / 60).toString().padStart(2, '0')}:{(recordingTimeSecs % 60).toString().padStart(2, '0')}</span>
@@ -3646,86 +3658,123 @@ function RoomPageContent() {
           )}
         </div>
         
-        {/* Navigation Sidebar selectors */}
-        <div className="flex gap-2">
-          {/* Mobile Select Tool custom dropdown */}
-          <MobileToolSelect 
-            activeSidebar={activeSidebar} 
-            setActiveSidebar={setActiveSidebar} 
-            setIsOnToGoMode={setIsOnToGoMode} 
-            participantsCount={participants.length} 
-            meetingType={meetingType}
-          />
+        {/* Right Header Navigation Pill Buttons */}
+        <div className="hidden lg:flex items-center gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
+            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
+              activeSidebar === 'chat'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-blue-400" /> Chat
+          </Button>
 
-          {/* Desktop selector buttons */}
-          <div className="hidden md:flex gap-1.5 flex-wrap">
-            <Button
-              variant="ghost"
-              onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
-              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
-                activeSidebar === 'chat'
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100'
-              }`}
-            >
-              <MessageSquare className="h-4 w-4 mr-1" /> Chat
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
-              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
-                activeSidebar === 'participants'
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100'
-              }`}
-            >
-              <Users className="h-4 w-4 mr-1" /> {participants.length}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
-              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
-                activeSidebar === 'ai'
-                  ? 'bg-[#8B5CF6] text-white shadow-sm shadow-[#8B5CF6]/20 font-bold'
-                  : 'text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100'
-              }`}
-            >
-              <Sparkles className="h-4 w-4 mr-1 text-purple-300 animate-pulse" /> AI Notes
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
-              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
-                activeSidebar === 'tasks'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100'
-              }`}
-            >
-              <Check className="h-4 w-4 mr-1 text-emerald-400" /> Tasks
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')}
-              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-200 ${
-                activeSidebar === 'timetravel'
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
-              }`}
-            >
-              <Clock className="h-4 w-4 mr-1 text-sky-400" /> Timeline
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setActiveSidebar(activeSidebar === 'focus' ? null : 'focus')}
-              className={`h-8 text-xs font-semibold rounded-lg transition-all duration-200 ${
-                activeSidebar === 'focus'
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
-              }`}
-            >
-              ⏱️ Focus
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
+            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
+              activeSidebar === 'participants'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Participants</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-[10px] font-mono text-slate-300">
+              {participants.length}
+            </span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
+            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
+              activeSidebar === 'ai'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" /> Notes
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
+            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
+              activeSidebar === 'tasks'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <Check className="w-3.5 h-3.5 text-emerald-400" /> Tasks
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setActiveSidebar(activeSidebar === 'polls' ? null : 'polls')}
+            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
+              activeSidebar === 'polls'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <BarChart2 className="w-3.5 h-3.5 text-indigo-400" /> Polls
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
+            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
+              activeWorkspace === 'whiteboard'
+                ? 'bg-amber-600 text-white shadow-md'
+                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <Paintbrush className="w-3.5 h-3.5 text-amber-400" /> Whiteboard
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')}
+            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
+              activeSidebar === 'timetravel'
+                ? 'bg-sky-600 text-white shadow-md'
+                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5 text-sky-400" /> Timeline
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsRecorderModalOpen(true)}
+            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
+              isRecording
+                ? 'bg-rose-600 text-white animate-pulse'
+                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5 text-rose-400" /> Record
+          </Button>
+
+          <button
+            onClick={() => isHostUser && setShowAdminCenter(true)}
+            className="w-8 h-8 rounded-full bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs hover:scale-105 transition ml-1"
+            title="User Profile & Host Admin"
+          >
+            {(lobbyName || 'U').charAt(0).toUpperCase()}
+          </button>
         </div>
       </header>
 
@@ -4188,53 +4237,35 @@ function RoomPageContent() {
         </div>
       </div>
 
-      {/* ── BOTTOM FLOATING ACTION DOCK ── */}
+      {/* ── BOTTOM FLOATING ACTION DOCK (Reference Image Alignment) ── */}
       <footer className="px-4 py-3 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 flex flex-wrap items-center justify-between gap-3 z-40 shrink-0 shadow-2xl select-none">
         
-        {/* Left Security & Info Group */}
+        {/* Left Group (Security & Invite Controls) */}
         <div className="flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
           <button
-            onClick={() => setShowOnboardingTour(true)}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-400 transition"
-            title="Help & Onboarding Tour"
+            onClick={() => isHostUser && setShowAdminCenter(true)}
+            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
+            title="Security Controls"
           >
-            <HelpCircle className="w-4 h-4" />
-            <span className="text-[9px] font-bold mt-0.5">Help</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSidebar('participants')}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-400 transition"
-            title="People & Participants"
-          >
-            <User className="w-4 h-4" />
-            <span className="text-[9px] font-bold mt-0.5">People</span>
+            <ShieldCheck className="w-4 h-4 text-slate-300" />
+            <span className="text-[9px] font-bold mt-0.5">Security</span>
           </button>
 
           <button
             onClick={() => setShowInvitePopup(true)}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-400 transition"
+            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
             title="Invite People"
           >
-            <Share2 className="w-4 h-4" />
+            <Share2 className="w-4 h-4 text-slate-300" />
             <span className="text-[9px] font-bold mt-0.5">Invite</span>
           </button>
 
           <button
             onClick={() => isHostUser && setShowAdminCenter(true)}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-400 transition"
-            title="Security Controls"
-          >
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span className="text-[9px] font-bold mt-0.5">Security</span>
-          </button>
-
-          <button
-            onClick={() => isHostUser && setShowAdminCenter(true)}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-400 transition relative"
+            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition relative"
             title="Waiting Room"
           >
-            <Users className="w-4 h-4 text-amber-400" />
+            <Users className="w-4 h-4 text-slate-300" />
             {waitingParticipants.length > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white font-bold text-[9px] rounded-full flex items-center justify-center animate-pulse">
                 {waitingParticipants.length}
@@ -4244,33 +4275,17 @@ function RoomPageContent() {
           </button>
         </div>
 
-        {/* Center Call Actions Group */}
+        {/* Center Group (Primary Action Controls) */}
         <div className="flex items-center gap-2">
-          <Button
-            onClick={handleLeaveCall}
-            className="h-10 px-4 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 font-bold text-xs hover:bg-slate-700 active:scale-95 transition-all"
-          >
-            Leave
-          </Button>
-
-          {isHostUser && (
-            <Button
-              onClick={() => setShowAdminCenter(true)}
-              className="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/20 gap-1.5 active:scale-95 transition-all"
-            >
-              <ShieldAlert className="h-4 w-4" /> Admin
-            </Button>
-          )}
-
           {/* Mic Button */}
           <button
             onClick={handleMuteToggle}
             className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
-              isMuted ? 'bg-rose-600 text-white' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
+              isMuted ? 'bg-rose-600 text-white shadow-rose-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
             }`}
             title={isMuted ? "Unmute Mic" : "Mute Mic"}
           >
-            {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-emerald-400" />}
+            {isMuted ? <MicOff className="w-4.5 h-4.5" /> : <Mic className="w-4.5 h-4.5 text-emerald-400" />}
             <span className="text-[9px] font-bold mt-0.5">Mic</span>
           </button>
 
@@ -4278,11 +4293,11 @@ function RoomPageContent() {
           <button
             onClick={handleVideoToggle}
             className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
-              isVideoOff ? 'bg-rose-600 text-white' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
+              isVideoOff ? 'bg-rose-600 text-white shadow-rose-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
             }`}
             title={isVideoOff ? "Turn Camera On" : "Turn Camera Off"}
           >
-            {isVideoOff ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4 text-blue-400" />}
+            {isVideoOff ? <VideoOff className="w-4.5 h-4.5" /> : <Video className="w-4.5 h-4.5 text-blue-400" />}
             <span className="text-[9px] font-bold mt-0.5">Camera</span>
           </button>
 
@@ -4290,53 +4305,63 @@ function RoomPageContent() {
           <button
             onClick={handleScreenShareToggle}
             className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
-              isScreenSharing ? 'bg-indigo-600 text-white' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
+              isScreenSharing ? 'bg-indigo-600 text-white shadow-indigo-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
             }`}
             title={isScreenSharing ? "Stop Sharing" : "Share Screen"}
           >
-            <MonitorUp className="w-4 h-4 text-indigo-400" />
+            <MonitorUp className="w-4.5 h-4.5 text-indigo-400" />
             <span className="text-[9px] font-bold mt-0.5">Share Screen</span>
+          </button>
+
+          {/* Raise Hand Button */}
+          <button
+            onClick={toggleHandRaise}
+            className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
+              isHandRaised ? 'bg-amber-600 text-white shadow-amber-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
+            }`}
+            title={isHandRaised ? "Lower Hand" : "Raise Hand"}
+          >
+            <span className="text-sm">🖐️</span>
+            <span className="text-[9px] font-bold mt-0.5">Raise Hand</span>
           </button>
 
           {/* Record Session Button */}
           <button
             onClick={() => setIsRecorderModalOpen(true)}
             className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
-              isRecording ? 'bg-rose-600 text-white animate-pulse' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
+              isRecording ? 'bg-rose-600 text-white animate-pulse shadow-rose-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
             }`}
             title="Record Session & Export Local File"
           >
-            <Radio className="w-4 h-4 text-rose-400" />
+            <Radio className="w-4.5 h-4.5 text-rose-400" />
             <span className="text-[9px] font-bold mt-0.5">Record</span>
           </button>
 
-          {/* AI Notes Button */}
+          {/* More Actions Button */}
           <button
-            onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
-            className={`flex flex-col items-center justify-center w-11 h-11 rounded-2xl transition shadow-md ${
-              activeSidebar === 'ai' ? 'bg-purple-600 text-white' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
-            }`}
-            title="AI Notes & Summary"
+            onClick={() => isHostUser && setShowAdminCenter(true)}
+            className="flex flex-col items-center justify-center w-11 h-11 rounded-2xl bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800 transition shadow-md"
+            title="More Options & Admin Center"
           >
-            <Sparkles className="w-4 h-4 text-purple-300" />
-            <span className="text-[9px] font-bold mt-0.5">AI Notes</span>
+            <span className="text-base font-bold leading-none">•••</span>
+            <span className="text-[9px] font-bold mt-0.5">More</span>
           </button>
 
-          {/* End Call Button */}
+          {/* Red Leave Meeting Pill Button */}
           <Button
-            onClick={handleEndMeetingForAll}
-            className="h-10 px-5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg shadow-rose-600/30 gap-1.5 active:scale-95 transition-all"
+            onClick={handleLeaveCall}
+            className="h-11 px-5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-lg shadow-rose-600/30 flex items-center gap-2 active:scale-95 transition-all ml-1"
           >
-            <PhoneOff className="w-4 h-4" />
-            End
+            <PhoneOff className="w-4 h-4 fill-current" />
+            <span>Leave Meeting</span>
           </Button>
         </div>
 
-        {/* Right Layout & Device Controls */}
+        {/* Right Group (Network & Settings) */}
         <div className="flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
           <button
             onClick={() => setIsStatsModalOpen(true)}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-400 transition"
+            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
             title="Network Status"
           >
             <Activity className="w-4 h-4 text-emerald-400" />
@@ -4345,7 +4370,7 @@ function RoomPageContent() {
 
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-400 transition"
+            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
             title="Device & Audio Effects"
           >
             <Settings className="w-4 h-4 text-slate-300" />
@@ -4353,21 +4378,12 @@ function RoomPageContent() {
           </button>
 
           <button
-            onClick={() => setIsWorkspaceMaximized(!isWorkspaceMaximized)}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-400 transition"
-            title="Layout Mode"
+            onClick={() => isHostUser && setShowAdminCenter(true)}
+            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
+            title="Settings & Admin"
           >
-            <Maximize2 className="w-4 h-4 text-blue-400" />
-            <span className="text-[9px] font-bold mt-0.5">Layout</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSidebar(activeSidebar === 'focus' ? null : 'focus')}
-            className="flex flex-col items-center justify-center px-2.5 py-1 rounded-xl hover:bg-white/5 text-slate-400 transition"
-            title="Focus Mode"
-          >
-            <Timer className="w-4 h-4 text-purple-400" />
-            <span className="text-[9px] font-bold mt-0.5">Focus</span>
+            <Settings className="w-4 h-4 text-slate-300" />
+            <span className="text-[9px] font-bold mt-0.5">Settings</span>
           </button>
         </div>
       </footer>
