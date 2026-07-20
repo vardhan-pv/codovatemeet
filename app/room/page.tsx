@@ -31,6 +31,9 @@ const Whiteboard = dynamic(() => import('@/components/room/Whiteboard').then(m =
 
 import { GitHubPanel } from '@/components/room/GitHubPanel'
 import { DeployPanel } from '@/components/room/DeployPanel'
+import { useAdaptiveNetwork } from '@/hooks/useAdaptiveNetwork'
+import { NetworkSignalBadge, NetworkAlertBanner } from '@/components/room/NetworkOptimizationHUD'
+import { NetworkStatsModal } from '@/components/room/NetworkStatsModal'
 
 interface RoomPageProps {
   params: Promise<{
@@ -1024,6 +1027,18 @@ function RoomPageContent() {
   // Room States
   const [token, setToken] = useState<string | null>(null)
   const [room, setRoom] = useState<Room | null>(null)
+
+  // Adaptive Network Optimization Engine
+  const {
+    stats: adaptiveStats,
+    config: adaptiveConfig,
+    updateConfig: updateAdaptiveConfig,
+    setMode: setAdaptiveMode,
+    isStatsModalOpen,
+    setIsStatsModalOpen,
+    alertBannerMessage,
+    clearAlertBanner
+  } = useAdaptiveNetwork(room)
   const [participants, setParticipants] = useState<any[]>([])
   const [isMuted, setIsMuted] = useState(false)
   const [isVideoOff, setIsVideoOff] = useState(false)
@@ -3533,6 +3548,14 @@ function RoomPageContent() {
             <span className="font-black text-xs text-white tracking-tight">Codovate-Meet</span>
             <span className="font-mono text-[9px] font-bold tracking-widest text-slate-400 mt-0.5">{roomId}</span>
           </div>
+
+          {/* Network Quality Badge & HUD */}
+          <NetworkSignalBadge
+            stats={adaptiveStats}
+            config={adaptiveConfig}
+            onOpenModal={() => setIsStatsModalOpen(true)}
+            onToggleMode={setAdaptiveMode}
+          />
         </div>
         
         {/* Navigation Sidebar selectors */}
@@ -4326,6 +4349,23 @@ function RoomPageContent() {
           setMeetingType={changeMeetingType}
         />
       )}
+
+      {/* Adaptive Network Alert Banner */}
+      <NetworkAlertBanner
+        message={alertBannerMessage}
+        onDismiss={clearAlertBanner}
+        onOpenModal={() => setIsStatsModalOpen(true)}
+        onEnableLowBandwidth={() => setAdaptiveMode('low_bandwidth')}
+      />
+
+      {/* Adaptive Network Diagnostic & Performance Dashboard Modal */}
+      <NetworkStatsModal
+        isOpen={isStatsModalOpen}
+        onClose={() => setIsStatsModalOpen(false)}
+        stats={adaptiveStats}
+        config={adaptiveConfig}
+        onUpdateConfig={updateAdaptiveConfig}
+      />
 
       {typeof window !== 'undefined' && !window.isSecureContext && (
         <div className="absolute top-16 left-6 right-6 bg-amber-500/20 border border-amber-500/40 text-amber-300 p-4 rounded-[20px] text-xs z-35 flex flex-col gap-1.5 select-none shadow-xl">
