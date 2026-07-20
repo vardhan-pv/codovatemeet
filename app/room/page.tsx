@@ -23,7 +23,7 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert,
   X, Maximize2, Minimize2, Subtitles, Expand, Shrink, Sparkles, Code, Paintbrush,
   BarChart2, ShieldCheck, Crown, Flag, Calendar, Heart, Send, Clock,
-  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive
+  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const CodeEditor = dynamic(() => import('@/components/room/CodeEditor').then(m => ({ default: m.CodeEditor })), { ssr: false })
@@ -39,6 +39,8 @@ import { DirectMessageDrawer } from '@/components/room/DirectMessageDrawer'
 import { WaitingRoomScreen, HostAdmissionBanner, WaitingParticipant } from '@/components/room/WaitingRoomOverlay'
 import { ExportEverythingModal } from '@/components/room/ExportEverythingModal'
 import { OnboardingTour } from '@/components/room/OnboardingTour'
+import { useMeetingRecorder } from '@/hooks/useMeetingRecorder'
+import { MeetingRecorderModal } from '@/components/room/MeetingRecorderModal'
 
 interface RoomPageProps {
   params: Promise<{
@@ -1071,6 +1073,21 @@ function RoomPageContent() {
   const [showOnboardingTour, setShowOnboardingTour] = useState(false)
   const [activeChatTab, setActiveChatTab] = useState<'public' | 'dm'>('public')
 
+  // Meeting Recording System Hook
+  const [isRecorderModalOpen, setIsRecorderModalOpen] = useState(false)
+  const {
+    isRecording,
+    isPaused,
+    recordingTimeSecs,
+    recordedBlob,
+    recordedUrl,
+    startRecording,
+    stopRecording,
+    pauseRecording,
+    resumeRecording,
+    downloadRecording
+  } = useMeetingRecorder()
+
   // Live Data & Admin
   const [metrics, setMetrics] = useState({ codeEdits: 0, chatMsgs: 0, aiRequests: 0 })
   const [userRoles, setUserRoles] = useState<Record<string, string>>({})
@@ -1114,6 +1131,7 @@ function RoomPageContent() {
     isScreenShareLocked: false,
     isMicLocked: false,
     isCameraLocked: false,
+    isRecordingLocked: false,
   })
 
   const isHostUser = !!(
@@ -3605,6 +3623,18 @@ function RoomPageContent() {
             onOpenModal={() => setIsStatsModalOpen(true)}
             onToggleMode={setAdaptiveMode}
           />
+
+          {/* Live Recording Status Indicator */}
+          {isRecording && (
+            <button
+              onClick={() => setIsRecorderModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 text-xs font-mono font-bold animate-pulse shadow-sm"
+              title="Recording in Progress - Click to manage"
+            >
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+              <span>REC {Math.floor(recordingTimeSecs / 60).toString().padStart(2, '0')}:{(recordingTimeSecs % 60).toString().padStart(2, '0')}</span>
+            </button>
+          )}
         </div>
         
         {/* Navigation Sidebar selectors */}
@@ -4363,6 +4393,20 @@ function RoomPageContent() {
           >
             <Archive className="h-4.5 w-4.5 text-blue-400" />
           </Button>
+
+          {/* Meeting Record Toggle Button */}
+          <Button
+            size="icon"
+            onClick={() => setIsRecorderModalOpen(true)}
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-300 hover:scale-105 active:scale-95 ${
+              isRecording
+                ? 'bg-rose-600 border-transparent text-white shadow-lg shadow-rose-500/20 animate-pulse'
+                : 'bg-zinc-900 border border-border text-zinc-300 hover:bg-zinc-800 hover:text-white'
+            }`}
+            title="Record Meeting & Local Export"
+          >
+            <Radio className="h-4.5 w-4.5 text-rose-400" />
+          </Button>
         </div>
 
         {/* Right footer: Desktop utilities & call actions */}
@@ -4488,6 +4532,26 @@ function RoomPageContent() {
       <OnboardingTour
         isOpen={showOnboardingTour}
         onComplete={() => setShowOnboardingTour(false)}
+      />
+
+      {/* Meeting Recording & Local Export Modal */}
+      <MeetingRecorderModal
+        isOpen={isRecorderModalOpen}
+        onClose={() => setIsRecorderModalOpen(false)}
+        isRecording={isRecording}
+        isPaused={isPaused}
+        recordingTimeSecs={recordingTimeSecs}
+        recordedBlob={recordedBlob}
+        recordedUrl={recordedUrl}
+        onStartRecording={startRecording}
+        onStopRecording={stopRecording}
+        onPauseRecording={pauseRecording}
+        onResumeRecording={resumeRecording}
+        onDownloadLocal={downloadRecording}
+        isRecordingLocked={adminSettings.isRecordingLocked}
+        isHost={isHostUser}
+        roomId={roomId}
+        transcriptItems={[]}
       />
 
       {typeof window !== 'undefined' && !window.isSecureContext && (

@@ -28,6 +28,7 @@ export interface AdminSettings {
   isScreenShareLocked: boolean
   isMicLocked: boolean
   isCameraLocked: boolean
+  isRecordingLocked: boolean
 }
 
 interface AdminCommandCenterProps {
