@@ -23,7 +23,7 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert,
   X, Maximize2, Minimize2, Subtitles, Expand, Shrink, Sparkles, Code, Paintbrush,
   BarChart2, ShieldCheck, Crown, Flag, Calendar, Heart, Send, Clock,
-  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio, Settings, StopCircle
+  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio, Settings, StopCircle, MoreHorizontal
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const CodeEditor = dynamic(() => import('@/components/room/CodeEditor').then(m => ({ default: m.CodeEditor })), { ssr: false })
@@ -4158,67 +4158,84 @@ function RoomPageContent() {
           </button>
         </div>
 
-        {/* Center Group: Primary Call Controls (Enlarged Buttons with Full Text Visibility) */}
-        <div className="flex items-center gap-2.5 relative flex-wrap justify-center">
+        {/* Center Group: Compact Round Icon Buttons */}
+        <div className="flex items-center gap-2 relative">
           {/* Mic Button */}
           <button
             onClick={handleMuteToggle}
-            className={`flex flex-col items-center justify-center min-w-[64px] h-[58px] px-3 py-1.5 rounded-2xl transition shadow-md active:scale-95 ${
-              isMuted ? 'bg-rose-600 text-white shadow-rose-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
+              isMuted ? 'bg-rose-600 text-white shadow-rose-600/40' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
             }`}
-            title={isMuted ? "Unmute Mic" : "Mute Mic"}
+            title={isMuted ? 'Unmute Mic' : 'Mute Mic'}
           >
             {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 text-emerald-400" />}
-            <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Mic</span>
           </button>
 
           {/* Camera Button */}
           <button
             onClick={handleVideoToggle}
-            className={`flex flex-col items-center justify-center min-w-[64px] h-[58px] px-3 py-1.5 rounded-2xl transition shadow-md active:scale-95 ${
-              isVideoOff ? 'bg-rose-600 text-white shadow-rose-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
+              isVideoOff ? 'bg-rose-600 text-white shadow-rose-600/40' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
             }`}
-            title={isVideoOff ? "Turn Camera On" : "Turn Camera Off"}
+            title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
           >
             {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5 text-blue-400" />}
-            <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Camera</span>
           </button>
 
           {/* Share Screen Button */}
           <button
             onClick={handleScreenShareToggle}
-            className={`flex flex-col items-center justify-center min-w-[76px] h-[58px] px-3 py-1.5 rounded-2xl transition shadow-md active:scale-95 ${
-              isScreenSharing ? 'bg-indigo-600 text-white shadow-indigo-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
+              isScreenSharing ? 'bg-indigo-600 text-white shadow-indigo-600/40' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
             }`}
-            title={isScreenSharing ? "Stop Sharing" : "Share Screen"}
+            title={isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
           >
             <MonitorUp className="w-5 h-5 text-indigo-400" />
-            <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Share Screen</span>
           </button>
 
           {/* Raise Hand Button */}
           <button
             onClick={toggleHandRaise}
-            className={`flex flex-col items-center justify-center min-w-[68px] h-[58px] px-3 py-1.5 rounded-2xl transition shadow-md active:scale-95 ${
-              isHandRaised ? 'bg-amber-600 text-white shadow-amber-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
+              isHandRaised ? 'bg-amber-500 text-white shadow-amber-500/40' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
             }`}
-            title={isHandRaised ? "Lower Hand" : "Raise Hand"}
+            title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
           >
-            <span className="text-base leading-none">🖐️</span>
-            <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">Raise Hand</span>
+            <span className="text-lg leading-none">🖐️</span>
+          </button>
+
+          {/* Reaction Button */}
+          <button
+            onClick={() => setShowReactionTray(!showReactionTray)}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
+              showReactionTray ? 'bg-pink-600 text-white' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
+            }`}
+            title="Send Reaction"
+          >
+            <Heart className="w-5 h-5 text-pink-400" />
+          </button>
+
+          {/* Chat Button */}
+          <button
+            onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
+              activeSidebar === 'chat' ? 'bg-blue-600 text-white shadow-blue-600/40' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
+            }`}
+            title="Chat"
+          >
+            <MessageSquare className="w-5 h-5 text-blue-400" />
           </button>
 
           {/* ••• More Button */}
           <div className="relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`flex flex-col items-center justify-center min-w-[64px] h-[58px] px-3 py-1.5 rounded-2xl transition shadow-md active:scale-95 ${
-                showMoreMenu ? 'bg-indigo-600 text-white shadow-indigo-600/30' : 'bg-slate-900 border border-white/10 text-slate-200 hover:bg-slate-800'
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
+                showMoreMenu ? 'bg-indigo-600 text-white shadow-indigo-600/40' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
               }`}
-              title="More Workspaces & Tools"
+              title="More Tools"
             >
-              <span className="text-base font-bold leading-none">•••</span>
-              <span className="text-[10px] font-extrabold mt-1 text-center whitespace-nowrap">More</span>
+              <MoreHorizontal className="w-5 h-5" />
             </button>
 
             {/* Floating Popover Menu */}
@@ -4324,19 +4341,60 @@ function RoomPageContent() {
               </div>
             )}
           </div>
+        </div>
 
-          {/* End Button (Visible ONLY to Host / Admin, permanently ends meeting for all) */}
+        {/* Right Section: Quick icon actions + End/Leave */}
+        <div className="flex items-center gap-2">
+          {/* Participants */}
+          <button
+            onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
+              activeSidebar === 'participants' ? 'bg-indigo-600 text-white' : 'bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700'
+            }`}
+            title="Participants"
+          >
+            <Users className="w-4 h-4 text-indigo-400" />
+          </button>
+
+          {/* Network Stats */}
+          <button
+            onClick={() => setIsStatsModalOpen(true)}
+            className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition"
+            title="Network Status"
+          >
+            <Activity className="w-4 h-4 text-emerald-400" />
+          </button>
+
+          {/* Device Settings */}
+          <button
+            onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
+            className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition"
+            title="Device & Effects"
+          >
+            <Settings className="w-4 h-4 text-slate-300" />
+          </button>
+
+          {/* Export */}
+          <button
+            onClick={() => setIsExportModalOpen(true)}
+            className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition"
+            title="Export Package"
+          >
+            <Archive className="w-4 h-4 text-sky-400" />
+          </button>
+
+          {/* End Button (Host ONLY) */}
           {isHostUser && (
             <Button
               onClick={() => {
-                if (confirm("Are you sure you want to permanently END this meeting for all participants?")) {
+                if (confirm('Are you sure you want to permanently END this meeting for all participants?')) {
                   handleEndMeetingForAll()
                 }
               }}
-              className="h-11 px-3.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white font-extrabold text-xs shadow-md shadow-rose-700/30 flex items-center gap-1.5 active:scale-95 transition-all"
+              className="h-10 px-4 rounded-full bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs shadow-md flex items-center gap-1.5 active:scale-95 transition-all"
               title="Permanently End Meeting for Everyone"
             >
-              <StopCircle className="w-4 h-4 text-white" />
+              <StopCircle className="w-4 h-4" />
               <span>End</span>
             </Button>
           )}
@@ -4344,42 +4402,12 @@ function RoomPageContent() {
           {/* Leave Button */}
           <Button
             onClick={handleLeaveCall}
-            className="h-11 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md shadow-rose-600/30 flex items-center gap-1.5 active:scale-95 transition-all"
+            className="h-10 px-4 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5 active:scale-95 transition-all"
             title="Leave Meeting"
           >
             <PhoneOff className="w-4 h-4 fill-current" />
             <span>Leave</span>
           </Button>
-        </div>
-
-        {/* Right Card: Telemetry & Device Controls */}
-        <div className="flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
-          <button
-            onClick={() => setIsStatsModalOpen(true)}
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="Network Status"
-          >
-            <Activity className="w-4 h-4 text-emerald-400" />
-            <span className="text-[9px] font-bold mt-0.5">Network</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="Device & Audio Effects"
-          >
-            <Settings className="w-4 h-4 text-slate-300" />
-            <span className="text-[9px] font-bold mt-0.5">Device</span>
-          </button>
-
-          <button
-            onClick={() => setShowOnboardingTour(true)}
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl hover:bg-white/5 text-slate-300 transition"
-            title="Help & Tour"
-          >
-            <HelpCircle className="w-4 h-4 text-slate-300" />
-            <span className="text-[9px] font-bold mt-0.5">Help</span>
-          </button>
         </div>
       </footer>
 
