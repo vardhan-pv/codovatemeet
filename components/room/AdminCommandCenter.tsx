@@ -43,11 +43,13 @@ interface AdminCommandCenterProps {
   user: any
   metrics?: { codeEdits: number, chatMsgs: number, aiRequests: number }
   userRoles?: Record<string, string>
+  userRecordingPermissions?: Record<string, boolean>
   meetingType: string
   setMeetingType: (type: string) => void
   adaptiveStats?: NetworkStats
   adaptiveConfig?: NetworkOptimizationConfig
   onUpdateAdaptiveConfig?: (config: Partial<NetworkOptimizationConfig>) => void
+  onToggleUserRecordingPermission?: (userId: string) => void
 }
 
 export function AdminCommandCenter({ 
@@ -60,11 +62,13 @@ export function AdminCommandCenter({
   user,
   metrics,
   userRoles = {},
+  userRecordingPermissions = {},
   meetingType,
   setMeetingType,
   adaptiveStats,
   adaptiveConfig,
-  onUpdateAdaptiveConfig
+  onUpdateAdaptiveConfig,
+  onToggleUserRecordingPermission
 }: AdminCommandCenterProps) {
   const [activeTab, setActiveTab] = useState('meeting')
 
@@ -117,6 +121,14 @@ export function AdminCommandCenter({
   const handleToggleRole = (targetId: string, currentRole: string) => {
     const nextRole = currentRole === 'cohost' ? 'participant' : 'cohost'
     broadcastAdminCommand('SET_ROLE', targetId, nextRole)
+  }
+
+  const handleToggleRecordingPerm = (targetId: string) => {
+    if (onToggleUserRecordingPermission) {
+      onToggleUserRecordingPermission(targetId)
+    }
+    const currentVal = !!userRecordingPermissions[targetId]
+    broadcastAdminCommand('GRANT_RECORDING_PERMISSION', targetId, !currentVal)
   }
 
   return (
@@ -207,10 +219,15 @@ export function AdminCommandCenter({
                     />
                   </div>
 
-                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
+                  <div className="bg-secondary/40 border border-rose-500/30 bg-rose-950/20 rounded-xl p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-white text-sm sm:text-base">Allow Meeting Recording</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Control session recording access</p>
+                      <h4 className="font-bold text-white text-sm sm:text-base flex items-center gap-1.5">
+                        <Radio className="w-4 h-4 text-rose-400" />
+                        Allow Participants to Record
+                      </h4>
+                      <p className="text-xs text-slate-300 mt-1">
+                        Permit users to record meeting session to their machine
+                      </p>
                     </div>
                     <Switch 
                       checked={!adminSettings.isRecordingLocked}
@@ -370,6 +387,7 @@ export function AdminCommandCenter({
                     const id = p.identity || p.sid
                     const isCoHost = userRoles[id] === 'cohost'
                     const isHost = id === meetingHostId
+                    const canRecord = !adminSettings.isRecordingLocked || !!userRecordingPermissions[id]
 
                     return (
                       <div key={id} className="bg-secondary/30 border border-white/5 rounded-xl p-3 flex items-center justify-between gap-3">
@@ -382,6 +400,7 @@ export function AdminCommandCenter({
                               <span>{(p.identity || 'User').split('_')[0]}</span>
                               {isHost && <span className="bg-amber-500/20 text-amber-400 text-[9px] px-1.5 py-0.5 rounded font-mono">HOST</span>}
                               {isCoHost && <span className="bg-indigo-500/20 text-indigo-400 text-[9px] px-1.5 py-0.5 rounded font-mono">CO-HOST</span>}
+                              {canRecord && !isHost && <span className="bg-rose-500/20 text-rose-400 text-[9px] px-1.5 py-0.5 rounded font-mono">REC ALLOWED</span>}
                             </p>
                             <p className="text-[10px] text-muted-foreground font-mono truncate">{id}</p>
                           </div>
@@ -389,6 +408,22 @@ export function AdminCommandCenter({
 
                         {!isHost && (
                           <div className="flex items-center gap-1 shrink-0">
+                            {/* Grant/Revoke Recording Permission */}
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => handleToggleRecordingPerm(id)} 
+                              title={canRecord ? "Revoke Recording Permission" : "Grant Recording Permission"} 
+                              className={`h-8 px-2 text-[10px] font-bold gap-1 ${
+                                canRecord 
+                                  ? 'text-rose-400 hover:bg-rose-500/10' 
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              <Radio className="h-3 w-3" />
+                              {canRecord ? 'Revoke Rec' : 'Grant Rec'}
+                            </Button>
+
                             <Button size="sm" variant="ghost" onClick={() => handleMuteUser(id)} title="Mute Participant" className="h-8 w-8 p-0 text-slate-400 hover:text-white">
                               <MicOff className="h-3.5 w-3.5" />
                             </Button>

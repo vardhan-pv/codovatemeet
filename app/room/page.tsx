@@ -1092,6 +1092,14 @@ function RoomPageContent() {
   // Live Data & Admin
   const [metrics, setMetrics] = useState({ codeEdits: 0, chatMsgs: 0, aiRequests: 0 })
   const [userRoles, setUserRoles] = useState<Record<string, string>>({})
+  const [userRecordingPermissions, setUserRecordingPermissions] = useState<Record<string, boolean>>({})
+
+  const handleToggleUserRecordingPermission = (userId: string) => {
+    setUserRecordingPermissions((prev) => ({
+      ...prev,
+      [userId]: !prev[userId]
+    }))
+  }
 
   // Captions state
   const [showCaptions, setShowCaptions] = useState(false)
@@ -4471,6 +4479,8 @@ function RoomPageContent() {
           adaptiveStats={adaptiveStats}
           adaptiveConfig={adaptiveConfig}
           onUpdateAdaptiveConfig={updateAdaptiveConfig}
+          userRecordingPermissions={userRecordingPermissions}
+          onToggleUserRecordingPermission={handleToggleUserRecordingPermission}
         />
       )}
 
@@ -4553,7 +4563,7 @@ function RoomPageContent() {
         onResumeRecording={resumeRecording}
         onDownloadLocal={downloadRecording}
         onResetRecorder={resetRecorder}
-        isRecordingLocked={adminSettings.isRecordingLocked}
+        isRecordingLocked={adminSettings.isRecordingLocked && !(user && userRecordingPermissions[user.id])}
         isHost={isHostUser}
         roomId={roomId}
         transcriptItems={[]}
