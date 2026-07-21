@@ -1222,6 +1222,7 @@ function RoomPageContent() {
 
   const canRecord = Boolean(
     isHostUser ||
+    !adminSettings.isRecordingLocked ||
     hasGrantedRecordingPermission ||
     (user && userRecordingPermissions[user.id]) ||
     (user && userRecordingPermissions[user.email]) ||
@@ -1861,6 +1862,12 @@ function RoomPageContent() {
           } else if (parsed.command === 'TOGGLE_ROOM_LOCK') {
             setAdminSettings(prev => ({ ...prev, isRoomLocked: parsed.value }))
             displayCaption('System', parsed.value ? 'Meeting is now Locked' : 'Meeting is now Open')
+          } else if (parsed.command === 'TOGGLE_RECORDING_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isRecordingLocked: parsed.value }))
+            displayCaption('System', parsed.value ? 'Recording option restricted by host' : '🎙️ Host enabled recording for all participants!')
+          } else if (parsed.command === 'TOGGLE_WAITING_ROOM') {
+            setAdminSettings(prev => ({ ...prev, waitingRoom: parsed.value }))
+            displayCaption('System', parsed.value ? 'Waiting room is now active' : 'Waiting room is now disabled')
           } else if (parsed.command === 'TOGGLE_CODE_LOCK') {
             setAdminSettings(prev => ({ ...prev, isCodeLocked: parsed.value }))
           } else if (parsed.command === 'TOGGLE_WHITEBOARD_LOCK') {
