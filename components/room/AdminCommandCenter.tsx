@@ -32,6 +32,10 @@ export interface AdminSettings {
   isCameraLocked: boolean
   isRecordingLocked: boolean
   waitingRoom: boolean
+  isDmDisabled?: boolean
+  isGamesDisabled?: boolean
+  isParticipantListHidden?: boolean
+  isParticipantInfoRestricted?: boolean
 }
 
 interface AdminCommandCenterProps {
@@ -153,6 +157,10 @@ export function AdminCommandCenter({
     }
     const currentVal = !!userRecordingPermissions[targetId]
     broadcastAdminCommand('GRANT_RECORDING_PERMISSION', targetId, !currentVal)
+  }
+
+  const handleSendToWaitingRoom = (targetId: string) => {
+    broadcastAdminCommand('SEND_TO_WAITING_ROOM', targetId)
   }
 
   return (
@@ -470,6 +478,9 @@ export function AdminCommandCenter({
                             <Button size="sm" variant="ghost" onClick={() => handleTurnOffCameraUser(id)} title="Turn Off Camera" className="h-8 w-8 p-0 text-slate-400 hover:text-white">
                               <VideoOff className="h-3.5 w-3.5" />
                             </Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleSendToWaitingRoom(id)} title="Send back to Waiting Room" className="h-8 px-2 text-[10px] text-amber-400 hover:bg-amber-500/10">
+                              Lobby
+                            </Button>
                             <Button size="sm" variant="ghost" onClick={() => handleToggleRole(id, userRoles[id] || 'participant')} title={isCoHost ? "Demote from Co-Host" : "Make Co-Host"} className="h-8 px-2 text-[10px] text-indigo-400 hover:bg-indigo-500/10">
                               {isCoHost ? 'Demote' : '+ CoHost'}
                             </Button>
@@ -524,11 +535,33 @@ export function AdminCommandCenter({
                   <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
                     <div>
                       <h4 className="font-bold text-white text-sm sm:text-base">Disable Chat</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Prevent users from sending messages</p>
+                      <p className="text-xs text-muted-foreground mt-1">Prevent users from sending public chat messages</p>
                     </div>
                     <Switch 
                       checked={adminSettings.isChatDisabled}
                       onCheckedChange={() => toggleSetting('isChatDisabled', 'TOGGLE_CHAT_LOCK')}
+                    />
+                  </div>
+
+                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Disable Direct Messages (DMs)</h4>
+                      <p className="text-xs text-muted-foreground mt-1">Prevent private 1-on-1 messaging</p>
+                    </div>
+                    <Switch 
+                      checked={adminSettings.isDmDisabled || false}
+                      onCheckedChange={() => toggleSetting('isDmDisabled' as any, 'TOGGLE_DM_LOCK')}
+                    />
+                  </div>
+
+                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Disable Games & Activities</h4>
+                      <p className="text-xs text-muted-foreground mt-1">Lock active games like UNO during meeting</p>
+                    </div>
+                    <Switch 
+                      checked={adminSettings.isGamesDisabled || false}
+                      onCheckedChange={() => toggleSetting('isGamesDisabled' as any, 'TOGGLE_GAMES_LOCK')}
                     />
                   </div>
                   
@@ -551,6 +584,28 @@ export function AdminCommandCenter({
                     <Switch 
                       checked={adminSettings.isScreenShareLocked}
                       onCheckedChange={() => toggleSetting('isScreenShareLocked', 'TOGGLE_SCREENSHARE_LOCK')}
+                    />
+                  </div>
+
+                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Hide Participant List</h4>
+                      <p className="text-xs text-muted-foreground mt-1">Hide participant panel from non-hosts</p>
+                    </div>
+                    <Switch 
+                      checked={adminSettings.isParticipantListHidden || false}
+                      onCheckedChange={() => toggleSetting('isParticipantListHidden' as any, 'TOGGLE_HIDE_PARTICIPANTS')}
+                    />
+                  </div>
+
+                  <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-white text-sm sm:text-base">Restrict Participant Info</h4>
+                      <p className="text-xs text-muted-foreground mt-1">Hide email & metadata for participant privacy</p>
+                    </div>
+                    <Switch 
+                      checked={adminSettings.isParticipantInfoRestricted || false}
+                      onCheckedChange={() => toggleSetting('isParticipantInfoRestricted' as any, 'TOGGLE_RESTRICT_INFO')}
                     />
                   </div>
                 </div>

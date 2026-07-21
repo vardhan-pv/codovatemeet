@@ -16,12 +16,14 @@ import {
   Download,
   Crosshair,
   X,
-  Palette,
-  Maximize2
+  StickyNote,
+  Minus,
+  Plus,
+  GripVertical
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-export type AnnotationTool = 'pen' | 'highlighter' | 'laser' | 'rectangle' | 'circle' | 'arrow' | 'text' | 'eraser'
+export type AnnotationTool = 'pen' | 'highlighter' | 'laser' | 'rectangle' | 'circle' | 'arrow' | 'text' | 'eraser' | 'sticky'
 
 interface Point {
   x: number
@@ -37,12 +39,34 @@ interface Stroke {
   text?: string
 }
 
+interface StickyNoteData {
+  id: string
+  x: number
+  y: number
+  text: string
+  color: string
+  width: number
+  height: number
+}
+
 interface ScreenAnnotationLayerProps {
   room: Room | null
   isActive: boolean
   onClose: () => void
   isPresenter: boolean
   senderName: string
+}
+
+const TOOL_LABELS: Record<AnnotationTool, string> = {
+  pen: 'Pencil',
+  highlighter: 'Highlighter',
+  laser: 'Laser Pointer',
+  rectangle: 'Rectangle',
+  circle: 'Circle',
+  arrow: 'Arrow',
+  text: 'Text',
+  eraser: 'Eraser',
+  sticky: 'Sticky Note'
 }
 
 export function ScreenAnnotationLayer({
@@ -59,9 +83,13 @@ export function ScreenAnnotationLayer({
   const [strokes, setStrokes] = useState<Stroke[]>([])
   const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null)
   const [laserPoint, setLaserPoint] = useState<Point | null>(null)
+  const [stickyNotes, setStickyNotes] = useState<StickyNoteData[]>([])
+  const [editingStickyId, setEditingStickyId] = useState<string | null>(null)
+  const [showStrokeWidth, setShowStrokeWidth] = useState(false)
   const isDrawingRef = useRef<boolean>(false)
 
   const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#ffffff', '#000000']
+  const stickyColors = ['#fef08a', '#bbf7d0', '#bfdbfe', '#fecaca', '#e9d5ff', '#fed7aa']
 
   // Redraw all strokes on canvas
   const redraw = useCallback(() => {
@@ -179,9 +207,19 @@ export function ScreenAnnotationLayer({
           setStrokes((prev) => [...prev, decoded.stroke])
         } else if (decoded.type === 'ANNOTATION_CLEAR') {
           setStrokes([])
+          setStickyNotes([])
         } else if (decoded.type === 'ANNOTATION_LASER') {
           setLaserPoint(decoded.point)
           setTimeout(() => setLaserPoint(null), 1000)
+        } else if (decoded.type === 'ANNOTATION_STICKY') {
+          setStickyNotes(prev => {
+            if (prev.find(n => n.id === decoded.note.id)) return prev
+            return [...prev, decoded.note]
+          })
+        } else if (decoded.type === 'ANNOTATION_STICKY_UPDATE') {
+          setStickyNotes(prev => prev.map(n => n.id === decoded.note.id ? decoded.note : n))
+        } else if (decoded.type === 'ANNOTATION_STICKY_DELETE') {
+          setStickyNotes(prev => prev.filter(n => n.id !== decoded.noteId))
         }
       } catch (e) {}
     }
@@ -191,11 +229,21 @@ export function ScreenAnnotationLayer({
     }
   }, [room])
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getEventPoint = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas) return { x: 0, y: 0 }
     const rect = canvas.getBoundingClientRect()
-    const pt = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+
+    if ('touches' in e) {
+      const touch = e.touches[0] || e.changedTouches[0]
+      return { x: touch.clientX - rect.left, y: touch.clientY - rect.top }
+    }
+
+    return { x: (e as React.MouseEvent).clientX - rect.left, y: (e as React.MouseEvent).clientY - rect.top }
+  }
+
+  const handlePointerDown = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const pt = getEventPoint(e)
 
     if (activeTool === 'laser') {
       setLaserPoint(pt)
@@ -220,6 +268,24 @@ export function ScreenAnnotationLayer({
       return
     }
 
+    if (activeTool === 'sticky') {
+      const noteText = prompt('Enter sticky note text:')
+      if (noteText) {
+        const note: StickyNoteData = {
+          id: Math.random().toString(),
+          x: pt.x,
+          y: pt.y,
+          text: noteText,
+          color: stickyColors[Math.floor(Math.random() * stickyColors.length)],
+          width: 160,
+          height: 100
+        }
+        setStickyNotes(prev => [...prev, note])
+        broadcastStroke('ANNOTATION_STICKY', { note })
+      }
+      return
+    }
+
     isDrawingRef.current = true
     const newStroke: Stroke = {
       id: Math.random().toString(),
@@ -231,13 +297,12 @@ export function ScreenAnnotationLayer({
     setCurrentStroke(newStroke)
   }
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
-    const pt = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+  const handlePointerMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const pt = getEventPoint(e)
 
-    if (activeTool === 'laser' && e.buttons === 1) {
+    const isButtonPressed = 'touches' in e ? true : (e as React.MouseEvent).buttons === 1
+
+    if (activeTool === 'laser' && isButtonPressed) {
       setLaserPoint(pt)
       broadcastStroke('ANNOTATION_LASER', { point: pt })
       return
@@ -253,7 +318,7 @@ export function ScreenAnnotationLayer({
     }
   }
 
-  const handleMouseUp = () => {
+  const handlePointerUp = () => {
     if (!isDrawingRef.current || !currentStroke) return
     isDrawingRef.current = false
     setStrokes((prev) => [...prev, currentStroke])
@@ -263,6 +328,7 @@ export function ScreenAnnotationLayer({
 
   const handleClear = () => {
     setStrokes([])
+    setStickyNotes([])
     broadcastStroke('ANNOTATION_CLEAR', {})
   }
 
@@ -280,17 +346,47 @@ export function ScreenAnnotationLayer({
     link.click()
   }
 
+  const handleDeleteSticky = (noteId: string) => {
+    setStickyNotes(prev => prev.filter(n => n.id !== noteId))
+    broadcastStroke('ANNOTATION_STICKY_DELETE', { noteId })
+  }
+
+  const handleUpdateSticky = (noteId: string, text: string) => {
+    setStickyNotes(prev => prev.map(n => {
+      if (n.id !== noteId) return n
+      const updated = { ...n, text }
+      broadcastStroke('ANNOTATION_STICKY_UPDATE', { note: updated })
+      return updated
+    }))
+    setEditingStickyId(null)
+  }
+
   if (!isActive) return null
+
+  const toolButtons: { tool: AnnotationTool; icon: any; activeColor: string }[] = [
+    { tool: 'pen', icon: Pencil, activeColor: 'bg-blue-600' },
+    { tool: 'highlighter', icon: Highlighter, activeColor: 'bg-amber-600' },
+    { tool: 'laser', icon: Crosshair, activeColor: 'bg-rose-600' },
+    { tool: 'rectangle', icon: Square, activeColor: 'bg-blue-600' },
+    { tool: 'circle', icon: Circle, activeColor: 'bg-blue-600' },
+    { tool: 'arrow', icon: ArrowRight, activeColor: 'bg-blue-600' },
+    { tool: 'text', icon: Type, activeColor: 'bg-blue-600' },
+    { tool: 'sticky', icon: StickyNote, activeColor: 'bg-yellow-600' },
+    { tool: 'eraser', icon: Eraser, activeColor: 'bg-red-600' }
+  ]
 
   return (
     <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
       {/* Interactive Drawing Canvas */}
       <canvas
         ref={canvasRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        className="w-full h-full pointer-events-auto cursor-crosshair"
+        onMouseDown={handlePointerDown}
+        onMouseMove={handlePointerMove}
+        onMouseUp={handlePointerUp}
+        onTouchStart={handlePointerDown}
+        onTouchMove={handlePointerMove}
+        onTouchEnd={handlePointerUp}
+        className="w-full h-full pointer-events-auto cursor-crosshair touch-none"
       />
 
       {/* Animated Laser Point Overlay */}
@@ -301,6 +397,55 @@ export function ScreenAnnotationLayer({
         />
       )}
 
+      {/* Sticky Notes */}
+      {stickyNotes.map(note => (
+        <div
+          key={note.id}
+          className="absolute pointer-events-auto shadow-xl rounded-lg overflow-hidden group"
+          style={{
+            left: note.x,
+            top: note.y,
+            width: note.width,
+            minHeight: note.height
+          }}
+        >
+          <div
+            className="w-full h-full p-2 text-xs text-slate-900 font-medium leading-relaxed relative"
+            style={{ backgroundColor: note.color }}
+          >
+            {/* Delete button */}
+            <button
+              onClick={() => handleDeleteSticky(note.id)}
+              className="absolute top-1 right-1 w-4 h-4 rounded-full bg-black/20 text-black/60 hover:bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+            >
+              <X className="w-2.5 h-2.5" />
+            </button>
+
+            {editingStickyId === note.id ? (
+              <textarea
+                autoFocus
+                defaultValue={note.text}
+                onBlur={(e) => handleUpdateSticky(note.id, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleUpdateSticky(note.id, (e.target as HTMLTextAreaElement).value)
+                  }
+                }}
+                className="w-full h-full bg-transparent resize-none outline-none text-xs"
+              />
+            ) : (
+              <div
+                className="cursor-pointer min-h-[60px]"
+                onClick={() => setEditingStickyId(note.id)}
+              >
+                {note.text}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+
       {/* Floating Toolbar */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -310,85 +455,71 @@ export function ScreenAnnotationLayer({
       >
         {/* Tools */}
         <div className="flex items-center gap-1 border-r border-white/10 pr-2">
+          {toolButtons.map(({ tool, icon: Icon, activeColor }) => (
+            <div key={tool} className="relative group">
+              <Button
+                size="icon"
+                variant={activeTool === tool ? 'default' : 'ghost'}
+                onClick={() => setActiveTool(tool)}
+                className={`h-8 w-8 rounded-lg ${activeTool === tool ? `${activeColor} text-white` : 'text-slate-300'}`}
+              >
+                <Icon className="w-4 h-4" />
+              </Button>
+              {/* Tool label tooltip */}
+              <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[9px] font-semibold bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-10">
+                {TOOL_LABELS[tool]}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Stroke Width Selector */}
+        <div className="flex items-center gap-1 border-r border-white/10 pr-2 relative">
           <Button
             size="icon"
-            variant={activeTool === 'pen' ? 'default' : 'ghost'}
-            onClick={() => setActiveTool('pen')}
-            className={`h-8 w-8 rounded-lg ${activeTool === 'pen' ? 'bg-blue-600 text-white' : 'text-slate-300'}`}
-            title="Pencil / Draw"
+            variant="ghost"
+            onClick={() => setShowStrokeWidth(!showStrokeWidth)}
+            className="h-8 w-8 rounded-lg text-slate-300 hover:text-white"
+            title="Stroke Width"
           >
-            <Pencil className="w-4 h-4" />
+            <GripVertical className="w-4 h-4" />
           </Button>
 
-          <Button
-            size="icon"
-            variant={activeTool === 'highlighter' ? 'default' : 'ghost'}
-            onClick={() => setActiveTool('highlighter')}
-            className={`h-8 w-8 rounded-lg ${activeTool === 'highlighter' ? 'bg-amber-600 text-white' : 'text-slate-300'}`}
-            title="Highlighter"
-          >
-            <Highlighter className="w-4 h-4" />
-          </Button>
-
-          <Button
-            size="icon"
-            variant={activeTool === 'laser' ? 'default' : 'ghost'}
-            onClick={() => setActiveTool('laser')}
-            className={`h-8 w-8 rounded-lg ${activeTool === 'laser' ? 'bg-rose-600 text-white' : 'text-slate-300'}`}
-            title="Laser Pointer"
-          >
-            <Crosshair className="w-4 h-4" />
-          </Button>
-
-          <Button
-            size="icon"
-            variant={activeTool === 'rectangle' ? 'default' : 'ghost'}
-            onClick={() => setActiveTool('rectangle')}
-            className={`h-8 w-8 rounded-lg ${activeTool === 'rectangle' ? 'bg-blue-600 text-white' : 'text-slate-300'}`}
-            title="Rectangle"
-          >
-            <Square className="w-4 h-4" />
-          </Button>
-
-          <Button
-            size="icon"
-            variant={activeTool === 'circle' ? 'default' : 'ghost'}
-            onClick={() => setActiveTool('circle')}
-            className={`h-8 w-8 rounded-lg ${activeTool === 'circle' ? 'bg-blue-600 text-white' : 'text-slate-300'}`}
-            title="Circle"
-          >
-            <Circle className="w-4 h-4" />
-          </Button>
-
-          <Button
-            size="icon"
-            variant={activeTool === 'arrow' ? 'default' : 'ghost'}
-            onClick={() => setActiveTool('arrow')}
-            className={`h-8 w-8 rounded-lg ${activeTool === 'arrow' ? 'bg-blue-600 text-white' : 'text-slate-300'}`}
-            title="Arrow"
-          >
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-
-          <Button
-            size="icon"
-            variant={activeTool === 'text' ? 'default' : 'ghost'}
-            onClick={() => setActiveTool('text')}
-            className={`h-8 w-8 rounded-lg ${activeTool === 'text' ? 'bg-blue-600 text-white' : 'text-slate-300'}`}
-            title="Text"
-          >
-            <Type className="w-4 h-4" />
-          </Button>
-
-          <Button
-            size="icon"
-            variant={activeTool === 'eraser' ? 'default' : 'ghost'}
-            onClick={() => setActiveTool('eraser')}
-            className={`h-8 w-8 rounded-lg ${activeTool === 'eraser' ? 'bg-red-600 text-white' : 'text-slate-300'}`}
-            title="Eraser"
-          >
-            <Eraser className="w-4 h-4" />
-          </Button>
+          {showStrokeWidth && (
+            <div className="absolute top-full mt-2 left-0 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-xl p-3 shadow-2xl flex items-center gap-2 z-20">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setStrokeWidth(Math.max(1, strokeWidth - 1))}
+                className="h-6 w-6 text-slate-400"
+              >
+                <Minus className="w-3 h-3" />
+              </Button>
+              <div className="flex items-center gap-1.5">
+                {[1, 2, 4, 6, 8, 12].map(w => (
+                  <button
+                    key={w}
+                    onClick={() => setStrokeWidth(w)}
+                    className={`rounded-full transition ${strokeWidth === w ? 'ring-2 ring-blue-400' : 'hover:ring-1 hover:ring-white/30'}`}
+                    style={{
+                      width: Math.max(8, w * 2),
+                      height: Math.max(8, w * 2),
+                      backgroundColor: color
+                    }}
+                  />
+                ))}
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setStrokeWidth(Math.min(20, strokeWidth + 1))}
+                className="h-6 w-6 text-slate-400"
+              >
+                <Plus className="w-3 h-3" />
+              </Button>
+              <span className="text-[10px] font-mono text-slate-400 ml-1">{strokeWidth}px</span>
+            </div>
+          )}
         </div>
 
         {/* Colors */}
@@ -407,45 +538,53 @@ export function ScreenAnnotationLayer({
 
         {/* Actions */}
         <div className="flex items-center gap-1">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={handleUndo}
-            className="h-8 w-8 text-slate-300 hover:text-white"
-            title="Undo"
-          >
-            <Undo className="w-4 h-4" />
-          </Button>
+          <div className="relative group">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleUndo}
+              className="h-8 w-8 text-slate-300 hover:text-white"
+            >
+              <Undo className="w-4 h-4" />
+            </Button>
+            <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[9px] font-semibold bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">Undo</span>
+          </div>
 
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={handleClear}
-            className="h-8 w-8 text-slate-300 hover:text-red-400"
-            title="Clear Canvas"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          <div className="relative group">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleClear}
+              className="h-8 w-8 text-slate-300 hover:text-red-400"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+            <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[9px] font-semibold bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">Clear All</span>
+          </div>
 
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={handleDownload}
-            className="h-8 w-8 text-slate-300 hover:text-white"
-            title="Download Screenshot"
-          >
-            <Download className="w-4 h-4" />
-          </Button>
+          <div className="relative group">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleDownload}
+              className="h-8 w-8 text-slate-300 hover:text-white"
+            >
+              <Download className="w-4 h-4" />
+            </Button>
+            <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[9px] font-semibold bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">Save</span>
+          </div>
 
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={onClose}
-            className="h-8 w-8 text-slate-400 hover:text-white"
-            title="Close Annotation Mode"
-          >
-            <X className="w-4 h-4" />
-          </Button>
+          <div className="relative group">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onClose}
+              className="h-8 w-8 text-slate-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+            <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[9px] font-semibold bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">Close</span>
+          </div>
         </div>
       </motion.div>
     </div>

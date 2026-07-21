@@ -20,10 +20,12 @@ export interface NetworkStats {
   uplinkKbps: number
   jitter: number // ms
   score: number // 0-100
+  signalBars: number // 1 to 5
   level: NetworkQualityLevel
   recommendedResolution: '1080p' | '720p' | '480p' | '360p' | '180p' | 'audio_only'
   recommendedFps: number
   isAudioOnly: boolean
+  simulcastDisabled: boolean
   connectionState: 'connected' | 'reconnecting' | 'disconnected' | 'signal_weak'
   history: NetworkStatsHistoryPoint[]
 }
@@ -46,10 +48,12 @@ export class NetworkAdaptiveEngine {
     uplinkKbps: 1800,
     jitter: 4,
     score: 95,
+    signalBars: 5,
     level: 'EXCELLENT',
     recommendedResolution: '720p',
     recommendedFps: 24,
     isAudioOnly: false,
+    simulcastDisabled: false,
     connectionState: 'connected',
     history: []
   }
@@ -65,6 +69,8 @@ export class NetworkAdaptiveEngine {
   }
 
   private historyLimit = 20
+  private criticalDurationMs = 0
+  private lastUpdateTime = Date.now()
 
   public calculateQualityLevel(rtt: number, loss: number, kbps: number): NetworkQualityLevel {
     if (loss > 15 || rtt > 600 || kbps < 150) {
@@ -81,41 +87,46 @@ export class NetworkAdaptiveEngine {
 
   public calculateScore(rtt: number, loss: number, jitter: number): number {
     let score = 100
-    // RTT deduction
     if (rtt > 500) score -= 40
     else if (rtt > 250) score -= 25
     else if (rtt > 120) score -= 12
     else if (rtt > 60) score -= 5
 
-    // Packet loss deduction
     if (loss > 15) score -= 45
     else if (loss > 8) score -= 30
     else if (loss > 3) score -= 18
     else if (loss > 1) score -= 8
 
-    // Jitter deduction
     if (jitter > 50) score -= 15
     else if (jitter > 20) score -= 8
 
     return Math.max(5, Math.min(100, Math.round(score)))
   }
 
+  public calculateSignalBars(score: number): number {
+    if (score >= 85) return 5
+    if (score >= 70) return 4
+    if (score >= 50) return 3
+    if (score >= 30) return 2
+    return 1
+  }
+
   public getRecommendation(level: NetworkQualityLevel, mode: AdaptiveMode) {
     if (mode === 'audio_only' || level === 'CRITICAL') {
-      return { resolution: 'audio_only' as const, fps: 0, isAudioOnly: true }
+      return { resolution: 'audio_only' as const, fps: 0, isAudioOnly: true, simulcastDisabled: true }
     }
     if (mode === 'low_bandwidth' || level === 'POOR') {
-      return { resolution: '180p' as const, fps: 15, isAudioOnly: false }
+      return { resolution: '180p' as const, fps: 15, isAudioOnly: false, simulcastDisabled: true }
     }
 
     switch (level) {
       case 'FAIR':
-        return { resolution: '360p' as const, fps: 18, isAudioOnly: false }
+        return { resolution: '360p' as const, fps: 18, isAudioOnly: false, simulcastDisabled: false }
       case 'GOOD':
-        return { resolution: '480p' as const, fps: 24, isAudioOnly: false }
+        return { resolution: '480p' as const, fps: 24, isAudioOnly: false, simulcastDisabled: false }
       case 'EXCELLENT':
       default:
-        return { resolution: '720p' as const, fps: 24, isAudioOnly: false }
+        return { resolution: '720p' as const, fps: 24, isAudioOnly: false, simulcastDisabled: false }
     }
   }
 
@@ -127,18 +138,40 @@ export class NetworkAdaptiveEngine {
     jitter?: number
     connectionState?: NetworkStats['connectionState']
   }): NetworkStats {
+    const now = Date.now()
+    const delta = now - this.lastUpdateTime
+    this.lastUpdateTime = now
+
+    // Exponential moving average for bitrate smoothing (alpha = 0.3)
+    const rawDown = params.downlinkKbps ?? this.stats.downlinkKbps
+    const rawUp = params.uplinkKbps ?? this.stats.uplinkKbps
+    const downKbps = Math.round(0.3 * rawDown + 0.7 * this.stats.downlinkKbps)
+    const upKbps = Math.round(0.3 * rawUp + 0.7 * this.stats.uplinkKbps)
+
     const rtt = params.rtt ?? this.stats.rtt
     const loss = params.packetLoss ?? this.stats.packetLoss
-    const downKbps = params.downlinkKbps ?? this.stats.downlinkKbps
-    const upKbps = params.uplinkKbps ?? this.stats.uplinkKbps
     const jitter = params.jitter ?? this.stats.jitter
     const state = params.connectionState ?? this.stats.connectionState
 
     const level = this.calculateQualityLevel(rtt, loss, downKbps)
     const score = this.calculateScore(rtt, loss, jitter)
-    const recommendation = this.getRecommendation(level, this.config.mode)
+    const signalBars = this.calculateSignalBars(score)
 
-    const now = Date.now()
+    // Track critical duration for auto audio-only threshold (>10 seconds critical)
+    if (level === 'CRITICAL' || level === 'POOR') {
+      this.criticalDurationMs += delta
+    } else {
+      this.criticalDurationMs = Math.max(0, this.criticalDurationMs - delta * 2)
+    }
+
+    // Auto adapt mode if autoAdapt is enabled and network is poor for >10s
+    let currentMode = this.config.mode
+    if (this.config.autoAdapt && this.criticalDurationMs > 10000 && currentMode === 'auto') {
+      currentMode = 'low_bandwidth'
+    }
+
+    const recommendation = this.getRecommendation(level, currentMode)
+
     const newHistoryPoint: NetworkStatsHistoryPoint = {
       timestamp: now,
       rtt,
@@ -155,10 +188,12 @@ export class NetworkAdaptiveEngine {
       uplinkKbps: upKbps,
       jitter,
       score,
+      signalBars,
       level,
       recommendedResolution: recommendation.resolution,
       recommendedFps: recommendation.fps,
       isAudioOnly: recommendation.isAudioOnly,
+      simulcastDisabled: recommendation.simulcastDisabled,
       connectionState: state,
       history: updatedHistory
     }
@@ -172,6 +207,7 @@ export class NetworkAdaptiveEngine {
     this.stats.recommendedResolution = recommendation.resolution
     this.stats.recommendedFps = recommendation.fps
     this.stats.isAudioOnly = recommendation.isAudioOnly
+    this.stats.simulcastDisabled = recommendation.simulcastDisabled
   }
 
   public getConfig(): NetworkOptimizationConfig {

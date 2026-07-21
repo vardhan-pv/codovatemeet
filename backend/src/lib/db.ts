@@ -128,6 +128,21 @@ async function initDB() {
         );
       `)
 
+      // Create Meeting Summaries table
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS meeting_summaries (
+          id VARCHAR(255) PRIMARY KEY,
+          meeting_id VARCHAR(255) REFERENCES meetings(id) ON DELETE CASCADE,
+          summary_text TEXT,
+          key_points JSONB DEFAULT '[]',
+          action_items JSONB DEFAULT '[]',
+          decisions JSONB DEFAULT '[]',
+          follow_ups JSONB DEFAULT '[]',
+          provider VARCHAR(100) DEFAULT 'AI',
+          generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `)
+
       console.log('PostgreSQL database tables checked/initialized successfully.')
       isInitialized = true
     } finally {

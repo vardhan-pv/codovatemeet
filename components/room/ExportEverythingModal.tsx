@@ -134,7 +134,7 @@ export function ExportEverythingModal({
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative w-full max-w-2xl bg-slate-950 border border-slate-800 rounded-3xl shadow-2xl text-slate-100 overflow-hidden"
+          className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-slate-950 border border-slate-800 rounded-3xl shadow-2xl text-slate-100 overflow-hidden"
         >
           {/* Modal Header */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-slate-900/80">

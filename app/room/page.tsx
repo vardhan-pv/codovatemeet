@@ -23,7 +23,7 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert,
   X, Maximize2, Minimize2, Subtitles, Expand, Shrink, Sparkles, Code, Paintbrush,
   BarChart2, ShieldCheck, Crown, Flag, Calendar, Heart, Send, Clock,
-  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio, Settings, StopCircle, MoreHorizontal
+  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio, Settings, StopCircle, MoreHorizontal, Brain
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const CodeEditor = dynamic(() => import('@/components/room/CodeEditor').then(m => ({ default: m.CodeEditor })), { ssr: false })
@@ -41,6 +41,10 @@ import { ExportEverythingModal } from '@/components/room/ExportEverythingModal'
 import { OnboardingTour } from '@/components/room/OnboardingTour'
 import { useMeetingRecorder } from '@/hooks/useMeetingRecorder'
 import { MeetingRecorderModal } from '@/components/room/MeetingRecorderModal'
+import { Tooltip } from '@/components/ui/tooltip'
+import { useMeetingSummary } from '@/hooks/useMeetingSummary'
+import { MeetingSummaryPanel } from '@/components/room/MeetingSummaryPanel'
+import { Footprints, AlertTriangle } from 'lucide-react'
 
 interface RoomPageProps {
   params: Promise<{
@@ -1171,6 +1175,27 @@ function RoomPageContent() {
   const [isWorkspaceMaximized, setIsWorkspaceMaximized] = useState(false)
   const [meetingType, setMeetingType] = useState('technical')
 
+  // AI Meeting Summary System
+  const [isSummaryPanelOpen, setIsSummaryPanelOpen] = useState(false)
+  const {
+    summary: aiSummary,
+    isGenerating: isGeneratingSummary,
+    isSendingEmail: isSendingSummaryEmail,
+    emailSent: isSummaryEmailSent,
+    error: summaryError,
+    generateSummary,
+    sendSummaryEmail,
+    saveSummary,
+    addChatMessage: accumulateChatMessage,
+    addTranscriptItem: accumulateTranscriptItem,
+    updateCodeSnapshot: accumulateCodeSnapshot
+  } = useMeetingSummary({
+    backendUrl: process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000',
+    roomId,
+    meetingTitle: meetingTitle || 'Codovate Meeting',
+    token: typeof window !== 'undefined' ? localStorage.getItem('token') : null
+  })
+
   // Admin Command Center State
   const [showAdminCenter, setShowAdminCenter] = useState(false)
   const [adminSettings, setAdminSettings] = useState<AdminSettings>({
@@ -1184,6 +1209,10 @@ function RoomPageContent() {
     isCameraLocked: false,
     isRecordingLocked: false,
     waitingRoom: false,
+    isDmDisabled: false,
+    isGamesDisabled: false,
+    isParticipantListHidden: false,
+    isParticipantInfoRestricted: false,
   })
 
   const isHostUser = Boolean(
@@ -1830,6 +1859,20 @@ function RoomPageContent() {
             setAdminSettings(prev => ({ ...prev, isWhiteboardLocked: parsed.value }))
           } else if (parsed.command === 'TOGGLE_CHAT_LOCK') {
             setAdminSettings(prev => ({ ...prev, isChatDisabled: parsed.value }))
+          } else if (parsed.command === 'TOGGLE_DM_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isDmDisabled: parsed.value }))
+          } else if (parsed.command === 'TOGGLE_GAMES_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isGamesDisabled: parsed.value }))
+          } else if (parsed.command === 'TOGGLE_HIDE_PARTICIPANTS') {
+            setAdminSettings(prev => ({ ...prev, isParticipantListHidden: parsed.value }))
+          } else if (parsed.command === 'TOGGLE_RESTRICT_INFO') {
+            setAdminSettings(prev => ({ ...prev, isParticipantInfoRestricted: parsed.value }))
+          } else if (parsed.command === 'SEND_TO_WAITING_ROOM') {
+            const myIdentity = room.localParticipant.identity
+            if ((parsed.targetId === myIdentity || parsed.targetId === 'ALL') && !_isHost) {
+              setIsInWaitingRoom(true)
+              displayCaption('System', 'The host moved you to the waiting room.')
+            }
           } else if (parsed.command === 'TOGGLE_AI_LOCK') {
             setAdminSettings(prev => ({ ...prev, isAiDisabled: parsed.value }))
           } else if (parsed.command === 'TOGGLE_SCREENSHARE_LOCK') {
@@ -1899,10 +1942,12 @@ function RoomPageContent() {
         }
         if (parsed.type === 'CAPTION') {
           displayCaption(sender, parsed.text)
+          accumulateTranscriptItem({ sender, text: parsed.text, startTimeSecs: Date.now() / 1000 })
           return
         }
         if (parsed.type === 'CHAT_MESSAGE') {
           setMessages(prev => [...prev, { sender, text: parsed.text, time: new Date() }])
+          accumulateChatMessage({ sender, text: parsed.text })
           setMetrics(prev => ({ ...prev, chatMsgs: prev.chatMsgs + 1 }))
           // Show chat toast if chat panel is not open
           if (activeSidebar !== 'chat') {
@@ -2887,6 +2932,7 @@ function RoomPageContent() {
                 participants={participants}
                 currentIdentity={room?.localParticipant?.identity || lobbyName}
                 currentName={lobbyName}
+                isDirectMessagingDisabled={adminSettings.isDmDisabled}
                 isHost={isHostUser}
               />
             ) : (
@@ -3922,6 +3968,17 @@ function RoomPageContent() {
             )}
           </div>
         </div>
+
+        {/* Mobile Tool Selector */}
+        <div className="flex lg:hidden items-center gap-2">
+          <MobileToolSelect
+            activeSidebar={activeSidebar}
+            setActiveSidebar={setActiveSidebar}
+            setIsOnToGoMode={setIsOnToGoMode}
+            participantsCount={participants.length}
+            meetingType={meetingType}
+          />
+        </div>
       </header>
 
       {/* Main Content Area */}
@@ -4197,20 +4254,27 @@ function RoomPageContent() {
 
         {/* Unified Tabbed Sidebar Panel */}
         {activeSidebar && (
-          <aside className="absolute md:static right-0 top-0 bottom-0 z-20 h-full w-full md:w-80 bg-secondary border-l border-border flex flex-col shrink-0 shadow-2xl animate-in slide-in-from-right-8 duration-200 animate-out">
-            <div className="p-3.5 border-b border-border flex justify-between items-center bg-popover/80 backdrop-blur-md">
-              <h2 className="font-extrabold text-sm text-slate-200 select-none capitalize">
-                {activeSidebar === 'chat' ? 'In-Call Messages' :
-                 activeSidebar === 'participants' ? 'Meeting Participants' :
-                 activeSidebar === 'ai' ? 'Codovate Assistant' :
-                 activeSidebar === 'timetravel' ? 'AI Time Travel' :
-                 activeSidebar === 'focus' ? 'Co-working & Pomodoro' :
-                 activeSidebar === 'interview' ? 'Technical Interview' : activeSidebar}
-              </h2>
-              <Button variant="ghost" size="icon" onClick={() => setActiveSidebar(null)} className="h-7 w-7 text-slate-400 hover:text-white hover:bg-slate-800">
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+          <>
+            {/* Mobile backdrop overlay */}
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] md:hidden"
+              onClick={() => setActiveSidebar(null)}
+            />
+            <aside className="fixed md:static inset-x-0 bottom-0 top-14 md:top-0 z-[80] md:z-20 h-[calc(100vh-3.5rem)] md:h-full w-full md:w-80 bg-slate-950 md:bg-secondary border-t md:border-t-0 md:border-l border-white/10 flex flex-col shrink-0 shadow-2xl animate-in slide-in-from-bottom-8 md:slide-in-from-right-8 duration-200 rounded-t-3xl md:rounded-none">
+              <div className="md:hidden w-12 h-1.5 bg-slate-800 rounded-full mx-auto mt-2.5 mb-1" />
+              <div className="p-3.5 border-b border-border flex justify-between items-center bg-popover/80 backdrop-blur-md">
+                <h2 className="font-extrabold text-sm text-slate-200 select-none capitalize">
+                  {activeSidebar === 'chat' ? 'In-Call Messages' :
+                   activeSidebar === 'participants' ? 'Meeting Participants' :
+                   activeSidebar === 'ai' ? 'Codovate Assistant' :
+                   activeSidebar === 'timetravel' ? 'AI Time Travel' :
+                   activeSidebar === 'focus' ? 'Co-working & Pomodoro' :
+                   activeSidebar === 'interview' ? 'Technical Interview' : activeSidebar}
+                </h2>
+                <Button variant="ghost" size="icon" onClick={() => setActiveSidebar(null)} className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             
             {/* Quick switcher inside sidebar */}
             {(() => {
@@ -4246,7 +4310,8 @@ function RoomPageContent() {
               {renderSidebarContent()}
             </div>
           </aside>
-        )}
+        </>
+      )}
       </div>
 
       {/* Floating Emojis Reaction Tray above Controls Dock */}
@@ -4265,10 +4330,10 @@ function RoomPageContent() {
       )}
 
       {/* ── ONE SINGLE FLOATING ACTION DOCK (Replaced according to user images - Zero Duplicates) ── */}
-      <footer className="px-4 py-3 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 flex flex-wrap items-center justify-between gap-3 z-40 shrink-0 shadow-2xl select-none relative">
+      <footer className="px-2 sm:px-4 py-3 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 flex items-center justify-between gap-2 z-40 shrink-0 shadow-2xl select-none relative overflow-x-auto custom-scrollbar">
         
-        {/* Left Card: Replaced with Code, Whiteboard, UNO Game (1st image instruction) */}
-        <div className="flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
+        {/* Left Card: Code, Whiteboard, UNO Game (Desktop Only) */}
+        <div className="hidden md:flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
           <button
             onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
             className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
@@ -4464,8 +4529,16 @@ function RoomPageContent() {
                   onClick={() => { setIsOnToGoMode(true); setShowMoreMenu(false); }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-slate-200 transition text-left"
                 >
-                  <span className="text-sm">🚶</span>
+                  <Footprints className="w-4 h-4 text-emerald-400" />
                   <span>On-The-Go Low Data Mode</span>
+                </button>
+
+                <button
+                  onClick={() => { setIsSummaryPanelOpen(true); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-indigo-400 font-bold transition text-left"
+                >
+                  <Brain className="w-4 h-4 text-indigo-400" />
+                  <span>AI Meeting Summary & Notes</span>
                 </button>
 
                 <button
@@ -4729,6 +4802,23 @@ function RoomPageContent() {
         isHost={isHostUser}
         roomId={roomId}
         transcriptItems={[]}
+      />
+
+      {/* AI Meeting Summary Panel */}
+      <MeetingSummaryPanel
+        isOpen={isSummaryPanelOpen}
+        onClose={() => setIsSummaryPanelOpen(false)}
+        summary={aiSummary}
+        isGenerating={isGeneratingSummary}
+        isSendingEmail={isSendingSummaryEmail}
+        emailSent={isSummaryEmailSent}
+        error={summaryError}
+        onGenerate={generateSummary}
+        onSendEmail={sendSummaryEmail}
+        onSave={saveSummary}
+        participantEmails={participants.map(p => p.identity).filter(Boolean)}
+        roomId={roomId}
+        meetingTitle={meetingTitle || 'Codovate Meeting'}
       />
 
       {typeof window !== 'undefined' && !window.isSecureContext && (

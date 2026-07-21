@@ -32,14 +32,11 @@ export function NetworkSignalBadge({ stats, config, onOpenModal, onToggleMode }:
   }
 
   const getSignalBars = () => {
-    let filled = 4
-    if (stats.level === 'GOOD') filled = 3
-    else if (stats.level === 'FAIR') filled = 2
-    else if (stats.level === 'POOR' || stats.level === 'CRITICAL') filled = 1
+    const filled = stats.signalBars || 5
 
     return (
       <div className="flex items-end space-x-0.5 h-3">
-        {[1, 2, 3, 4].map((bar) => {
+        {[1, 2, 3, 4, 5].map((bar) => {
           const isFilled = bar <= filled
           return (
             <div
@@ -55,7 +52,7 @@ export function NetworkSignalBadge({ stats, config, onOpenModal, onToggleMode }:
                     : 'bg-rose-400'
                   : 'bg-slate-700/60'
               }`}
-              style={{ height: `${bar * 25}%` }}
+              style={{ height: `${bar * 20}%` }}
             />
           )
         })}

@@ -240,4 +240,80 @@ router.post('/end', authenticateToken, async (req: AuthRequest, res: Response) =
   }
 })
 
+// 4. POST /meetings/save-summary - Save AI-generated meeting summary
+router.post('/save-summary', async (req: Request, res: Response) => {
+  try {
+    const { meetingCode, summary, keyPoints = [], actionItems = [], decisions = [], followUps = [], provider = 'AI' } = req.body
+
+    if (!meetingCode) {
+      return res.status(400).json({ error: 'Missing meetingCode' })
+    }
+
+    const meetingRes = await query('SELECT id FROM meetings WHERE meeting_code = $1', [meetingCode.toUpperCase()])
+    if (meetingRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Meeting not found' })
+    }
+    const meetingId = meetingRes.rows[0].id
+
+    const summaryId = crypto.randomUUID()
+    await query(
+      `INSERT INTO meeting_summaries (id, meeting_id, summary_text, key_points, action_items, decisions, follow_ups, provider)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        summaryId,
+        meetingId,
+        summary || '',
+        JSON.stringify(keyPoints),
+        JSON.stringify(actionItems),
+        JSON.stringify(decisions),
+        JSON.stringify(followUps),
+        provider
+      ]
+    )
+
+    return res.status(201).json({ success: true, summaryId })
+  } catch (error: any) {
+    console.error('Save summary error:', error)
+    return res.status(500).json({ error: error.message || 'Failed to save summary' })
+  }
+})
+
+// 5. GET /meetings/:code/summary - Get meeting summary by meeting code
+router.get('/:code/summary', async (req: Request, res: Response) => {
+  try {
+    const code = req.params.code?.toUpperCase()
+    if (!code) {
+      return res.status(400).json({ error: 'Missing meeting code' })
+    }
+
+    const result = await query(
+      `SELECT ms.* FROM meeting_summaries ms
+       JOIN meetings m ON ms.meeting_id = m.id
+       WHERE m.meeting_code = $1
+       ORDER BY ms.generated_at DESC
+       LIMIT 1`,
+      [code]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No summary found for this meeting' })
+    }
+
+    const row = result.rows[0]
+    return res.status(200).json({
+      summary: row.summary_text,
+      keyPoints: row.key_points,
+      actionItems: row.action_items,
+      decisions: row.decisions,
+      followUps: row.follow_ups,
+      provider: row.provider,
+      generatedAt: row.generated_at
+    })
+  } catch (error: any) {
+    console.error('Get summary error:', error)
+    return res.status(500).json({ error: error.message || 'Failed to retrieve summary' })
+  }
+})
+
 export default router
+
