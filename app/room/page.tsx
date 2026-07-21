@@ -4341,7 +4341,7 @@ function RoomPageContent() {
       )}
 
       {/* ── ONE SINGLE FLOATING ACTION DOCK (Replaced according to user images - Zero Duplicates) ── */}
-      <footer className="px-2 sm:px-4 py-3 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 flex items-center justify-between gap-2 z-[100] shrink-0 shadow-2xl select-none relative overflow-x-auto custom-scrollbar">
+      <footer className="px-2 sm:px-4 py-3 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 flex items-center justify-between gap-2 z-[100] shrink-0 shadow-2xl select-none relative">
         
         {/* Left Card: Code, Whiteboard, UNO Game (Desktop Only) */}
         <div className="hidden md:flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
@@ -4448,7 +4448,7 @@ function RoomPageContent() {
           </button>
 
           {/* ••• More Button */}
-          <div className="relative z-[200]">
+          <div className="relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
@@ -4461,7 +4461,7 @@ function RoomPageContent() {
 
             {/* Floating Popover Menu */}
             {showMoreMenu && (
-              <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-[250] animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-slate-200 text-xs font-semibold">
+              <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-64 max-h-[70vh] overflow-y-auto bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-[300] animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-slate-200 text-xs font-semibold custom-scrollbar">
                 {/* Record Session Button — respects admin recording permission */}
                 {canRecord ? (
                   <button
