@@ -2040,6 +2040,113 @@ function RoomPageContent() {
           setInterviewPurpose(parsed.purpose)
           return
         }
+        if (parsed.type === 'ADMIN_COMMAND') {
+          const payload = parsed.payload || parsed
+          const command = payload.command
+          const targetId = payload.targetId
+          const value = payload.value
+          const localId = room?.localParticipant?.sid || room?.localParticipant?.identity
+
+          // 1. Lock Room
+          if (command === 'TOGGLE_ROOM_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isRoomLocked: !!value }))
+            displayCaption('System', value ? '🔒 Meeting room has been locked by the host' : '🔓 Meeting room has been unlocked')
+          }
+
+          // 2. Lock Mics / Mute All
+          if (command === 'TOGGLE_MIC_LOCK' || command === 'FORCE_MUTE_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isMicLocked: value ?? true }))
+            if (!isHostUser) {
+              if (room?.localParticipant?.isMicrophoneEnabled) {
+                room.localParticipant.setMicrophoneEnabled(false)
+                setIsMuted(true)
+              }
+              displayCaption('System', '🎙️ Host has muted and locked all microphones')
+            }
+          }
+
+          // 3. Lock Cameras / Force Camera Off All
+          if (command === 'TOGGLE_CAMERA_LOCK' || command === 'FORCE_CAMERA_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isCameraLocked: value ?? true }))
+            if (!isHostUser) {
+              if (room?.localParticipant?.isCameraEnabled) {
+                room.localParticipant.setCameraEnabled(false)
+                setIsVideoOff(true)
+              }
+              displayCaption('System', '📹 Host has turned off and locked all video cameras')
+            }
+          }
+
+          // 4. Lock Chat
+          if (command === 'TOGGLE_CHAT_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isChatDisabled: !!value }))
+            displayCaption('System', value ? '💬 Public chat locked by host' : '💬 Public chat unlocked')
+          }
+
+          // 5. Lock DMs
+          if (command === 'TOGGLE_DM_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isDmDisabled: !!value }))
+            displayCaption('System', value ? '🔒 Direct Messaging locked by host' : '🔓 Direct Messaging unlocked')
+          }
+
+          // 6. Lock Games
+          if (command === 'TOGGLE_GAMES_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isGamesDisabled: !!value }))
+            displayCaption('System', value ? '🃏 Games locked by host' : '🃏 Games unlocked')
+          }
+
+          // 7. Lock Code
+          if (command === 'TOGGLE_CODE_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isCodeLocked: !!value }))
+            displayCaption('System', value ? '🔒 Code editor locked by host' : '🔓 Code editor unlocked')
+          }
+
+          // 8. Lock Whiteboard
+          if (command === 'TOGGLE_WHITEBOARD_LOCK') {
+            setAdminSettings(prev => ({ ...prev, isWhiteboardLocked: !!value }))
+            displayCaption('System', value ? '🎨 Whiteboard locked by host' : '🎨 Whiteboard unlocked')
+          }
+
+          // 9. Mute Single User
+          if (command === 'MUTE_USER') {
+            if (targetId === 'ALL' || targetId === localId || targetId === lobbyName) {
+              if (room?.localParticipant?.isMicrophoneEnabled) {
+                room.localParticipant.setMicrophoneEnabled(false)
+                setIsMuted(true)
+              }
+              displayCaption('System', '🎙️ Host muted your microphone')
+            }
+          }
+
+          // 10. Camera Off Single User
+          if (command === 'CAMERA_OFF_USER') {
+            if (targetId === 'ALL' || targetId === localId || targetId === lobbyName) {
+              if (room?.localParticipant?.isCameraEnabled) {
+                room.localParticipant.setCameraEnabled(false)
+                setIsVideoOff(true)
+              }
+              displayCaption('System', '📹 Host turned off your camera')
+            }
+          }
+
+          // 11. Kick User
+          if (command === 'KICK_USER') {
+            if (targetId === localId || targetId === lobbyName) {
+              alert('⚠️ You have been removed from the meeting by the host.')
+              handleLeaveCall()
+            }
+          }
+
+          // 12. Send to Waiting Room
+          if (command === 'SEND_TO_WAITING_ROOM') {
+            if (targetId === localId || targetId === lobbyName) {
+              setIsInWaitingRoom(true)
+              displayCaption('System', '⏳ Host placed you in the waiting room')
+            }
+          }
+
+          return
+        }
         if (parsed.type === 'NEW_TASK') {
           setTasks(prev => {
             if (prev.some(t => t.id === parsed.task.id)) return prev
@@ -4023,14 +4130,28 @@ function RoomPageContent() {
           </div>
         </div>
 
-        {/* Mobile Tool Selector */}
+        {/* Mobile Tool Selector & Host Admin Button */}
         <div className="flex lg:hidden items-center gap-2">
+          {/* Mobile Host Dedicated Admin Button */}
+          {isHostUser && (
+            <button
+              onClick={() => setShowAdminCenter(true)}
+              className="h-8 px-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition hover:bg-amber-500/30 cursor-pointer"
+              title="Admin Command Center"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+              <span>Admin</span>
+            </button>
+          )}
+
           <MobileToolSelect
             activeSidebar={activeSidebar}
             setActiveSidebar={setActiveSidebar}
             setIsOnToGoMode={setIsOnToGoMode}
             participantsCount={participants.length}
             meetingType={meetingType}
+            isHostUser={isHostUser}
+            setShowAdminCenter={setShowAdminCenter}
           />
         </div>
       </header>

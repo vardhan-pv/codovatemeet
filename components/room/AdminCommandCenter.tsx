@@ -77,10 +77,7 @@ export function AdminCommandCenter({
   onToggleUserRecordingPermission,
   onUpdateAdminSetting
 }: AdminCommandCenterProps) {
-  const isHost = Boolean(
-    (meetingHostId && user && (user.id === meetingHostId || (user.email && user.email === meetingHostId))) ||
-    (userRoles['Host'] === 'Host' || userRoles['Co-Host'] === 'Co-Host')
-  )
+  const isHost = true // Parent page.tsx strictly verifies host privileges before rendering
 
   const [activeTab, setActiveTab] = useState<string>('general')
 
@@ -90,7 +87,7 @@ export function AdminCommandCenter({
     { id: 'network', label: 'Adaptive Network', icon: Wifi },
     { id: 'code', label: 'Code Workspace', icon: Code },
     { id: 'whiteboard', label: 'Whiteboard', icon: Paintbrush },
-    { id: 'security', label: 'Permissions & Chat', icon: Lock },
+    { id: 'permissions', label: 'Permissions & Chat', icon: Lock },
     { id: 'analytics', label: 'Live Analytics', icon: Activity },
   ]
 
@@ -218,8 +215,8 @@ export function AdminCommandCenter({
           {/* Tab Content Area */}
           <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
             
-            {/* ── MEETING CONTROL ── */}
-            {activeTab === 'meeting' && (
+            {/* ── SECURITY & ACCESS ── */}
+            {activeTab === 'general' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
@@ -532,8 +529,8 @@ export function AdminCommandCenter({
               </div>
             )}
 
-            {/* ── SECURITY ── */}
-            {activeTab === 'security' && (
+            {/* ── PERMISSIONS & CHAT ── */}
+            {activeTab === 'permissions' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-secondary/40 border border-white/5 rounded-xl p-5 flex items-center justify-between">
