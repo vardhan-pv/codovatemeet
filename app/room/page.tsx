@@ -1120,7 +1120,7 @@ function RoomPageContent() {
   const [metrics, setMetrics] = useState({ codeEdits: 0, chatMsgs: 0, aiRequests: 0 })
   const [userRoles, setUserRoles] = useState<Record<string, string>>({})
   const [userRecordingPermissions, setUserRecordingPermissions] = useState<Record<string, boolean>>({})
-  const [canRecord, setCanRecord] = useState(false) // Set to true for host, or when admin grants permission
+  const [hasGrantedRecordingPermission, setHasGrantedRecordingPermission] = useState(false)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
 
   const handleToggleUserRecordingPermission = (userId: string) => {
@@ -1218,6 +1218,14 @@ function RoomPageContent() {
   const isHostUser = Boolean(
     (meetingHostId && user && (user.id === meetingHostId || (meetingHostEmail && user.email === meetingHostEmail))) ||
     (userRoles[lobbyName] === 'Host' || userRoles[lobbyName] === 'Co-Host')
+  )
+
+  const canRecord = Boolean(
+    isHostUser ||
+    hasGrantedRecordingPermission ||
+    (user && userRecordingPermissions[user.id]) ||
+    (user && userRecordingPermissions[user.email]) ||
+    userRecordingPermissions[lobbyName]
   )
 
   // Refs to give stable access to latest values inside event handler closures
@@ -1904,6 +1912,17 @@ function RoomPageContent() {
                 displayCaption('System', 'The host has unlocked your camera. You may turn it on.')
               }
             }
+          } else if (parsed.command === 'GRANT_RECORDING_PERMISSION') {
+            setUserRecordingPermissions(prev => ({ ...prev, [parsed.targetId]: parsed.value }))
+            const myIdentity = room.localParticipant.identity
+            const myName = room.localParticipant.name || myIdentity
+            if (parsed.targetId === myIdentity || parsed.targetId === myName || (user && parsed.targetId === user.id)) {
+              setHasGrantedRecordingPermission(parsed.value)
+              displayCaption('System', parsed.value
+                ? '🎙️ Host has granted you recording permission'
+                : '🚫 Host has revoked your recording permission'
+              )
+            }
           } else if (parsed.command === 'SYNC_TERMINAL') {
             window.dispatchEvent(new CustomEvent('sync_terminal'))
           } else if (parsed.command === 'SET_ROLE') {
@@ -2112,7 +2131,7 @@ function RoomPageContent() {
           const myIdentity = room.localParticipant.identity
           const myName = room.localParticipant.name || myIdentity
           if (parsed.targetUserId === myIdentity || parsed.targetUserId === myName) {
-            setCanRecord(parsed.allowed)
+            setHasGrantedRecordingPermission(parsed.allowed)
             displayCaption('System', parsed.allowed
               ? '🎙️ Host has granted you recording permission'
               : '🚫 Host has revoked your recording permission'
@@ -2362,14 +2381,6 @@ function RoomPageContent() {
       setIsVideoOff(true)
     }
   }, [adminSettings.isCameraLocked, room, isHostUser])
-
-  // Hosts can always record; participants need explicit permission
-  useEffect(() => {
-    if (isHostUser) {
-      setCanRecord(true)
-    }
-  }, [isHostUser])
-
 
   // Toggle AI Assistant sidebar listener
   useEffect(() => {
@@ -3929,7 +3940,7 @@ function RoomPageContent() {
               {(lobbyName || 'U').charAt(0).toUpperCase()}
             </button>
             {showProfilePopup && (
-              <div className="absolute right-0 top-10 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-4 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute right-0 top-10 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-4 shadow-2xl z-[250] animate-in fade-in slide-in-from-top-2 duration-150">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 rounded-full bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300 font-black text-lg">
                     {(lobbyName || 'U').charAt(0).toUpperCase()}
@@ -4316,7 +4327,7 @@ function RoomPageContent() {
 
       {/* Floating Emojis Reaction Tray above Controls Dock */}
       {showReactionTray && (
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-popover/90 backdrop-blur-md border border-border rounded-full px-4 py-2 flex gap-3.5 shadow-2xl z-30 animate-in fade-in slide-in-from-bottom-2 duration-200 select-none">
+        <div className="fixed sm:absolute bottom-20 left-1/2 -translate-x-1/2 bg-popover/95 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex gap-3.5 shadow-2xl z-[200] animate-in fade-in slide-in-from-bottom-2 duration-200 select-none">
           {['❤️', '👍', '🎉', '👏', '😂', '😮', '😢', '🤔'].map(emoji => (
             <button
               key={emoji}
@@ -4330,7 +4341,7 @@ function RoomPageContent() {
       )}
 
       {/* ── ONE SINGLE FLOATING ACTION DOCK (Replaced according to user images - Zero Duplicates) ── */}
-      <footer className="px-2 sm:px-4 py-3 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 flex items-center justify-between gap-2 z-40 shrink-0 shadow-2xl select-none relative overflow-x-auto custom-scrollbar">
+      <footer className="px-2 sm:px-4 py-3 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 flex items-center justify-between gap-2 z-[100] shrink-0 shadow-2xl select-none relative overflow-x-auto custom-scrollbar">
         
         {/* Left Card: Code, Whiteboard, UNO Game (Desktop Only) */}
         <div className="hidden md:flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
@@ -4437,7 +4448,7 @@ function RoomPageContent() {
           </button>
 
           {/* ••• More Button */}
-          <div className="relative">
+          <div className="relative z-[200]">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
@@ -4450,7 +4461,7 @@ function RoomPageContent() {
 
             {/* Floating Popover Menu */}
             {showMoreMenu && (
-              <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-slate-200 text-xs font-semibold">
+              <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-64 bg-slate-900/95 border border-white/10 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-[250] animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-slate-200 text-xs font-semibold">
                 {/* Record Session Button — respects admin recording permission */}
                 {canRecord ? (
                   <button
