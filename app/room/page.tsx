@@ -4545,40 +4545,207 @@ function RoomPageContent() {
       {/* ── ONE SINGLE FLOATING ACTION DOCK (Replaced according to user images - Zero Duplicates) ── */}
       <footer className="px-2 sm:px-4 py-3 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 flex items-center justify-between gap-2 z-[100] shrink-0 shadow-2xl select-none relative">
         
-        {/* Left Card: Code, Whiteboard, UNO Game (Desktop Only) */}
+        {/* Left Card: Dynamically Tailored Workspace Buttons (Desktop Only) */}
         <div className="hidden md:flex items-center gap-1.5 bg-slate-900/80 border border-white/5 rounded-2xl p-1.5">
-          <button
-            onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
-            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeWorkspace === 'code' ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title="Code Workspace Editor"
-          >
-            <Code className="w-4 h-4 text-emerald-400" />
-            <span className="text-[9px] font-bold mt-0.5">Code</span>
-          </button>
+          {(meetingType === 'technical' || meetingType === 'interview') && (
+            <>
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'code' ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Code Workspace Editor"
+              >
+                <Code className="w-4 h-4 text-emerald-400" />
+                <span className="text-[9px] font-bold mt-0.5">Code</span>
+              </button>
 
-          <button
-            onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
-            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeWorkspace === 'whiteboard' ? 'bg-amber-600/30 text-amber-400 border border-amber-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title="Whiteboard Workspace"
-          >
-            <Paintbrush className="w-4 h-4 text-amber-400" />
-            <span className="text-[9px] font-bold mt-0.5">Whiteboard</span>
-          </button>
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'whiteboard' ? 'bg-amber-600/30 text-amber-400 border border-amber-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Whiteboard Workspace"
+              >
+                <Paintbrush className="w-4 h-4 text-amber-400" />
+                <span className="text-[9px] font-bold mt-0.5">Whiteboard</span>
+              </button>
 
-          <button
-            onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
-            className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-              activeWorkspace === 'uno' ? 'bg-orange-600/30 text-orange-400 border border-orange-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
-            }`}
-            title="UNO! Game"
-          >
-            <span className="text-sm">🃏</span>
-            <span className="text-[9px] font-bold mt-0.5">UNO Game</span>
-          </button>
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'uno' ? 'bg-orange-600/30 text-orange-400 border border-orange-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="UNO! Game"
+              >
+                <span className="text-sm">🃏</span>
+                <span className="text-[9px] font-bold mt-0.5">UNO Game</span>
+              </button>
+            </>
+          )}
+
+          {meetingType === 'business' && (
+            <>
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'notes' ? 'bg-purple-600/30 text-purple-400 border border-purple-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Shared Meeting Notes"
+              >
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="text-[9px] font-bold mt-0.5">Notes</span>
+              </button>
+
+              <button
+                onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeSidebar === 'tasks' ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Tasks & Action Items"
+              >
+                <Check className="w-4 h-4 text-emerald-400" />
+                <span className="text-[9px] font-bold mt-0.5">Tasks</span>
+              </button>
+
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'agenda' ? 'none' : 'agenda')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'agenda' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Meeting Agenda"
+              >
+                <Calendar className="w-4 h-4 text-blue-400" />
+                <span className="text-[9px] font-bold mt-0.5">Agenda</span>
+              </button>
+            </>
+          )}
+
+          {meetingType === 'education' && (
+            <>
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'whiteboard' ? 'bg-amber-600/30 text-amber-400 border border-amber-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Classroom Whiteboard"
+              >
+                <Paintbrush className="w-4 h-4 text-amber-400" />
+                <span className="text-[9px] font-bold mt-0.5">Whiteboard</span>
+              </button>
+
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'notes' ? 'bg-purple-600/30 text-purple-400 border border-purple-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Classroom Notes"
+              >
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="text-[9px] font-bold mt-0.5">Notes</span>
+              </button>
+
+              <button
+                onClick={() => setActiveSidebar(activeSidebar === 'polls' ? null : 'polls')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeSidebar === 'polls' ? 'bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Live Quizzes & Polls"
+              >
+                <BarChart2 className="w-4 h-4 text-indigo-400" />
+                <span className="text-[9px] font-bold mt-0.5">Quizzes</span>
+              </button>
+            </>
+          )}
+
+          {meetingType === 'brainstorm' && (
+            <>
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'whiteboard' ? 'bg-amber-600/30 text-amber-400 border border-amber-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Brainstorm Canvas"
+              >
+                <Paintbrush className="w-4 h-4 text-amber-400" />
+                <span className="text-[9px] font-bold mt-0.5">Canvas</span>
+              </button>
+
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'notes' ? 'bg-purple-600/30 text-purple-400 border border-purple-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Idea Notes"
+              >
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="text-[9px] font-bold mt-0.5">Notes</span>
+              </button>
+            </>
+          )}
+
+          {meetingType === 'standup' && (
+            <>
+              <button
+                onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeSidebar === 'tasks' ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Sprint Tasks Board"
+              >
+                <Check className="w-4 h-4 text-emerald-400" />
+                <span className="text-[9px] font-bold mt-0.5">Sprint Tasks</span>
+              </button>
+
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'notes' ? 'bg-purple-600/30 text-purple-400 border border-purple-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Standup Notes"
+              >
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="text-[9px] font-bold mt-0.5">Standup Notes</span>
+              </button>
+
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'agenda' ? 'none' : 'agenda')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'agenda' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Standup Agenda & Timer"
+              >
+                <Calendar className="w-4 h-4 text-blue-400" />
+                <span className="text-[9px] font-bold mt-0.5">Agenda</span>
+              </button>
+            </>
+          )}
+
+          {meetingType !== 'technical' && meetingType !== 'interview' && meetingType !== 'business' && meetingType !== 'education' && meetingType !== 'brainstorm' && meetingType !== 'standup' && (
+            <>
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'notes' ? 'bg-purple-600/30 text-purple-400 border border-purple-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Notes Workspace"
+              >
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="text-[9px] font-bold mt-0.5">Notes</span>
+              </button>
+
+              <button
+                onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
+                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
+                  activeWorkspace === 'whiteboard' ? 'bg-amber-600/30 text-amber-400 border border-amber-500/40 font-bold' : 'hover:bg-white/5 text-slate-300'
+                }`}
+                title="Whiteboard Workspace"
+              >
+                <Paintbrush className="w-4 h-4 text-amber-400" />
+                <span className="text-[9px] font-bold mt-0.5">Whiteboard</span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Center Group: Compact Round Icon Buttons */}
