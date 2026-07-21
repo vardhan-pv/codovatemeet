@@ -4275,10 +4275,10 @@ function RoomPageContent() {
           <>
             {/* Mobile backdrop overlay */}
             <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] md:hidden"
+              className="fixed inset-0 bg-black/70 backdrop-blur-md z-[99990] md:hidden"
               onClick={() => setActiveSidebar(null)}
             />
-            <aside className="fixed md:static inset-x-0 bottom-0 top-14 md:top-0 z-[80] md:z-20 h-[calc(100vh-3.5rem)] md:h-full w-full md:w-80 bg-slate-950 md:bg-secondary border-t md:border-t-0 md:border-l border-white/10 flex flex-col shrink-0 shadow-2xl animate-in slide-in-from-bottom-8 md:slide-in-from-right-8 duration-200 rounded-t-3xl md:rounded-none">
+            <aside className="fixed md:static inset-x-0 bottom-0 top-14 md:top-0 z-[99995] md:z-20 h-[calc(100vh-3.5rem)] md:h-full w-full md:w-80 bg-slate-950 md:bg-secondary border-t md:border-t-0 md:border-l border-white/10 flex flex-col shrink-0 shadow-2xl animate-in slide-in-from-bottom-8 md:slide-in-from-right-8 duration-200 rounded-t-3xl md:rounded-none">
               <div className="md:hidden w-12 h-1.5 bg-slate-800 rounded-full mx-auto mt-2.5 mb-1" />
               <div className="p-3.5 border-b border-border flex justify-between items-center bg-popover/80 backdrop-blur-md">
                 <h2 className="font-extrabold text-sm text-slate-200 select-none capitalize">
@@ -4638,7 +4638,7 @@ function RoomPageContent() {
             <Archive className="w-4 h-4 text-sky-400" />
           </button>
 
-          {/* End Button (Host ONLY) */}
+          {/* End Button (Host / Admin ONLY) */}
           {isHostUser && (
             <Button
               onClick={() => {
@@ -4646,22 +4646,22 @@ function RoomPageContent() {
                   handleEndMeetingForAll()
                 }
               }}
-              className="h-10 px-4 rounded-full bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs shadow-md flex items-center gap-1.5 active:scale-95 transition-all"
-              title="Permanently End Meeting for Everyone"
+              className="h-9 w-9 p-0 sm:h-10 sm:w-auto sm:px-4 rounded-full bg-rose-800 hover:bg-rose-700 text-white font-bold text-xs shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+              title="Permanently End Meeting for Everyone (Host Only)"
             >
-              <StopCircle className="w-4 h-4" />
-              <span>End</span>
+              <StopCircle className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">End</span>
             </Button>
           )}
 
-          {/* Leave Button */}
+          {/* Leave Button (Everyone) */}
           <Button
             onClick={handleLeaveCall}
-            className="h-10 px-4 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5 active:scale-95 transition-all"
+            className="h-9 w-9 p-0 sm:h-10 sm:w-auto sm:px-4 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all"
             title="Leave Meeting"
           >
-            <PhoneOff className="w-4 h-4 fill-current" />
-            <span>Leave</span>
+            <PhoneOff className="w-4 h-4 shrink-0 fill-current" />
+            <span className="hidden sm:inline">Leave</span>
           </Button>
         </div>
       </footer>
