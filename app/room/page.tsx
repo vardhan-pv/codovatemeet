@@ -4003,26 +4003,32 @@ function RoomPageContent() {
           )}
         </div>
         
-        {/* Right Header Navigation Pill Buttons */}
+        {/* Right Header Navigation Pill Buttons (Filtered by Meeting Type) */}
         <div className="hidden lg:flex items-center gap-1.5">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => window.open('https://github.com/vardhan-pv/codovatemeet', '_blank')}
-            className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-slate-300 hover:bg-white/5 hover:text-white"
-          >
-            <GitBranch className="w-3.5 h-3.5 text-slate-400" /> GitHub
-          </Button>
+          {/* GitHub & Deploy (Technical/Interview ONLY) */}
+          {(meetingType === 'technical' || meetingType === 'interview') && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.open('https://github.com/vardhan-pv/codovatemeet', '_blank')}
+                className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-slate-300 hover:bg-white/5 hover:text-white"
+              >
+                <GitBranch className="w-3.5 h-3.5 text-slate-400" /> GitHub
+              </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => window.open('https://vercel.com/dashboard', '_blank')}
-            className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-slate-300 hover:bg-white/5 hover:text-white"
-          >
-            <Rocket className="w-3.5 h-3.5 text-slate-400" /> Deploy
-          </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.open('https://vercel.com/dashboard', '_blank')}
+                className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-slate-300 hover:bg-white/5 hover:text-white"
+              >
+                <Rocket className="w-3.5 h-3.5 text-slate-400" /> Deploy
+              </Button>
+            </>
+          )}
 
+          {/* AI Notes */}
           <Button
             variant="ghost"
             size="sm"
@@ -4036,6 +4042,7 @@ function RoomPageContent() {
             <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" /> Notes
           </Button>
 
+          {/* Tasks */}
           <Button
             variant="ghost"
             size="sm"
@@ -4049,6 +4056,7 @@ function RoomPageContent() {
             <Check className="w-3.5 h-3.5 text-emerald-400" /> Tasks
           </Button>
 
+          {/* Polls */}
           <Button
             variant="ghost"
             size="sm"
@@ -4062,18 +4070,21 @@ function RoomPageContent() {
             <BarChart2 className="w-3.5 h-3.5 text-indigo-400" /> Polls
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')}
-            className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
-              activeSidebar === 'interview'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-slate-300 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <Target className="w-3.5 h-3.5 text-purple-400" /> Interview Mode
-          </Button>
+          {/* Interview Mode (Technical/Interview ONLY) */}
+          {(meetingType === 'technical' || meetingType === 'interview') && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')}
+              className={`h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition ${
+                activeSidebar === 'interview'
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'text-slate-300 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <Target className="w-3.5 h-3.5 text-purple-400" /> Interview Mode
+            </Button>
+          )}
 
           <Button
             variant="ghost"
@@ -4170,8 +4181,15 @@ function RoomPageContent() {
             setIsOnToGoMode={setIsOnToGoMode}
             participantsCount={participants.length}
             meetingType={meetingType}
+            activeWorkspace={activeWorkspace}
+            setActiveWorkspace={setActiveWorkspace}
+            isScreenSharing={isScreenSharing}
+            handleScreenShareToggle={handleScreenShareToggle}
             isHostUser={isHostUser}
             setShowAdminCenter={setShowAdminCenter}
+            setIsRecorderModalOpen={setIsRecorderModalOpen}
+            canRecord={canRecord}
+            isRecording={isRecording}
           />
         </div>
       </header>

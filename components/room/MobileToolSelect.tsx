@@ -69,16 +69,52 @@ export function MobileToolSelect({
     setIsOpen(false)
   }
 
-  const primaryTools = [
+  // Dynamically tailor primary tools based on meetingType
+  const isTechnicalMeeting = meetingType === 'technical' || meetingType === 'interview'
+
+  const primaryTools: { value: string; label: string; icon: any; color: string }[] = [
     { value: 'chat', label: 'Chat & DMs', icon: MessageSquare, color: 'text-blue-400' },
     { value: 'participants', label: `Participants (${participantsCount})`, icon: Users, color: 'text-indigo-400' },
     { value: 'screenshare', label: isScreenSharing ? 'Stop Screen Share' : 'Share Screen', icon: MonitorUp, color: 'text-indigo-400' },
-    { value: 'code', label: 'Code Editor', icon: Code, color: 'text-emerald-400' },
-    { value: 'whiteboard', label: 'Whiteboard', icon: Paintbrush, color: 'text-amber-400' },
-    { value: 'ai', label: 'AI Notes & Memory', icon: Sparkles, color: 'text-purple-400' },
-    { value: 'tasks', label: 'Tasks', icon: CheckSquare, color: 'text-emerald-400' },
-    { value: 'polls', label: 'Polls', icon: BarChart2, color: 'text-amber-400' },
   ]
+
+  if (isTechnicalMeeting) {
+    primaryTools.push(
+      { value: 'code', label: 'Code Editor', icon: Code, color: 'text-emerald-400' },
+      { value: 'whiteboard', label: 'Whiteboard', icon: Paintbrush, color: 'text-amber-400' }
+    )
+  } else if (meetingType === 'business') {
+    primaryTools.push(
+      { value: 'notes', label: 'Shared Notes', icon: Sparkles, color: 'text-purple-400' },
+      { value: 'tasks', label: 'Tasks & Action Items', icon: CheckSquare, color: 'text-emerald-400' },
+      { value: 'polls', label: 'Polls & Decisions', icon: BarChart2, color: 'text-amber-400' }
+    )
+  } else if (meetingType === 'education') {
+    primaryTools.push(
+      { value: 'whiteboard', label: 'Classroom Whiteboard', icon: Paintbrush, color: 'text-amber-400' },
+      { value: 'notes', label: 'Classroom Notes', icon: Sparkles, color: 'text-purple-400' },
+      { value: 'polls', label: 'Live Quiz & Polls', icon: BarChart2, color: 'text-indigo-400' }
+    )
+  } else if (meetingType === 'brainstorm') {
+    primaryTools.push(
+      { value: 'whiteboard', label: 'Brainstorm Canvas', icon: Paintbrush, color: 'text-amber-400' },
+      { value: 'notes', label: 'Idea Notes', icon: Sparkles, color: 'text-purple-400' }
+    )
+  } else if (meetingType === 'standup') {
+    primaryTools.push(
+      { value: 'tasks', label: 'Sprint Tasks Board', icon: CheckSquare, color: 'text-emerald-400' },
+      { value: 'notes', label: 'Standup Notes', icon: Sparkles, color: 'text-purple-400' }
+    )
+  } else {
+    primaryTools.push(
+      { value: 'whiteboard', label: 'Whiteboard', icon: Paintbrush, color: 'text-amber-400' },
+      { value: 'notes', label: 'Shared Notes', icon: Sparkles, color: 'text-purple-400' }
+    )
+  }
+
+  primaryTools.push(
+    { value: 'ai', label: 'AI Notes & Memory', icon: Sparkles, color: 'text-purple-400' }
+  )
 
   if (isHostUser) {
     primaryTools.unshift({ value: 'admin', label: 'Admin Command Center', icon: ShieldAlert, color: 'text-rose-400' })
@@ -88,7 +124,7 @@ export function MobileToolSelect({
     primaryTools.push({ value: 'record', label: isRecording ? 'Recording Active...' : 'Record Session', icon: Radio, color: 'text-rose-400' })
   }
 
-  if (meetingType === 'technical') {
+  if (isTechnicalMeeting) {
     primaryTools.push({ value: 'interview', label: 'Interview Mode', icon: Crown, color: 'text-amber-400' })
   }
 
