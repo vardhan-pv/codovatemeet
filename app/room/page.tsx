@@ -2045,7 +2045,18 @@ function RoomPageContent() {
           const command = payload.command
           const targetId = payload.targetId
           const value = payload.value
-          const localId = room?.localParticipant?.sid || room?.localParticipant?.identity
+          const localSid = room?.localParticipant?.sid
+          const localIdentity = room?.localParticipant?.identity
+
+          const isTargetMe = targetId === 'ALL' ||
+            (targetId && (
+              targetId === localSid ||
+              targetId === localIdentity ||
+              targetId === lobbyName ||
+              (localIdentity && targetId.includes(localIdentity)) ||
+              (localIdentity && localIdentity.includes(targetId)) ||
+              (lobbyName && targetId.startsWith(lobbyName))
+            ))
 
           // 1. Lock Room
           if (command === 'TOGGLE_ROOM_LOCK') {
@@ -2108,40 +2119,49 @@ function RoomPageContent() {
           }
 
           // 9. Mute Single User
-          if (command === 'MUTE_USER') {
-            if (targetId === 'ALL' || targetId === localId || targetId === lobbyName) {
-              if (room?.localParticipant?.isMicrophoneEnabled) {
-                room.localParticipant.setMicrophoneEnabled(false)
-                setIsMuted(true)
-              }
-              displayCaption('System', '🎙️ Host muted your microphone')
+          if (command === 'MUTE_USER' && isTargetMe) {
+            if (room?.localParticipant?.isMicrophoneEnabled) {
+              room.localParticipant.setMicrophoneEnabled(false)
+              setIsMuted(true)
             }
+            displayCaption('System', '🎙️ Host muted your microphone')
           }
 
           // 10. Camera Off Single User
-          if (command === 'CAMERA_OFF_USER') {
-            if (targetId === 'ALL' || targetId === localId || targetId === lobbyName) {
-              if (room?.localParticipant?.isCameraEnabled) {
-                room.localParticipant.setCameraEnabled(false)
-                setIsVideoOff(true)
-              }
-              displayCaption('System', '📹 Host turned off your camera')
+          if (command === 'CAMERA_OFF_USER' && isTargetMe) {
+            if (room?.localParticipant?.isCameraEnabled) {
+              room.localParticipant.setCameraEnabled(false)
+              setIsVideoOff(true)
             }
+            displayCaption('System', '📹 Host turned off your camera')
           }
 
           // 11. Kick User
-          if (command === 'KICK_USER') {
-            if (targetId === localId || targetId === lobbyName) {
-              alert('⚠️ You have been removed from the meeting by the host.')
-              handleLeaveCall()
-            }
+          if (command === 'KICK_USER' && isTargetMe) {
+            alert('⚠️ You have been removed from the meeting by the host.')
+            handleLeaveCall()
           }
 
           // 12. Send to Waiting Room
-          if (command === 'SEND_TO_WAITING_ROOM') {
-            if (targetId === localId || targetId === lobbyName) {
-              setIsInWaitingRoom(true)
-              displayCaption('System', '⏳ Host placed you in the waiting room')
+          if (command === 'SEND_TO_WAITING_ROOM' && isTargetMe) {
+            setIsInWaitingRoom(true)
+            displayCaption('System', '⏳ Host placed you in the waiting room')
+          }
+
+          // 13. Set Role (Co-Host / Participant)
+          if (command === 'SET_ROLE') {
+            setUserRoles(prev => ({ ...prev, [targetId]: value, [targetId.split('_')[0]]: value }))
+            if (isTargetMe) {
+              displayCaption('System', `👑 Host assigned you role: ${value}`)
+            }
+          }
+
+          // 14. Grant / Revoke Recording Permission
+          if (command === 'GRANT_RECORDING_PERMISSION') {
+            setUserRecordingPermissions(prev => ({ ...prev, [targetId]: !!value, [targetId.split('_')[0]]: !!value }))
+            if (isTargetMe) {
+              setHasGrantedRecordingPermission(!!value)
+              displayCaption('System', value ? '🎥 Host granted you recording permission' : '🚫 Host revoked your recording permission')
             }
           }
 

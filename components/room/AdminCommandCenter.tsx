@@ -434,9 +434,10 @@ export function AdminCommandCenter({
                 <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar pr-1">
                   {participants.map((p) => {
                     const id = p.identity || p.sid
-                    const isCoHost = userRoles[id] === 'cohost'
-                    const isHost = id === meetingHostId
-                    const canRecord = !adminSettings.isRecordingLocked || !!userRecordingPermissions[id]
+                    const displayName = (p.identity || 'User').split('_')[0]
+                    const isCoHost = userRoles[id] === 'cohost' || userRoles[displayName] === 'cohost'
+                    const isHost = id === meetingHostId || displayName === meetingHostId
+                    const canRecord = !adminSettings.isRecordingLocked || !!userRecordingPermissions[id] || !!userRecordingPermissions[displayName]
 
                     return (
                       <div key={id} className="bg-secondary/30 border border-white/5 rounded-xl p-3 flex items-center justify-between gap-3">
@@ -446,7 +447,7 @@ export function AdminCommandCenter({
                           </div>
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-white truncate flex items-center gap-1.5">
-                              <span>{(p.identity || 'User').split('_')[0]}</span>
+                              <span>{displayName}</span>
                               {isHost && <span className="bg-amber-500/20 text-amber-400 text-[9px] px-1.5 py-0.5 rounded font-mono">HOST</span>}
                               {isCoHost && <span className="bg-indigo-500/20 text-indigo-400 text-[9px] px-1.5 py-0.5 rounded font-mono">CO-HOST</span>}
                               {canRecord && !isHost && <span className="bg-rose-500/20 text-rose-400 text-[9px] px-1.5 py-0.5 rounded font-mono">REC ALLOWED</span>}
@@ -461,7 +462,10 @@ export function AdminCommandCenter({
                             <Button 
                               size="sm" 
                               variant="ghost" 
-                              onClick={() => handleToggleRecordingPerm(id)} 
+                              onClick={() => {
+                                handleToggleRecordingPerm(id)
+                                handleToggleRecordingPerm(displayName)
+                              }} 
                               title={canRecord ? "Revoke Recording Permission" : "Grant Recording Permission"} 
                               className={`h-8 px-2 text-[10px] font-bold gap-1 ${
                                 canRecord 
