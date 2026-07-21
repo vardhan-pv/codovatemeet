@@ -38,6 +38,8 @@ interface DirectMessageDrawerProps {
   currentName: string
   isDirectMessagingDisabled?: boolean
   isHost?: boolean
+  initialPeerIdentity?: string | null
+  onIncomingDmNotify?: (dm: { senderIdentity: string, senderName: string, text: string }) => void
 }
 
 export function DirectMessageDrawer({
@@ -46,7 +48,9 @@ export function DirectMessageDrawer({
   currentIdentity,
   currentName,
   isDirectMessagingDisabled = false,
-  isHost = false
+  isHost = false,
+  initialPeerIdentity,
+  onIncomingDmNotify
 }: DirectMessageDrawerProps) {
   const [selectedPeer, setSelectedPeer] = useState<any | null>(null)
   const [selectedGroup, setSelectedGroup] = useState<GroupChat | null>(null)
@@ -69,6 +73,20 @@ export function DirectMessageDrawer({
     const index = identity.lastIndexOf('_')
     return index !== -1 ? identity.substring(0, index) : identity
   }
+
+  // Handle initial peer jumping
+  useEffect(() => {
+    if (initialPeerIdentity) {
+      const match = participants.find(p => p.identity === initialPeerIdentity || p.name === initialPeerIdentity)
+      if (match) {
+        setSelectedPeer(match)
+        setActiveView('dm')
+      } else {
+        setSelectedPeer({ identity: initialPeerIdentity, name: getDisplayName(initialPeerIdentity) })
+        setActiveView('dm')
+      }
+    }
+  }, [initialPeerIdentity, participants])
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -104,6 +122,14 @@ export function DirectMessageDrawer({
             ...prev,
             [senderId]: [...(prev[senderId] || []), dm]
           }))
+
+          if (onIncomingDmNotify && senderId !== currentIdentity) {
+            onIncomingDmNotify({
+              senderIdentity: senderId,
+              senderName,
+              text: decoded.text
+            })
+          }
 
           if (selectedPeer?.identity !== senderId) {
             setUnreadCounts((prev) => ({

@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { FileText, Download, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-export function NotesWorkspace() {
+interface NotesWorkspaceProps {
+  sendData?: (type: string, payload: any) => void
+}
+
+export function NotesWorkspace({ sendData }: NotesWorkspaceProps) {
   const [notes, setNotes] = useState('# Meeting Notes\n\n- ')
   const [copied, setCopied] = useState(false)
 
@@ -30,6 +34,19 @@ export function NotesWorkspace() {
           <span className="font-bold text-xs text-white uppercase tracking-wider">Shared Notes</span>
         </div>
         <div className="flex items-center gap-2">
+          {/* Share / Broadcast Workspace Button */}
+          <button
+            onClick={() => {
+              if (sendData) {
+                sendData('PRESENT_WORKSPACE', { workspaceType: 'notes', state: notes, action: 'start' })
+                alert('📢 You are now presenting your Notes workspace to the room as a live screen share!')
+              }
+            }}
+            className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1 shadow transition active:scale-95 cursor-pointer"
+            title="Share & Present Notes workspace to all room participants as a live screen share"
+          >
+            <span>📢 Share as Screen</span>
+          </button>
           <Button onClick={handleCopy} size="sm" variant="ghost" className="h-7 text-[10px] text-slate-400 hover:text-white font-bold">
             {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
             {copied ? 'Copied' : 'Copy Text'}

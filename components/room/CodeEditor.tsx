@@ -809,8 +809,45 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
           {currentFile} — {rootFolderName} — Antigravity IDE
         </div>
 
-        {/* Sync indicators on the right */}
-        <div className="flex items-center gap-4 text-slate-400">
+        {/* Sync & Share indicators on the right */}
+        <div className="flex items-center gap-2.5 text-slate-400">
+          {/* Share / Broadcast Workspace Button */}
+          <button
+            onClick={() => {
+              if (sendData) {
+                sendData('PRESENT_WORKSPACE', { workspaceType: 'code', state: code, action: 'start' })
+                alert('📢 You are now presenting your Code Editor workspace to the room as a live screen share!')
+              }
+            }}
+            className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition active:scale-95 cursor-pointer"
+            title="Share & Present Code Editor workspace to all room participants as a live screen share"
+          >
+            <span>📢 Share as Screen</span>
+          </button>
+
+          {/* Run Code Button */}
+          <button
+            onClick={runCode}
+            className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition active:scale-95 cursor-pointer"
+            title="Execute live JavaScript / HTML output in terminal"
+          >
+            <Play className="w-3 h-3 fill-current" />
+            <span>Run</span>
+          </button>
+
+          {/* Format Document Button */}
+          <button
+            onClick={() => {
+              if (editorRef.current) {
+                editorRef.current.getAction('editor.action.formatDocument')?.run()
+              }
+            }}
+            className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 font-bold text-[10px] flex items-center gap-1 transition active:scale-95 cursor-pointer"
+            title="Format Document (Shift+Alt+F)"
+          >
+            <span>✨ Format</span>
+          </button>
+
           <div className="flex items-center gap-1">
             <span className="text-[10px] font-mono select-none">Language:</span>
             <select 

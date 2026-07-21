@@ -61,6 +61,25 @@ export function Whiteboard({ room, lobbyName, sendData, readOnly = false, active
           <span className="text-xl">🎨</span> Advanced Whiteboard
         </div>
         <div className="flex items-center gap-2">
+          {/* Share / Broadcast Workspace Button */}
+          <button
+            onClick={() => {
+              if (sendData) {
+                try {
+                  const snapshot = editor ? JSON.stringify(editor.store.getSnapshot()) : ''
+                  sendData('PRESENT_WORKSPACE', { workspaceType: 'whiteboard', state: snapshot, action: 'start' })
+                  alert('📢 You are now presenting your Whiteboard workspace to the room as a live screen share!')
+                } catch (e) {
+                  sendData('PRESENT_WORKSPACE', { workspaceType: 'whiteboard', action: 'start' })
+                  alert('📢 You are now presenting your Whiteboard workspace to the room as a live screen share!')
+                }
+              }
+            }}
+            className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1 shadow transition active:scale-95 cursor-pointer"
+            title="Share & Present Whiteboard workspace to all room participants as a live screen share"
+          >
+            <span>📢 Share as Screen</span>
+          </button>
           {readOnly && <span className="text-[10px] uppercase font-bold text-red-400 bg-red-400/10 px-2 py-1 rounded">View Only</span>}
           <span className="text-[10px] uppercase font-bold text-primary bg-primary/10 px-2 py-1 rounded">Live Sync Active</span>
         </div>

@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   MessageSquare, Users, Sparkles, CheckSquare, BarChart2, Clock, Timer,
@@ -43,6 +44,11 @@ export function MobileToolSelect({
   isRecording
 }: MobileToolSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSelect = (val: string) => {
     if (val === 'onthego') {
@@ -105,9 +111,9 @@ export function MobileToolSelect({
         <span>Tools</span>
       </button>
 
-      <AnimatePresence>
-        {isOpen && (
-          <div className="fixed inset-0 z-[99999] flex flex-col justify-end bg-black/80 backdrop-blur-md">
+      {isOpen && mounted && createPortal(
+        <AnimatePresence>
+          <div className="fixed inset-0 z-[999999] flex flex-col justify-end bg-black/80 backdrop-blur-md">
             {/* Backdrop click dismiss */}
             <div className="flex-1" onClick={() => setIsOpen(false)} />
 
@@ -184,8 +190,9 @@ export function MobileToolSelect({
               </div>
             </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   )
 }

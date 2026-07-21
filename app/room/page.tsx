@@ -1122,6 +1122,15 @@ function RoomPageContent() {
   const [userRecordingPermissions, setUserRecordingPermissions] = useState<Record<string, boolean>>({})
   const [hasGrantedRecordingPermission, setHasGrantedRecordingPermission] = useState(false)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
+  const [incomingDmPopup, setIncomingDmPopup] = useState<{ senderIdentity: string, senderName: string, text: string, timestamp: number } | null>(null)
+  const [targetDmIdentity, setTargetDmIdentity] = useState<string | null>(null)
+
+  const openDmWithUser = (identity: string, name?: string) => {
+    setTargetDmIdentity(identity)
+    setActiveSidebar('chat')
+    setActiveChatTab('dm')
+    setIncomingDmPopup(null)
+  }
 
   const handleToggleUserRecordingPermission = (userId: string) => {
     const nextValue = !userRecordingPermissions[userId]
@@ -2073,20 +2082,24 @@ function RoomPageContent() {
           return
         }
         if (parsed.type === 'PRESENT_WORKSPACE') {
-          const localId = room.localParticipant.sid || room.localParticipant.identity
-          if (parsed.senderSid !== localId) {
-            // Persistent banner is shown via presentedWorkspace state — no auto-dismiss caption
-            setPresentedWorkspace({
-              type: parsed.workspaceType,
-              state: parsed.state,
-              presenterSid: parsed.senderSid,
-              presenterName: parsed.sender
-            })
+          if (parsed.action === 'stop') {
+            setPresentedWorkspace(prev => (prev?.presenterSid === parsed.senderSid ? null : prev))
+            displayCaption('System', `🛑 ${sender} stopped presenting their workspace`)
+            return
           }
+          setPresentedWorkspace({
+            type: parsed.workspaceType,
+            state: parsed.state,
+            presenterSid: parsed.senderSid,
+            presenterName: parsed.sender
+          })
+          setPresentedWorkspaceLayout('maximized')
+          displayCaption('System', `🖥️ ${sender} is sharing their ${parsed.workspaceType} workspace as a screen presentation`)
           return
         }
         if (parsed.type === 'STOP_PRESENT_WORKSPACE') {
           setPresentedWorkspace(prev => (prev?.presenterSid === parsed.senderSid ? null : prev))
+          displayCaption('System', `🛑 ${sender} stopped presenting their workspace`)
           return
         }
         if (parsed.type === 'FORCE_WORKSPACE') {
@@ -2944,7 +2957,8 @@ function RoomPageContent() {
               </button>
             </div>
 
-            {activeChatTab === 'dm' ? (
+            {/* Direct Messages Component — Always mounted in background to catch all incoming DMs */}
+            <div className={activeChatTab === 'dm' ? 'flex-1 flex flex-col min-h-0' : 'hidden'}>
               <DirectMessageDrawer
                 room={room}
                 participants={participants}
@@ -2952,8 +2966,19 @@ function RoomPageContent() {
                 currentName={lobbyName}
                 isDirectMessagingDisabled={adminSettings.isDmDisabled}
                 isHost={isHostUser}
+                initialPeerIdentity={targetDmIdentity}
+                onIncomingDmNotify={(dm) => {
+                  setIncomingDmPopup({
+                    senderIdentity: dm.senderIdentity,
+                    senderName: dm.senderName,
+                    text: dm.text,
+                    timestamp: Date.now()
+                  })
+                }}
               />
-            ) : (
+            </div>
+
+            {activeChatTab !== 'dm' && (
               <>
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   <div className="bg-blue-950/40 border border-blue-900/50 rounded-[20px] p-3 text-xs text-blue-300 flex items-start gap-2 select-none">
@@ -3074,6 +3099,17 @@ function RoomPageContent() {
                         </div>
                       </div>
                       <div className="flex gap-1.5 items-center">
+                        {!p.isLocal && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openDmWithUser(p.identity, getDisplayName(p.identity))}
+                            className="h-6 w-6 hover:bg-blue-500/20 text-blue-400"
+                            title={`Send Private DM to ${getDisplayName(p.identity)}`}
+                          >
+                            <MessageSquare className="h-3.5 w-3.5 text-blue-400" />
+                          </Button>
+                        )}
                         {isUserMuted ? <MicOff className="h-3.5 w-3.5 text-red-500" /> : <Mic className="h-3.5 w-3.5 text-emerald-500" />}
                         {isHostUser && !p.isLocal && (
                           <Button variant="ghost" size="icon" onClick={() => kickParticipant(p.identity)} className="h-6 w-6 hover:bg-destructive/10 text-destructive" title="Remove Participant">
@@ -3797,7 +3833,7 @@ function RoomPageContent() {
       `}</style>
 
       {/* Meeting Room Header (Reference Mockup Design) */}
-      <header className="px-4 py-2 bg-slate-950/95 backdrop-blur-xl flex items-center justify-between z-40 shrink-0 border-b border-white/10 shadow-lg select-none">
+      <header className="px-4 py-2 bg-slate-950/95 backdrop-blur-xl flex items-center justify-between z-[500] shrink-0 border-b border-white/10 shadow-lg select-none">
         {/* Left: Brand + Room Code + Telemetry */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -4045,7 +4081,7 @@ function RoomPageContent() {
               <AgendaWorkspace room={room} lobbyName={lobbyName} sendData={sendData} agenda={agenda} setAgenda={setAgenda} />
             </div>
             <div className={activeWorkspace === 'notes' ? 'h-full w-full' : 'hidden'}>
-              <NotesWorkspace />
+              <NotesWorkspace sendData={sendData} />
             </div>
           </div>
 
@@ -4702,6 +4738,69 @@ function RoomPageContent() {
         onOpenModal={() => setIsStatsModalOpen(true)}
         onEnableLowBandwidth={() => setAdaptiveMode('low_bandwidth')}
       />
+
+      {/* Floating Incoming Direct Message Pop-up Toast Banner */}
+      {incomingDmPopup && (
+        <div className="fixed top-16 right-4 sm:right-6 z-[999999] bg-slate-900/95 border border-blue-500/40 backdrop-blur-xl rounded-2xl p-4 shadow-2xl animate-in slide-in-from-top-4 duration-200 text-white max-w-xs sm:max-w-sm select-none">
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <span className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+              <MessageSquare className="w-4 h-4 text-blue-400 animate-bounce" />
+              Private DM from {incomingDmPopup.senderName}
+            </span>
+            <button
+              onClick={() => setIncomingDmPopup(null)}
+              className="text-slate-400 hover:text-white transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="text-xs text-slate-200 line-clamp-2 bg-slate-950/70 p-2.5 rounded-xl my-2 border border-white/5 font-sans font-medium">
+            "{incomingDmPopup.text}"
+          </p>
+          <div className="flex items-center gap-2 mt-3">
+            <Button
+              size="sm"
+              onClick={() => openDmWithUser(incomingDmPopup.senderIdentity, incomingDmPopup.senderName)}
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg gap-1.5 active:scale-95 transition cursor-pointer"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Reply & Chat</span>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Workspace Screen Sharing Top Notification Banner */}
+      {presentedWorkspace && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[99999] bg-slate-950/95 border border-indigo-500/50 backdrop-blur-xl px-4 py-2 rounded-full shadow-2xl flex items-center gap-3 text-white text-xs font-bold animate-in slide-in-from-top-4 duration-200 select-none max-w-lg">
+          <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+          <span className="truncate">
+            🖥️ {presentedWorkspace.presenterSid === (room?.localParticipant?.sid || room?.localParticipant?.identity)
+              ? `You are presenting your ${presentedWorkspace.type} workspace to everyone`
+              : `${presentedWorkspace.presenterName} is presenting their ${presentedWorkspace.type} workspace`}
+          </span>
+          {presentedWorkspace.presenterSid === (room?.localParticipant?.sid || room?.localParticipant?.identity) ? (
+            <button
+              onClick={() => {
+                if (sendData) {
+                  sendData('PRESENT_WORKSPACE', { action: 'stop' })
+                }
+                setPresentedWorkspace(null)
+              }}
+              className="bg-rose-600 hover:bg-rose-500 text-white px-3 py-1 rounded-full text-[11px] font-extrabold transition shadow cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+            >
+              <StopCircle className="w-3.5 h-3.5" /> Stop Sharing
+            </button>
+          ) : (
+            <button
+              onClick={() => setPresentedWorkspaceLayout(presentedWorkspaceLayout === 'maximized' ? 'grid' : 'maximized')}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded-full text-[11px] font-extrabold transition shadow cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+            >
+              <Maximize2 className="w-3.5 h-3.5" /> {presentedWorkspaceLayout === 'maximized' ? 'Tile Grid' : 'Maximize'}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Adaptive Network Diagnostic & Performance Dashboard Modal */}
       <NetworkStatsModal
