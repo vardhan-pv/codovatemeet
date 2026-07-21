@@ -55,6 +55,7 @@ interface AdminCommandCenterProps {
   adaptiveConfig?: NetworkOptimizationConfig
   onUpdateAdaptiveConfig?: (config: Partial<NetworkOptimizationConfig>) => void
   onToggleUserRecordingPermission?: (userId: string) => void
+  onUpdateAdminSetting?: (key: keyof AdminSettings, value: boolean) => void
 }
 
 export function AdminCommandCenter({ 
@@ -73,13 +74,25 @@ export function AdminCommandCenter({
   adaptiveStats,
   adaptiveConfig,
   onUpdateAdaptiveConfig,
-  onToggleUserRecordingPermission
+  onToggleUserRecordingPermission,
+  onUpdateAdminSetting
 }: AdminCommandCenterProps) {
   const isHost = Boolean(
     (meetingHostId && user && (user.id === meetingHostId || (user.email && user.email === meetingHostId))) ||
-    (userRoles[user?.name || ''] === 'Host') ||
-    (userRoles[user?.name || ''] === 'Co-Host')
+    (userRoles['Host'] === 'Host' || userRoles['Co-Host'] === 'Co-Host')
   )
+
+  const [activeTab, setActiveTab] = useState<string>('general')
+
+  const tabs: { id: string; label: string; icon: any }[] = [
+    { id: 'general', label: 'Security & Access', icon: ShieldAlert },
+    { id: 'participants', label: 'Participant Management', icon: Users },
+    { id: 'network', label: 'Adaptive Network', icon: Wifi },
+    { id: 'code', label: 'Code Workspace', icon: Code },
+    { id: 'whiteboard', label: 'Whiteboard', icon: Paintbrush },
+    { id: 'security', label: 'Permissions & Chat', icon: Lock },
+    { id: 'analytics', label: 'Live Analytics', icon: Activity },
+  ]
 
   if (!isHost) {
     return (
@@ -98,18 +111,6 @@ export function AdminCommandCenter({
     )
   }
 
-  const [activeTab, setActiveTab] = useState('meeting')
-
-  const tabs = [
-    { id: 'meeting', label: 'Meeting Control', icon: Settings },
-    { id: 'network', label: 'Network Quality', icon: Wifi },
-    { id: 'participants', label: 'Participants', icon: Users },
-    { id: 'code', label: 'Live Code', icon: Code },
-    { id: 'whiteboard', label: 'Whiteboard', icon: Paintbrush },
-    { id: 'security', label: 'Security', icon: ShieldAlert },
-    { id: 'analytics', label: 'Live Analytics', icon: Activity },
-  ]
-
   // Helper to send Admin Commands
   const broadcastAdminCommand = (command: string, targetId?: string, value?: any) => {
     sendData('ADMIN_COMMAND', {
@@ -123,6 +124,9 @@ export function AdminCommandCenter({
   // --- Actions ---
   const toggleSetting = (key: keyof AdminSettings, command: string) => {
     const newValue = !adminSettings[key]
+    if (onUpdateAdminSetting) {
+      onUpdateAdminSetting(key, newValue)
+    }
     broadcastAdminCommand(command, 'ALL', newValue)
   }
 

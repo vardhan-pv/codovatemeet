@@ -4,7 +4,8 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   MessageSquare, Users, Sparkles, CheckSquare, BarChart2, Clock, Timer,
-  Crown, Footprints, Sliders, Calendar, Flag, Grid, X, ChevronRight, Settings
+  Crown, Footprints, Sliders, Calendar, Flag, Grid, X, MonitorUp, Code, Paintbrush,
+  Radio, ShieldAlert, Heart, Activity
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -14,6 +15,15 @@ interface MobileToolSelectProps {
   setIsOnToGoMode: (val: boolean) => void
   participantsCount: number
   meetingType: string
+  activeWorkspace?: string
+  setActiveWorkspace?: (ws: any) => void
+  isScreenSharing?: boolean
+  handleScreenShareToggle?: () => void
+  isHostUser?: boolean
+  setShowAdminCenter?: (val: boolean) => void
+  setIsRecorderModalOpen?: (val: boolean) => void
+  canRecord?: boolean
+  isRecording?: boolean
 }
 
 export function MobileToolSelect({
@@ -21,13 +31,32 @@ export function MobileToolSelect({
   setActiveSidebar,
   setIsOnToGoMode,
   participantsCount,
-  meetingType
+  meetingType,
+  activeWorkspace,
+  setActiveWorkspace,
+  isScreenSharing,
+  handleScreenShareToggle,
+  isHostUser,
+  setShowAdminCenter,
+  setIsRecorderModalOpen,
+  canRecord,
+  isRecording
 }: MobileToolSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const handleSelect = (val: string) => {
     if (val === 'onthego') {
       setIsOnToGoMode(true)
+    } else if (val === 'screenshare' && handleScreenShareToggle) {
+      handleScreenShareToggle()
+    } else if (val === 'code' && setActiveWorkspace) {
+      setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')
+    } else if (val === 'whiteboard' && setActiveWorkspace) {
+      setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')
+    } else if (val === 'admin' && setShowAdminCenter) {
+      setShowAdminCenter(true)
+    } else if (val === 'record' && setIsRecorderModalOpen) {
+      setIsRecorderModalOpen(true)
     } else {
       setActiveSidebar(activeSidebar === val ? null : val)
     }
@@ -37,12 +66,21 @@ export function MobileToolSelect({
   const primaryTools = [
     { value: 'chat', label: 'Chat & DMs', icon: MessageSquare, color: 'text-blue-400' },
     { value: 'participants', label: `Participants (${participantsCount})`, icon: Users, color: 'text-indigo-400' },
+    { value: 'screenshare', label: isScreenSharing ? 'Stop Screen Share' : 'Share Screen', icon: MonitorUp, color: 'text-indigo-400' },
+    { value: 'code', label: 'Code Editor', icon: Code, color: 'text-emerald-400' },
+    { value: 'whiteboard', label: 'Whiteboard', icon: Paintbrush, color: 'text-amber-400' },
     { value: 'ai', label: 'AI Notes & Memory', icon: Sparkles, color: 'text-purple-400' },
     { value: 'tasks', label: 'Tasks', icon: CheckSquare, color: 'text-emerald-400' },
     { value: 'polls', label: 'Polls', icon: BarChart2, color: 'text-amber-400' },
-    { value: 'timetravel', label: 'Timeline', icon: Clock, color: 'text-sky-400' },
-    { value: 'focus', label: 'Focus Timer', icon: Timer, color: 'text-rose-400' },
   ]
+
+  if (isHostUser) {
+    primaryTools.unshift({ value: 'admin', label: 'Admin Command Center', icon: ShieldAlert, color: 'text-rose-400' })
+  }
+
+  if (canRecord) {
+    primaryTools.push({ value: 'record', label: isRecording ? 'Recording Active...' : 'Record Session', icon: Radio, color: 'text-rose-400' })
+  }
 
   if (meetingType === 'technical') {
     primaryTools.push({ value: 'interview', label: 'Interview Mode', icon: Crown, color: 'text-amber-400' })
@@ -51,27 +89,25 @@ export function MobileToolSelect({
   const secondaryTools = [
     { value: 'onthego', label: 'On-the-Go Low Data', icon: Footprints, color: 'text-emerald-400' },
     { value: 'effects', label: 'Effects & Audio', icon: Sliders, color: 'text-blue-400' },
-    { value: 'scheduler', label: 'Schedule', icon: Calendar, color: 'text-indigo-400' },
+    { value: 'timetravel', label: 'Timeline', icon: Clock, color: 'text-sky-400' },
+    { value: 'focus', label: 'Focus Timer', icon: Timer, color: 'text-rose-400' },
     { value: 'abuse', label: 'Report Abuse', icon: Flag, color: 'text-rose-400' },
   ]
 
   return (
-    <div className="md:hidden">
-      <Button 
-        variant="outline" 
-        size="sm" 
+    <div>
+      <button
         onClick={() => setIsOpen(true)}
-        className="h-9 text-xs font-bold border-slate-800 bg-slate-900/90 text-white hover:bg-slate-800 rounded-xl shadow-lg px-3 flex items-center gap-2 active:scale-95 transition"
+        className="h-8 px-2.5 rounded-xl bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition hover:bg-indigo-600/50"
+        title="Tools & Workspaces"
       >
-        <Grid className="w-4 h-4 text-indigo-400" />
-        <span className="truncate max-w-[100px]">
-          {activeSidebar ? activeSidebar.charAt(0).toUpperCase() + activeSidebar.slice(1) : 'Tools'}
-        </span>
-      </Button>
+        <Grid className="w-3.5 h-3.5 text-indigo-400" />
+        <span>Tools</span>
+      </button>
 
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-[140] flex flex-col justify-end bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-[99999] flex flex-col justify-end bg-black/80 backdrop-blur-md">
             {/* Backdrop click dismiss */}
             <div className="flex-1" onClick={() => setIsOpen(false)} />
 
@@ -81,7 +117,7 @@ export function MobileToolSelect({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="bg-slate-950 border-t border-slate-800 rounded-t-3xl p-5 shadow-2xl space-y-4 max-h-[80vh] flex flex-col overflow-hidden text-white"
+              className="bg-slate-950 border-t border-slate-800 rounded-t-3xl p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col overflow-hidden text-white"
             >
               {/* Drag Handle & Header */}
               <div className="flex flex-col items-center gap-2">
@@ -89,7 +125,7 @@ export function MobileToolSelect({
                 <div className="w-full flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Grid className="w-5 h-5 text-indigo-400" />
-                    <h3 className="text-sm font-bold text-white">Meeting Tools & Utilities</h3>
+                    <h3 className="text-sm font-bold text-white">Tools & Workspaces</h3>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-8 w-8 rounded-full text-slate-400 hover:text-white">
                     <X className="w-4 h-4" />
@@ -101,12 +137,12 @@ export function MobileToolSelect({
               <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-1">
                 <div>
                   <span className="text-[10px] font-bold text-slate-400 font-mono uppercase tracking-wider block mb-2">
-                    Workspace Sidebars
+                    Workspaces & Tools
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {primaryTools.map((tool) => {
                       const Icon = tool.icon
-                      const isActive = activeSidebar === tool.value
+                      const isActive = activeSidebar === tool.value || (tool.value === 'code' && activeWorkspace === 'code') || (tool.value === 'whiteboard' && activeWorkspace === 'whiteboard') || (tool.value === 'screenshare' && isScreenSharing)
                       return (
                         <button
                           key={tool.value}

@@ -4410,10 +4410,43 @@ function RoomPageContent() {
             {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5 text-blue-400" />}
           </button>
 
-          {/* Share Screen Button */}
+          {/* Raise Hand Button (Mobile & Desktop) */}
+          <button
+            onClick={toggleHandRaise}
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
+              isHandRaised ? 'bg-amber-500 text-white shadow-amber-500/40' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
+            }`}
+            title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
+          >
+            <span className="text-base sm:text-lg leading-none">🖐️</span>
+          </button>
+
+          {/* Reaction Emojis Button (Mobile & Desktop) */}
+          <button
+            onClick={() => setShowReactionTray(!showReactionTray)}
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
+              showReactionTray ? 'bg-pink-600 text-white' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
+            }`}
+            title="Send Reaction Emojis"
+          >
+            <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-pink-400" />
+          </button>
+
+          {/* UNO Game Button (Mobile & Desktop) */}
+          <button
+            onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
+              activeWorkspace === 'uno' ? 'bg-orange-600 text-white shadow-orange-600/40' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
+            }`}
+            title="UNO Game"
+          >
+            <span className="text-base sm:text-lg leading-none">🃏</span>
+          </button>
+
+          {/* Desktop-Only Share Screen Button */}
           <button
             onClick={handleScreenShareToggle}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
+            className={`hidden md:flex w-12 h-12 rounded-full items-center justify-center transition shadow-md active:scale-95 ${
               isScreenSharing ? 'bg-indigo-600 text-white shadow-indigo-600/40' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
             }`}
             title={isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
@@ -4421,32 +4454,10 @@ function RoomPageContent() {
             <MonitorUp className="w-5 h-5 text-indigo-400" />
           </button>
 
-          {/* Raise Hand Button */}
-          <button
-            onClick={toggleHandRaise}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
-              isHandRaised ? 'bg-amber-500 text-white shadow-amber-500/40' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
-            }`}
-            title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
-          >
-            <span className="text-lg leading-none">🖐️</span>
-          </button>
-
-          {/* Reaction Button */}
-          <button
-            onClick={() => setShowReactionTray(!showReactionTray)}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
-              showReactionTray ? 'bg-pink-600 text-white' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
-            }`}
-            title="Send Reaction"
-          >
-            <Heart className="w-5 h-5 text-pink-400" />
-          </button>
-
-          {/* Chat Button */}
+          {/* Desktop-Only Chat Button */}
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
+            className={`hidden md:flex w-12 h-12 rounded-full items-center justify-center transition shadow-md active:scale-95 ${
               activeSidebar === 'chat' ? 'bg-blue-600 text-white shadow-blue-600/40' : 'bg-slate-800 border border-white/10 text-slate-200 hover:bg-slate-700'
             }`}
             title="Chat"
@@ -4454,8 +4465,8 @@ function RoomPageContent() {
             <MessageSquare className="w-5 h-5 text-blue-400" />
           </button>
 
-          {/* ••• More Button */}
-          <div className="relative">
+          {/* Desktop-Only ••• More Button */}
+          <div className="hidden md:block relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
@@ -4587,12 +4598,12 @@ function RoomPageContent() {
           </div>
         </div>
 
-        {/* Right Section: Quick icon actions + End/Leave */}
-        <div className="flex items-center gap-2">
-          {/* Participants */}
+        {/* Right Section: Quick icon actions (Desktop) + End/Leave (Mobile & Desktop) */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Participants (Desktop Only) */}
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
+            className={`hidden md:flex w-10 h-10 rounded-full items-center justify-center transition ${
               activeSidebar === 'participants' ? 'bg-indigo-600 text-white' : 'bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700'
             }`}
             title="Participants"
@@ -4600,28 +4611,28 @@ function RoomPageContent() {
             <Users className="w-4 h-4 text-indigo-400" />
           </button>
 
-          {/* Network Stats */}
+          {/* Network Stats (Desktop Only) */}
           <button
             onClick={() => setIsStatsModalOpen(true)}
-            className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition"
+            className="hidden md:flex w-10 h-10 rounded-full bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 items-center justify-center transition"
             title="Network Status"
           >
             <Activity className="w-4 h-4 text-emerald-400" />
           </button>
 
-          {/* Device Settings */}
+          {/* Device Settings (Desktop Only) */}
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
-            className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition"
+            className="hidden md:flex w-10 h-10 rounded-full bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 items-center justify-center transition"
             title="Device & Effects"
           >
             <Settings className="w-4 h-4 text-slate-300" />
           </button>
 
-          {/* Export */}
+          {/* Export (Desktop Only) */}
           <button
             onClick={() => setIsExportModalOpen(true)}
-            className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition"
+            className="hidden md:flex w-10 h-10 rounded-full bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 items-center justify-center transition"
             title="Export Package"
           >
             <Archive className="w-4 h-4 text-sky-400" />
@@ -4680,6 +4691,7 @@ function RoomPageContent() {
           onUpdateAdaptiveConfig={updateAdaptiveConfig}
           userRecordingPermissions={userRecordingPermissions}
           onToggleUserRecordingPermission={handleToggleUserRecordingPermission}
+          onUpdateAdminSetting={(key: keyof AdminSettings, val: boolean) => setAdminSettings((prev) => ({ ...prev, [key]: val }))}
         />
       )}
 
