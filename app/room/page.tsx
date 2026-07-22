@@ -3986,7 +3986,11 @@ function RoomPageContent() {
           <NetworkSignalBadge
             stats={adaptiveStats}
             config={adaptiveConfig}
-            onOpenModal={() => setIsStatsModalOpen(true)}
+            onOpenModal={() => {
+              if (isHostUser) {
+                setIsStatsModalOpen(true)
+              }
+            }}
             onToggleMode={setAdaptiveMode}
           />
 
@@ -4545,9 +4549,9 @@ function RoomPageContent() {
       {/* ── ONE SINGLE FLOATING ACTION DOCK (Simple, Clean, User-Friendly Controls) ── */}
       <footer className="px-2 sm:px-4 py-3 bg-[#0D1015] border-t border-slate-800/80 flex items-center justify-between gap-2 z-[100] shrink-0 shadow-2xl select-none relative">
         
-        {/* Left Card: Workspace Buttons (Simple & Clean) */}
+        {/* Left Card: Dynamic Workspace Buttons per Meeting Type */}
         <div className="hidden md:flex items-center gap-1 bg-[#161B26] rounded-2xl p-1 shadow-inner">
-          {(meetingType === 'technical' || meetingType === 'interview') && (
+          {(meetingType === 'business' || meetingType === 'technical' || meetingType === 'interview') ? (
             <>
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
@@ -4557,7 +4561,7 @@ function RoomPageContent() {
                 title="Code Workspace Editor"
               >
                 <Code className="w-4 h-4 text-[#0B5CFF]" />
-                <span className="text-[10px] font-bold mt-0.5">Code</span>
+                <span className="text-[10px] font-bold mt-0.5">Code Editor</span>
               </button>
 
               <button
@@ -4568,7 +4572,7 @@ function RoomPageContent() {
                 title="Whiteboard Workspace"
               >
                 <Paintbrush className="w-4 h-4 text-[#0B5CFF]" />
-                <span className="text-[10px] font-bold mt-0.5">Tools</span>
+                <span className="text-[10px] font-bold mt-0.5">Whiteboard</span>
               </button>
 
               <button
@@ -4578,45 +4582,43 @@ function RoomPageContent() {
                 }`}
                 title="UNO! Game"
               >
-                <Calendar className="w-4 h-4 text-[#0B5CFF]" />
-                <span className="text-[10px] font-bold mt-0.5">Agenda</span>
+                <span className="text-sm leading-none">🃏</span>
+                <span className="text-[10px] font-bold mt-0.5">UNO Game</span>
               </button>
             </>
-          )}
-
-          {meetingType !== 'technical' && meetingType !== 'interview' && (
+          ) : (
             <>
               <button
-                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  showMoreMenu ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold' : 'hover:bg-[#1A1D24] text-[#0B5CFF] hover:text-[#FFFFFF] font-bold'
+                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold shadow-md' : 'hover:bg-[#1A1D24] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold'
                 }`}
-                title="More Options"
+                title="Notes Workspace"
               >
-                <MoreHorizontal className="w-4 h-4 text-[#0B5CFF]" />
-                <span className="text-[10px] font-bold mt-0.5">More</span>
+                <FileText className="w-4 h-4 text-[#0B5CFF]" />
+                <span className="text-[10px] font-bold mt-0.5">Notes</span>
               </button>
 
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold' : 'hover:bg-[#1A1D24] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold'
+                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold shadow-md' : 'hover:bg-[#1A1D24] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold'
                 }`}
-                title="Tools & Whiteboard"
+                title="Whiteboard Workspace"
               >
-                <Wrench className="w-4 h-4 text-[#9CA3AF]" />
-                <span className="text-[10px] font-bold mt-0.5">Tools</span>
+                <Paintbrush className="w-4 h-4 text-[#0B5CFF]" />
+                <span className="text-[10px] font-bold mt-0.5">Whiteboard</span>
               </button>
 
               <button
-                onClick={() => setActiveWorkspace(activeWorkspace === 'agenda' ? 'none' : 'agenda')}
+                onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'agenda' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold' : 'hover:bg-[#1A1D24] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold'
+                  activeWorkspace === 'uno' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold shadow-md' : 'hover:bg-[#1A1D24] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold'
                 }`}
-                title="Meeting Agenda"
+                title="UNO! Game"
               >
-                <Calendar className="w-4 h-4 text-[#0B5CFF]" />
-                <span className="text-[10px] font-bold mt-0.5">Agenda</span>
+                <span className="text-sm leading-none">🃏</span>
+                <span className="text-[10px] font-bold mt-0.5">UNO Game</span>
               </button>
             </>
           )}
@@ -4835,11 +4837,15 @@ function RoomPageContent() {
             <span>{participants.length || 1}</span>
           </button>
 
-          {/* Network Stats Pulse */}
+          {/* Network Stats Pulse (Host Only Opens Control Panel) */}
           <button
-            onClick={() => setIsStatsModalOpen(true)}
-            className="hidden md:flex w-9 h-9 rounded-full bg-[#1E2330] hover:bg-[#2A3040] text-[#22C55E] items-center justify-center border-none shadow-md transition"
-            title="Network Status"
+            onClick={() => {
+              if (isHostUser) {
+                setIsStatsModalOpen(true)
+              }
+            }}
+            className="hidden md:flex w-9 h-9 rounded-full bg-[#1E2330] hover:bg-[#2A3040] text-[#22C55E] items-center justify-center border-none shadow-md transition cursor-pointer"
+            title={isHostUser ? "Network Control Panel (Admin Only)" : `Network Quality: ${adaptiveStats?.score || 'Good'} (${adaptiveStats?.rtt || 24}ms)`}
           >
             <Activity className="w-4 h-4 text-[#22C55E]" />
           </button>
