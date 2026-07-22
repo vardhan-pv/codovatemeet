@@ -4007,127 +4007,98 @@ function RoomPageContent() {
           )}
         </div>
         
-        {/* Right Header Navigation Pill Buttons (Filtered by Meeting Type) */}
-        <div className="hidden lg:flex items-center gap-1.5">
-          {/* GitHub & Deploy (Technical/Interview ONLY) */}
-          {(meetingType === 'technical' || meetingType === 'interview') && (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.open('https://github.com/vardhan-pv/codovatemeet', '_blank')}
-                className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-[#FFFFFF] bg-[#1A1D24] border-2 border-[#2B3344] hover:border-[#0B5CFF] hover:bg-[#0B5CFF]"
-              >
-                <GitBranch className="w-3.5 h-3.5 text-[#3B82F6]" /> GitHub
-              </Button>
+        {/* Right Header Navigation Pill Buttons (Simple, User-Friendly Controls matching Bottom Row) */}
+        <div className="hidden md:flex items-center gap-2">
+          {/* Quick Mic Control */}
+          <button
+            onClick={handleMuteToggle}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition shadow-md border-none active:scale-95 cursor-pointer ${
+              isMuted ? 'bg-[#801313] hover:bg-[#991B1B] text-white' : 'bg-[#0B5CFF] hover:bg-[#0846CC] text-white'
+            }`}
+            title={isMuted ? 'Unmute Mic' : 'Mute Mic'}
+          >
+            {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </button>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.open('https://vercel.com/dashboard', '_blank')}
-                className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-[#FFFFFF] bg-[#1A1D24] border-2 border-[#2B3344] hover:border-[#0B5CFF] hover:bg-[#0B5CFF]"
-              >
-                <Rocket className="w-3.5 h-3.5 text-[#3B82F6]" /> Deploy
-              </Button>
-            </>
-          )}
+          {/* Quick Camera Control */}
+          <button
+            onClick={handleVideoToggle}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition shadow-md border-none active:scale-95 cursor-pointer ${
+              isVideoOff ? 'bg-[#801313] hover:bg-[#991B1B] text-white' : 'bg-[#0B5CFF] hover:bg-[#0846CC] text-white'
+            }`}
+            title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
+          >
+            {isVideoOff ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+          </button>
 
-          {/* AI Notes */}
-          <Button
-            variant="ghost"
-            size="sm"
+          {/* Quick Screen Share */}
+          <button
+            onClick={handleScreenShareToggle}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition shadow-md border-none active:scale-95 cursor-pointer ${
+              isScreenSharing ? 'bg-[#0B5CFF] text-white' : 'bg-[#1E2330] hover:bg-[#2A3040] text-[#0B5CFF]'
+            }`}
+            title={isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
+          >
+            <MonitorUp className="w-4 h-4" />
+          </button>
+
+          {/* Quick Chat Button */}
+          <button
+            onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition shadow-md border-none active:scale-95 cursor-pointer ${
+              activeSidebar === 'chat' ? 'bg-[#0B5CFF] text-white' : 'bg-[#1E2330] hover:bg-[#2A3040] text-[#0B5CFF]'
+            }`}
+            title="Chat Messages"
+          >
+            <MessageSquare className="w-4 h-4" />
+          </button>
+
+          {/* Quick Participants Badge */}
+          <button
+            onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
+            className={`h-9 px-3 rounded-full bg-[#1E2330] hover:bg-[#2A3040] text-[#0B5CFF] font-bold text-xs flex items-center gap-1.5 border-none shadow-md transition cursor-pointer`}
+            title="Participants List"
+          >
+            <Users className="w-4 h-4 text-[#0B5CFF]" />
+            <span>{participants.length || 1}</span>
+          </button>
+
+          {/* AI Notes Button */}
+          <button
             onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
-            className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
+            className={`h-9 px-3 rounded-full font-extrabold text-xs flex items-center gap-1.5 transition border-none shadow-md cursor-pointer ${
               activeSidebar === 'ai'
-                ? 'bg-[#0B5CFF] text-[#FFFFFF] border-[#0B5CFF] shadow-md'
-                : 'bg-[#1A1D24] border-[#2B3344] text-[#9CA3AF] hover:border-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-[#FFFFFF]'
+                ? 'bg-[#0B5CFF] text-white'
+                : 'bg-[#1E2330] hover:bg-[#2A3040] text-slate-200'
             }`}
+            title="AI Notes & Assistant"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#3B82F6] animate-pulse" /> Notes
-          </Button>
+            <Sparkles className="w-3.5 h-3.5 text-[#0B5CFF]" />
+            <span>Notes</span>
+          </button>
 
-          {/* Tasks */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
-            className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
-              activeSidebar === 'tasks'
-                ? 'bg-[#0B5CFF] text-[#FFFFFF] border-[#0B5CFF] shadow-md'
-                : 'bg-[#1A1D24] border-[#2B3344] text-[#9CA3AF] hover:border-[#22C55E] hover:bg-[#22C55E] hover:text-[#FFFFFF]'
-            }`}
+          {/* Device Settings Gear */}
+          <button
+            onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
+            className="w-9 h-9 rounded-full bg-[#1E2330] hover:bg-[#2A3040] text-slate-300 flex items-center justify-center border-none shadow-md transition cursor-pointer"
+            title="Device & Settings"
           >
-            <Check className="w-3.5 h-3.5 text-[#22C55E]" /> Tasks
-          </Button>
+            <Settings className="w-4 h-4 text-slate-300" />
+          </button>
 
-          {/* Polls */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setActiveSidebar(activeSidebar === 'polls' ? null : 'polls')}
-            className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
-              activeSidebar === 'polls'
-                ? 'bg-[#0B5CFF] text-[#FFFFFF] border-[#0B5CFF] shadow-md'
-                : 'bg-[#1A1D24] border-[#2B3344] text-[#9CA3AF] hover:border-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-[#FFFFFF]'
-            }`}
-          >
-            <BarChart2 className="w-3.5 h-3.5 text-[#3B82F6]" /> Polls
-          </Button>
-
-          {/* Interview Mode (Technical/Interview ONLY) */}
-          {(meetingType === 'technical' || meetingType === 'interview') && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')}
-              className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
-                activeSidebar === 'interview'
-                  ? 'bg-[#0B5CFF] text-[#FFFFFF] border-[#0B5CFF] shadow-md'
-                  : 'bg-[#1A1D24] border-[#2B3344] text-[#9CA3AF] hover:border-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-[#FFFFFF]'
-              }`}
-            >
-              <Target className="w-3.5 h-3.5 text-[#3B82F6]" /> Interview Mode
-            </Button>
-          )}
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')}
-            className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
-              activeSidebar === 'timetravel'
-                ? 'bg-[#0B5CFF] text-[#FFFFFF] border-[#0B5CFF] shadow-md'
-                : 'bg-[#1A1D24] border-[#2B3344] text-[#9CA3AF] hover:border-[#3B82F6] hover:bg-[#3B82F6] hover:text-[#FFFFFF]'
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5 text-[#3B82F6]" /> Timeline
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setActiveSidebar(activeSidebar === 'focus' ? null : 'focus')}
-            className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
-              activeSidebar === 'focus'
-                ? 'bg-[#FBBF24] text-[#111827] border-[#FBBF24] shadow-md'
-                : 'bg-[#1A1D24] border-[#2B3344] text-[#9CA3AF] hover:border-[#FBBF24] hover:bg-[#FBBF24] hover:text-[#111827]'
-            }`}
-          >
-            <Timer className="w-3.5 h-3.5 text-[#FBBF24]" /> Focus
-          </Button>
-
+          {/* Profile Popup Avatar */}
           <div className="relative ml-1">
             <button
               onClick={() => setShowProfilePopup(prev => !prev)}
-              className="w-8 h-8 rounded-full bg-[#0B5CFF] text-[#FFFFFF] border-2 border-[#3B82F6] flex items-center justify-center font-black text-xs hover:scale-105 transition shadow-md shadow-[#0B5CFF]/30"
+              className="w-8 h-8 rounded-full bg-[#0B5CFF] text-[#FFFFFF] border-none flex items-center justify-center font-black text-xs hover:scale-105 transition shadow-md shadow-[#0B5CFF]/30 cursor-pointer"
               title="Your Profile"
             >
               {(lobbyName || 'U').charAt(0).toUpperCase()}
             </button>
             {showProfilePopup && (
-              <div className="absolute right-0 top-10 w-64 bg-[#161B26] border-2 border-[#2B3344] backdrop-blur-xl rounded-2xl p-4 shadow-2xl z-[250] animate-in fade-in slide-in-from-top-2 duration-150 text-[#FFFFFF]">
+              <div className="absolute right-0 top-10 w-64 bg-[#161B26] border border-slate-700/80 backdrop-blur-xl rounded-2xl p-4 shadow-2xl z-[250] animate-in fade-in slide-in-from-top-2 duration-150 text-[#FFFFFF]">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-full bg-[#0B5CFF] border-2 border-[#3B82F6] flex items-center justify-center text-[#FFFFFF] font-black text-lg">
+                  <div className="w-12 h-12 rounded-full bg-[#0B5CFF] flex items-center justify-center text-[#FFFFFF] font-black text-lg shadow-md">
                     {(lobbyName || 'U').charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -4163,6 +4134,16 @@ function RoomPageContent() {
               </div>
             )}
           </div>
+
+          {/* Quick Leave Button (Dark Red Pill - Matching Bottom Row) */}
+          <Button
+            onClick={handleLeaveCall}
+            className="h-9 px-3.5 rounded-full bg-[#801313] hover:bg-[#991B1B] text-white font-extrabold text-xs shadow-md border-none flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+            title="Leave Meeting"
+          >
+            <LogOut className="w-3.5 h-3.5 shrink-0 text-white" />
+            <span>Leave</span>
+          </Button>
         </div>
 
         {/* Mobile Tool Selector & Host Admin Button */}
@@ -4171,7 +4152,7 @@ function RoomPageContent() {
           {isHostUser && (
             <button
               onClick={() => setShowAdminCenter(true)}
-              className="h-8 px-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition hover:bg-amber-500/30 cursor-pointer"
+              className="h-8 px-3 rounded-full bg-[#1E2330] hover:bg-[#2A3040] text-amber-400 font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition border-none cursor-pointer"
               title="Admin Command Center"
             >
               <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
