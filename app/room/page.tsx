@@ -3903,7 +3903,7 @@ function RoomPageContent() {
 
   // Connected Meeting Room Layout
   return (
-    <div className="relative h-[100dvh] bg-[#F8F9FA] text-[#3D3D50] flex flex-col justify-between overflow-hidden font-sans selection:bg-[#EEF4FF]">
+    <div className="relative h-[100dvh] bg-[#0B0F19] text-[#F8F9FA] flex flex-col justify-between overflow-hidden font-sans selection:bg-[#0B5CFF]/30">
       
       {/* Chat Notification Popup Toast */}
       <AnimatePresence>
@@ -3913,21 +3913,21 @@ function RoomPageContent() {
             animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
             exit={{ opacity: 0, y: 50, x: "-50%", scale: 0.95 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="fixed bottom-24 left-1/2 z-[100] w-80 bg-[#FFFFFF] border-2 border-slate-300 backdrop-blur-md rounded-2xl p-4 shadow-2xl flex items-start gap-3 text-[#3D3D50]"
+            className="fixed bottom-24 left-1/2 z-[100] w-80 bg-slate-900/95 border-2 border-slate-700 backdrop-blur-md rounded-2xl p-4 shadow-2xl flex items-start gap-3 text-white"
           >
-            <div className="p-2 bg-[#EEF4FF] text-[#0B5CFF] rounded-xl shrink-0 mt-0.5 border border-[#0B5CFF]/30">
+            <div className="p-2 bg-[#0B5CFF]/20 text-[#0B5CFF] rounded-xl shrink-0 mt-0.5 border border-[#0B5CFF]/40">
               <MessageSquare className="h-4.5 w-4.5" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <span className="font-extrabold text-xs text-[#000000] truncate">{chatToast.sender}</span>
-                <span className="text-[10px] text-[#67677E] font-bold shrink-0">New Message</span>
+                <span className="font-extrabold text-xs text-white truncate">{chatToast.sender}</span>
+                <span className="text-[10px] text-slate-400 font-bold shrink-0">New Message</span>
               </div>
-              <p className="text-xs text-[#3D3D50] mt-1 line-clamp-2 break-words leading-relaxed font-medium">{chatToast.text}</p>
+              <p className="text-xs text-slate-300 mt-1 line-clamp-2 break-words leading-relaxed font-medium">{chatToast.text}</p>
             </div>
             <button 
               onClick={() => setChatToast(null)} 
-              className="text-[#67677E] hover:text-[#000000] transition p-0.5 rounded-lg hover:bg-[#EEF4FF] shrink-0"
+              className="text-slate-400 hover:text-white transition p-0.5 rounded-lg hover:bg-slate-800 shrink-0"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -4012,7 +4012,7 @@ function RoomPageContent() {
                 variant="ghost"
                 size="sm"
                 onClick={() => window.open('https://github.com/vardhan-pv/codovatemeet', '_blank')}
-                className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-[#232333] border-2 border-slate-300 hover:border-[#0B5CFF] hover:bg-[#EEF4FF] hover:text-[#0B5CFF]"
+                className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-slate-200 bg-slate-900 border-2 border-slate-700 hover:border-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-white"
               >
                 <GitBranch className="w-3.5 h-3.5 text-[#0B5CFF]" /> GitHub
               </Button>
@@ -4021,7 +4021,7 @@ function RoomPageContent() {
                 variant="ghost"
                 size="sm"
                 onClick={() => window.open('https://vercel.com/dashboard', '_blank')}
-                className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-[#232333] border-2 border-slate-300 hover:border-[#0B5CFF] hover:bg-[#EEF4FF] hover:text-[#0B5CFF]"
+                className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-slate-200 bg-slate-900 border-2 border-slate-700 hover:border-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-white"
               >
                 <Rocket className="w-3.5 h-3.5 text-[#0B5CFF]" /> Deploy
               </Button>
@@ -4035,8 +4035,8 @@ function RoomPageContent() {
             onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
             className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
               activeSidebar === 'ai'
-                ? 'bg-[#7B61FF] text-white border-[#7B61FF] shadow-sm'
-                : 'bg-white border-slate-300 text-[#232333] hover:border-[#7B61FF] hover:bg-[#7B61FF]/10 hover:text-[#7B61FF]'
+                ? 'bg-[#7B61FF] text-white border-[#7B61FF] shadow-md'
+                : 'bg-slate-900 border-slate-700 text-slate-200 hover:border-[#7B61FF] hover:bg-[#7B61FF] hover:text-white'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-[#7B61FF] animate-pulse" /> Notes
@@ -4049,8 +4049,8 @@ function RoomPageContent() {
             onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
             className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
               activeSidebar === 'tasks'
-                ? 'bg-[#3EC78F] text-white border-[#3EC78F] shadow-sm'
-                : 'bg-white border-slate-300 text-[#232333] hover:border-[#3EC78F] hover:bg-[#3EC78F]/10 hover:text-[#3EC78F]'
+                ? 'bg-[#3EC78F] text-white border-[#3EC78F] shadow-md'
+                : 'bg-slate-900 border-slate-700 text-slate-200 hover:border-[#3EC78F] hover:bg-[#3EC78F] hover:text-white'
             }`}
           >
             <Check className="w-3.5 h-3.5 text-[#3EC78F]" /> Tasks
@@ -4063,8 +4063,8 @@ function RoomPageContent() {
             onClick={() => setActiveSidebar(activeSidebar === 'polls' ? null : 'polls')}
             className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
               activeSidebar === 'polls'
-                ? 'bg-[#0B5CFF] text-white border-[#0B5CFF] shadow-sm'
-                : 'bg-white border-slate-300 text-[#232333] hover:border-[#0B5CFF] hover:bg-[#EEF4FF] hover:text-[#0B5CFF]'
+                ? 'bg-[#0B5CFF] text-white border-[#0B5CFF] shadow-md'
+                : 'bg-slate-900 border-slate-700 text-slate-200 hover:border-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-white'
             }`}
           >
             <BarChart2 className="w-3.5 h-3.5 text-[#0B5CFF]" /> Polls
@@ -4078,8 +4078,8 @@ function RoomPageContent() {
               onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')}
               className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
                 activeSidebar === 'interview'
-                  ? 'bg-[#7B61FF] text-white border-[#7B61FF] shadow-sm'
-                  : 'bg-white border-slate-300 text-[#232333] hover:border-[#7B61FF] hover:bg-[#7B61FF]/10 hover:text-[#7B61FF]'
+                  ? 'bg-[#7B61FF] text-white border-[#7B61FF] shadow-md'
+                  : 'bg-slate-900 border-slate-700 text-slate-200 hover:border-[#7B61FF] hover:bg-[#7B61FF] hover:text-white'
               }`}
             >
               <Target className="w-3.5 h-3.5 text-[#7B61FF]" /> Interview Mode
@@ -4092,8 +4092,8 @@ function RoomPageContent() {
             onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')}
             className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
               activeSidebar === 'timetravel'
-                ? 'bg-[#00B8FF] text-white border-[#00B8FF] shadow-sm'
-                : 'bg-white border-slate-300 text-[#232333] hover:border-[#00B8FF] hover:bg-[#00B8FF]/10 hover:text-[#00B8FF]'
+                ? 'bg-[#00B8FF] text-white border-[#00B8FF] shadow-md'
+                : 'bg-slate-900 border-slate-700 text-slate-200 hover:border-[#00B8FF] hover:bg-[#00B8FF] hover:text-white'
             }`}
           >
             <Clock className="w-3.5 h-3.5 text-[#00B8FF]" /> Timeline
@@ -4105,54 +4105,54 @@ function RoomPageContent() {
             onClick={() => setActiveSidebar(activeSidebar === 'focus' ? null : 'focus')}
             className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
               activeSidebar === 'focus'
-                ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
-                : 'bg-white border-slate-300 text-[#232333] hover:border-amber-500 hover:bg-amber-50 hover:text-amber-600'
+                ? 'bg-amber-600 text-white border-amber-600 shadow-md'
+                : 'bg-slate-900 border-slate-700 text-slate-200 hover:border-amber-500 hover:bg-amber-600 hover:text-white'
             }`}
           >
-            <Timer className="w-3.5 h-3.5 text-amber-500" /> Focus
+            <Timer className="w-3.5 h-3.5 text-amber-400" /> Focus
           </Button>
 
           <div className="relative ml-1">
             <button
               onClick={() => setShowProfilePopup(prev => !prev)}
-              className="w-8 h-8 rounded-full bg-[#EEF4FF] text-[#0B5CFF] border-2 border-[#0B5CFF] flex items-center justify-center font-black text-xs hover:scale-105 transition shadow-xs"
+              className="w-8 h-8 rounded-full bg-[#0B5CFF] text-white border-2 border-blue-400 flex items-center justify-center font-black text-xs hover:scale-105 transition shadow-md shadow-[#0B5CFF]/30"
               title="Your Profile"
             >
               {(lobbyName || 'U').charAt(0).toUpperCase()}
             </button>
             {showProfilePopup && (
-              <div className="absolute right-0 top-10 w-64 bg-[#FFFFFF] border-2 border-slate-300 backdrop-blur-xl rounded-2xl p-4 shadow-2xl z-[250] animate-in fade-in slide-in-from-top-2 duration-150 text-[#3D3D50]">
+              <div className="absolute right-0 top-10 w-64 bg-slate-900/95 border-2 border-slate-700 backdrop-blur-xl rounded-2xl p-4 shadow-2xl z-[250] animate-in fade-in slide-in-from-top-2 duration-150 text-white">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-full bg-[#EEF4FF] border-2 border-[#0B5CFF] flex items-center justify-center text-[#0B5CFF] font-black text-lg">
+                  <div className="w-12 h-12 rounded-full bg-[#0B5CFF] border-2 border-blue-400 flex items-center justify-center text-white font-black text-lg">
                     {(lobbyName || 'U').charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-extrabold text-[#000000] truncate">{lobbyName || 'You'}</p>
-                    <p className="text-xs text-[#67677E] truncate">{user?.email || 'Guest'}</p>
+                    <p className="text-sm font-extrabold text-white truncate">{lobbyName || 'You'}</p>
+                    <p className="text-xs text-slate-400 truncate">{user?.email || 'Guest'}</p>
                     <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                      isHostUser ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-[#EEF4FF] text-[#0B5CFF] border border-[#0B5CFF]/30'
+                      isHostUser ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
                     }`}>
                       {isHostUser ? '👑 Host' : '👤 Participant'}
                     </span>
                   </div>
                 </div>
-                <div className="border-t border-slate-200 pt-3 space-y-1">
+                <div className="border-t border-slate-800 pt-3 space-y-1">
                   <button
                     onClick={() => { setActiveSidebar('effects'); setShowProfilePopup(false) }}
-                    className="w-full text-left text-xs text-[#232333] font-bold hover:text-[#0B5CFF] px-3 py-2 rounded-xl hover:bg-[#EEF4FF] transition flex items-center gap-2"
+                    className="w-full text-left text-xs text-slate-200 font-bold hover:text-white px-3 py-2 rounded-xl hover:bg-slate-800 transition flex items-center gap-2"
                   >
                     <Settings className="w-3.5 h-3.5 text-[#0B5CFF]" /> Device & Audio Settings
                   </button>
                   <button
                     onClick={() => { setShowProfilePopup(false); handleLeaveCall() }}
-                    className="w-full text-left text-xs text-rose-600 font-bold hover:text-rose-700 px-3 py-2 rounded-xl hover:bg-rose-50 transition flex items-center gap-2"
+                    className="w-full text-left text-xs text-rose-400 font-bold hover:text-rose-300 px-3 py-2 rounded-xl hover:bg-rose-600/20 transition flex items-center gap-2"
                   >
                     <PhoneOff className="w-3.5 h-3.5" /> Leave Meeting
                   </button>
                 </div>
                 <button
                   onClick={() => setShowProfilePopup(false)}
-                  className="absolute top-2 right-2 text-[#67677E] hover:text-[#000000] transition"
+                  className="absolute top-2 right-2 text-slate-400 hover:text-white transition"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -4473,10 +4473,10 @@ function RoomPageContent() {
               className="fixed inset-0 bg-black/70 backdrop-blur-md z-[99990] md:hidden"
               onClick={() => setActiveSidebar(null)}
             />
-            <aside className="fixed md:static inset-x-0 bottom-0 top-14 md:top-0 z-[99995] md:z-20 h-[calc(100vh-3.5rem)] md:h-full w-full md:w-80 bg-[#FFFFFF] border-t-2 md:border-t-0 md:border-l-2 border-slate-300 flex flex-col shrink-0 shadow-2xl animate-in slide-in-from-bottom-8 md:slide-in-from-right-8 duration-200 rounded-t-3xl md:rounded-none text-[#3D3D50]">
-              <div className="md:hidden w-12 h-1.5 bg-slate-300 rounded-full mx-auto mt-2.5 mb-1" />
-              <div className="p-3.5 border-b-2 border-slate-300 flex justify-between items-center bg-[#F8F9FA] backdrop-blur-md">
-                <h2 className="font-extrabold text-sm text-[#000000] select-none capitalize">
+            <aside className="fixed md:static inset-x-0 bottom-0 top-14 md:top-0 z-[99995] md:z-20 h-[calc(100vh-3.5rem)] md:h-full w-full md:w-80 bg-[#0F172A] border-t-2 md:border-t-0 md:border-l-2 border-slate-800 flex flex-col shrink-0 shadow-2xl animate-in slide-in-from-bottom-8 md:slide-in-from-right-8 duration-200 rounded-t-3xl md:rounded-none text-slate-100">
+              <div className="md:hidden w-12 h-1.5 bg-slate-700 rounded-full mx-auto mt-2.5 mb-1" />
+              <div className="p-3.5 border-b border-slate-800 flex justify-between items-center bg-slate-900/90 backdrop-blur-md">
+                <h2 className="font-extrabold text-sm text-white select-none capitalize">
                   {activeSidebar === 'chat' ? 'In-Call Messages' :
                    activeSidebar === 'participants' ? 'Meeting Participants' :
                    activeSidebar === 'ai' ? 'Codovate Assistant' :
@@ -4484,7 +4484,7 @@ function RoomPageContent() {
                    activeSidebar === 'focus' ? 'Co-working & Pomodoro' :
                    activeSidebar === 'interview' ? 'Technical Interview' : activeSidebar}
                 </h2>
-                <Button variant="ghost" size="icon" onClick={() => setActiveSidebar(null)} className="h-8 w-8 text-[#67677E] hover:text-[#000000] hover:bg-[#EEF4FF] rounded-full">
+                <Button variant="ghost" size="icon" onClick={() => setActiveSidebar(null)} className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full">
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -4504,13 +4504,13 @@ function RoomPageContent() {
               }
               const gridCols = sidebarTabs.length === 5 ? 'grid-cols-5' : 'grid-cols-4'
               return (
-                <div className={`grid ${gridCols} border-b-2 border-slate-300 bg-[#F8F9FA] p-1`}>
+                <div className={`grid ${gridCols} border-b border-slate-800 bg-slate-950 p-1`}>
                   {sidebarTabs.map(item => (
                     <button
                       key={item.tab}
                       onClick={() => setActiveSidebar(item.tab)}
                       title={item.label}
-                      className={`py-1.5 flex justify-center rounded transition ${activeSidebar === item.tab ? 'bg-[#EEF4FF] text-[#0B5CFF] shadow-xs border border-[#0B5CFF]/30 font-extrabold' : 'text-[#67677E] hover:text-[#000000]'}`}
+                      className={`py-1.5 flex justify-center rounded transition ${activeSidebar === item.tab ? 'bg-[#0B5CFF] text-white shadow-md font-extrabold' : 'text-slate-400 hover:text-white'}`}
                     >
                       {item.icon}
                     </button>
@@ -4519,7 +4519,7 @@ function RoomPageContent() {
               )
             })()}
 
-            <div className="flex-1 min-h-0 bg-[#FFFFFF]">
+            <div className="flex-1 min-h-0 bg-[#0F172A]">
               {renderSidebarContent()}
             </div>
           </aside>
@@ -4543,38 +4543,38 @@ function RoomPageContent() {
       )}
 
       {/* ── ONE SINGLE FLOATING ACTION DOCK (Replaced according to user images - Zero Duplicates) ── */}
-      <footer className="px-2 sm:px-4 py-3 bg-[#FFFFFF] border-t-2 border-slate-300 flex items-center justify-between gap-2 z-[100] shrink-0 shadow-lg select-none relative">
+      <footer className="px-2 sm:px-4 py-3 bg-[#0F172A] border-t-2 border-slate-800 flex items-center justify-between gap-2 z-[100] shrink-0 shadow-2xl select-none relative">
         
         {/* Left Card: Dynamically Tailored Workspace Buttons (Desktop Only) */}
-        <div className="hidden md:flex items-center gap-1.5 bg-[#F8F9FA] border-2 border-slate-300 rounded-2xl p-1.5 shadow-xs">
+        <div className="hidden md:flex items-center gap-1.5 bg-slate-900 border-2 border-slate-700 rounded-2xl p-1.5 shadow-inner">
           {(meetingType === 'technical' || meetingType === 'interview') && (
             <>
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'code' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'code' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Code Workspace Editor"
               >
-                <Code className={`w-4 h-4 ${activeWorkspace === 'code' ? 'text-white' : 'text-[#0B5CFF]'}`} />
+                <Code className="w-4 h-4 text-emerald-400" />
                 <span className="text-[9px] font-bold mt-0.5">Code</span>
               </button>
 
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Whiteboard Workspace"
               >
-                <Paintbrush className={`w-4 h-4 ${activeWorkspace === 'whiteboard' ? 'text-white' : 'text-amber-500'}`} />
+                <Paintbrush className="w-4 h-4 text-amber-400" />
                 <span className="text-[9px] font-bold mt-0.5">Whiteboard</span>
               </button>
 
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'uno' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'uno' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="UNO! Game"
               >
@@ -4589,33 +4589,33 @@ function RoomPageContent() {
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Shared Meeting Notes"
               >
-                <Sparkles className={`w-4 h-4 ${activeWorkspace === 'notes' ? 'text-white' : 'text-[#7B61FF]'}`} />
+                <Sparkles className="w-4 h-4 text-purple-400" />
                 <span className="text-[9px] font-bold mt-0.5">Notes</span>
               </button>
 
               <button
                 onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeSidebar === 'tasks' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeSidebar === 'tasks' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Tasks & Action Items"
               >
-                <Check className={`w-4 h-4 ${activeSidebar === 'tasks' ? 'text-white' : 'text-[#3EC78F]'}`} />
+                <Check className="w-4 h-4 text-emerald-400" />
                 <span className="text-[9px] font-bold mt-0.5">Tasks</span>
               </button>
 
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'agenda' ? 'none' : 'agenda')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'agenda' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'agenda' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Meeting Agenda"
               >
-                <Calendar className={`w-4 h-4 ${activeWorkspace === 'agenda' ? 'text-white' : 'text-[#0B5CFF]'}`} />
+                <Calendar className="w-4 h-4 text-blue-400" />
                 <span className="text-[9px] font-bold mt-0.5">Agenda</span>
               </button>
             </>
@@ -4626,33 +4626,33 @@ function RoomPageContent() {
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Classroom Whiteboard"
               >
-                <Paintbrush className={`w-4 h-4 ${activeWorkspace === 'whiteboard' ? 'text-white' : 'text-amber-500'}`} />
+                <Paintbrush className="w-4 h-4 text-amber-400" />
                 <span className="text-[9px] font-bold mt-0.5">Whiteboard</span>
               </button>
 
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Classroom Notes"
               >
-                <Sparkles className={`w-4 h-4 ${activeWorkspace === 'notes' ? 'text-white' : 'text-[#7B61FF]'}`} />
+                <Sparkles className="w-4 h-4 text-purple-400" />
                 <span className="text-[9px] font-bold mt-0.5">Notes</span>
               </button>
 
               <button
                 onClick={() => setActiveSidebar(activeSidebar === 'polls' ? null : 'polls')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeSidebar === 'polls' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeSidebar === 'polls' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Live Quizzes & Polls"
               >
-                <BarChart2 className={`w-4 h-4 ${activeSidebar === 'polls' ? 'text-white' : 'text-[#0B5CFF]'}`} />
+                <BarChart2 className="w-4 h-4 text-indigo-400" />
                 <span className="text-[9px] font-bold mt-0.5">Quizzes</span>
               </button>
             </>
@@ -4663,22 +4663,22 @@ function RoomPageContent() {
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Brainstorm Canvas"
               >
-                <Paintbrush className={`w-4 h-4 ${activeWorkspace === 'whiteboard' ? 'text-white' : 'text-amber-500'}`} />
+                <Paintbrush className="w-4 h-4 text-amber-400" />
                 <span className="text-[9px] font-bold mt-0.5">Canvas</span>
               </button>
 
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Idea Notes"
               >
-                <Sparkles className={`w-4 h-4 ${activeWorkspace === 'notes' ? 'text-white' : 'text-[#7B61FF]'}`} />
+                <Sparkles className="w-4 h-4 text-purple-400" />
                 <span className="text-[9px] font-bold mt-0.5">Notes</span>
               </button>
             </>
@@ -4689,33 +4689,33 @@ function RoomPageContent() {
               <button
                 onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeSidebar === 'tasks' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeSidebar === 'tasks' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Sprint Tasks Board"
               >
-                <Check className={`w-4 h-4 ${activeSidebar === 'tasks' ? 'text-white' : 'text-[#3EC78F]'}`} />
+                <Check className="w-4 h-4 text-emerald-400" />
                 <span className="text-[9px] font-bold mt-0.5">Sprint Tasks</span>
               </button>
 
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Standup Notes"
               >
-                <Sparkles className={`w-4 h-4 ${activeWorkspace === 'notes' ? 'text-white' : 'text-[#7B61FF]'}`} />
+                <Sparkles className="w-4 h-4 text-purple-400" />
                 <span className="text-[9px] font-bold mt-0.5">Standup Notes</span>
               </button>
 
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'agenda' ? 'none' : 'agenda')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'agenda' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'agenda' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Standup Agenda & Timer"
               >
-                <Calendar className={`w-4 h-4 ${activeWorkspace === 'agenda' ? 'text-white' : 'text-[#0B5CFF]'}`} />
+                <Calendar className="w-4 h-4 text-blue-400" />
                 <span className="text-[9px] font-bold mt-0.5">Agenda</span>
               </button>
             </>
@@ -4726,35 +4726,35 @@ function RoomPageContent() {
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Notes Workspace"
               >
-                <Sparkles className={`w-4 h-4 ${activeWorkspace === 'notes' ? 'text-white' : 'text-[#7B61FF]'}`} />
+                <Sparkles className="w-4 h-4 text-purple-400" />
                 <span className="text-[9px] font-bold mt-0.5">Notes</span>
               </button>
 
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-white font-extrabold shadow-sm' : 'hover:bg-[#EEF4FF] text-[#232333] font-bold'
+                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-white font-extrabold border-2 border-blue-400 shadow-md' : 'hover:bg-slate-800 text-slate-200 font-bold border border-transparent'
                 }`}
                 title="Whiteboard Workspace"
               >
-                <Paintbrush className={`w-4 h-4 ${activeWorkspace === 'whiteboard' ? 'text-white' : 'text-amber-500'}`} />
+                <Paintbrush className="w-4 h-4 text-amber-400" />
                 <span className="text-[9px] font-bold mt-0.5">Whiteboard</span>
               </button>
             </>
           )}
         </div>
 
-        {/* Center Group: Compact Round Icon Buttons */}
+        {/* Center Group: High-Visibility Compact Round Filled Icon Buttons */}
         <div className="flex items-center gap-2 relative">
           {/* Mic Button */}
           <button
             onClick={handleMuteToggle}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
-              isMuted ? 'bg-rose-600 border-2 border-rose-700 text-white shadow-rose-600/30' : 'bg-[#EEF4FF] border-2 border-[#0B5CFF] text-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-white'
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
+              isMuted ? 'bg-rose-600 border-2 border-rose-400 text-white shadow-rose-600/40 hover:bg-rose-700' : 'bg-[#0B5CFF] border-2 border-blue-400 text-white shadow-[#0B5CFF]/40 hover:bg-[#0846CC]'
             }`}
             title={isMuted ? 'Unmute Mic' : 'Mute Mic'}
           >
@@ -4764,8 +4764,8 @@ function RoomPageContent() {
           {/* Camera Button */}
           <button
             onClick={handleVideoToggle}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
-              isVideoOff ? 'bg-rose-600 border-2 border-rose-700 text-white shadow-rose-600/30' : 'bg-[#EEF4FF] border-2 border-[#0B5CFF] text-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-white'
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
+              isVideoOff ? 'bg-rose-600 border-2 border-rose-400 text-white shadow-rose-600/40 hover:bg-rose-700' : 'bg-[#0B5CFF] border-2 border-blue-400 text-white shadow-[#0B5CFF]/40 hover:bg-[#0846CC]'
             }`}
             title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
           >
@@ -4775,8 +4775,8 @@ function RoomPageContent() {
           {/* Raise Hand Button (Mobile & Desktop) */}
           <button
             onClick={toggleHandRaise}
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
-              isHandRaised ? 'bg-amber-500 border-2 border-amber-600 text-white shadow-amber-500/40' : 'bg-[#F8F9FA] border-2 border-slate-300 text-[#232333] hover:border-amber-500 hover:bg-amber-50'
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
+              isHandRaised ? 'bg-amber-500 border-2 border-amber-300 text-white shadow-amber-500/40 hover:bg-amber-600' : 'bg-amber-600/20 border-2 border-amber-500/50 text-amber-300 hover:bg-amber-500 hover:text-white'
             }`}
             title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
           >
@@ -4786,8 +4786,8 @@ function RoomPageContent() {
           {/* Reaction Emojis Button (Mobile & Desktop) */}
           <button
             onClick={() => setShowReactionTray(!showReactionTray)}
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
-              showReactionTray ? 'bg-pink-600 border-2 border-pink-700 text-white' : 'bg-[#F8F9FA] border-2 border-slate-300 text-pink-600 hover:border-pink-500 hover:bg-pink-50'
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
+              showReactionTray ? 'bg-pink-600 border-2 border-pink-400 text-white shadow-pink-600/40 hover:bg-pink-700' : 'bg-pink-600/20 border-2 border-pink-500/50 text-pink-400 hover:bg-pink-600 hover:text-white'
             }`}
             title="Send Reaction Emojis"
           >
@@ -4797,8 +4797,8 @@ function RoomPageContent() {
           {/* UNO Game Button (Mobile & Desktop) */}
           <button
             onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
-              activeWorkspace === 'uno' ? 'bg-orange-600 border-2 border-orange-700 text-white shadow-orange-600/40' : 'bg-[#F8F9FA] border-2 border-slate-300 text-[#232333] hover:border-orange-500 hover:bg-orange-50'
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
+              activeWorkspace === 'uno' ? 'bg-orange-600 border-2 border-orange-400 text-white shadow-orange-600/40 hover:bg-orange-700' : 'bg-orange-600/20 border-2 border-orange-500/50 text-orange-400 hover:bg-orange-600 hover:text-white'
             }`}
             title="UNO Game"
           >
@@ -4808,8 +4808,8 @@ function RoomPageContent() {
           {/* Desktop-Only Share Screen Button */}
           <button
             onClick={handleScreenShareToggle}
-            className={`hidden md:flex w-12 h-12 rounded-full items-center justify-center transition shadow-md active:scale-95 ${
-              isScreenSharing ? 'bg-[#0B5CFF] border-2 border-[#0B5CFF] text-white shadow-[#0B5CFF]/30' : 'bg-[#F8F9FA] border-2 border-slate-300 text-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-white hover:border-[#0B5CFF]'
+            className={`hidden md:flex w-12 h-12 rounded-full items-center justify-center transition shadow-lg active:scale-95 ${
+              isScreenSharing ? 'bg-[#7B61FF] border-2 border-purple-400 text-white shadow-[#7B61FF]/40 hover:bg-[#684bfa]' : 'bg-[#7B61FF]/20 border-2 border-[#7B61FF]/50 text-[#7B61FF] hover:bg-[#7B61FF] hover:text-white'
             }`}
             title={isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
           >
@@ -4819,8 +4819,8 @@ function RoomPageContent() {
           {/* Desktop-Only Chat Button */}
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
-            className={`hidden md:flex w-12 h-12 rounded-full items-center justify-center transition shadow-md active:scale-95 ${
-              activeSidebar === 'chat' ? 'bg-[#0B5CFF] border-2 border-[#0B5CFF] text-white shadow-[#0B5CFF]/30' : 'bg-[#F8F9FA] border-2 border-slate-300 text-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-white hover:border-[#0B5CFF]'
+            className={`hidden md:flex w-12 h-12 rounded-full items-center justify-center transition shadow-lg active:scale-95 ${
+              activeSidebar === 'chat' ? 'bg-[#0B5CFF] border-2 border-blue-400 text-white shadow-[#0B5CFF]/40 hover:bg-[#0846CC]' : 'bg-[#0B5CFF]/20 border-2 border-[#0B5CFF]/50 text-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-white'
             }`}
             title="Chat"
           >
@@ -4831,8 +4831,8 @@ function RoomPageContent() {
           <div className="hidden md:block relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md active:scale-95 ${
-                showMoreMenu ? 'bg-[#0B5CFF] border-2 border-[#0B5CFF] text-white shadow-[#0B5CFF]/30' : 'bg-[#F8F9FA] border-2 border-slate-300 text-[#232333] hover:bg-[#0B5CFF] hover:text-white hover:border-[#0B5CFF]'
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
+                showMoreMenu ? 'bg-slate-700 border-2 border-slate-400 text-white' : 'bg-slate-800 border-2 border-slate-600 text-slate-200 hover:bg-slate-700 hover:text-white'
               }`}
               title="More Tools"
             >
@@ -4841,23 +4841,23 @@ function RoomPageContent() {
 
             {/* Floating Popover Menu */}
             {showMoreMenu && (
-              <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-64 max-h-[70vh] overflow-y-auto bg-[#FFFFFF] border-2 border-slate-300 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-[300] animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-[#3D3D50] text-xs font-semibold custom-scrollbar">
+              <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-64 max-h-[70vh] overflow-y-auto bg-slate-900/95 border-2 border-slate-700 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-[300] animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-slate-200 text-xs font-semibold custom-scrollbar">
                 {/* Record Session Button — respects admin recording permission */}
                 {canRecord ? (
                   <button
                     onClick={() => { setIsRecorderModalOpen(true); setShowMoreMenu(false); }}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition text-left ${
-                      isRecording ? 'bg-rose-600 text-white font-bold animate-pulse' : 'hover:bg-[#EEF4FF] text-rose-600 font-bold'
+                      isRecording ? 'bg-rose-600 text-white font-bold animate-pulse' : 'hover:bg-slate-800 text-rose-400 font-bold'
                     }`}
                   >
-                    <Radio className="w-4 h-4 text-rose-600" />
+                    <Radio className="w-4 h-4 text-rose-400" />
                     <span>{isRecording ? 'Recording in Progress...' : 'Record Session'}</span>
                   </button>
                 ) : (
-                  <div className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-slate-400 cursor-not-allowed" title="Recording not permitted — ask the host to grant you permission">
-                    <Radio className="w-4 h-4 text-slate-400" />
+                  <div className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-slate-500 cursor-not-allowed" title="Recording not permitted — ask the host to grant you permission">
+                    <Radio className="w-4 h-4 text-slate-600" />
                     <span>Record Session</span>
-                    <span className="ml-auto text-[9px] bg-slate-100 px-1.5 py-0.5 rounded-full text-slate-500">No Permission</span>
+                    <span className="ml-auto text-[9px] bg-slate-800 px-1.5 py-0.5 rounded-full text-slate-500">No Permission</span>
                   </div>
                 )}
 
@@ -4865,7 +4865,7 @@ function RoomPageContent() {
                 {isHostUser && (
                   <button
                     onClick={() => { setShowAdminCenter(true); setShowMoreMenu(false); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#EEF4FF] text-[#0B5CFF] font-bold transition text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 text-[#0B5CFF] font-bold transition text-left"
                   >
                     <ShieldAlert className="w-4 h-4 text-[#0B5CFF]" />
                     <span>Admin Command Center</span>
@@ -4876,7 +4876,7 @@ function RoomPageContent() {
                 {isHostUser && (
                   <button
                     onClick={() => { setShowAdminCenter(true); setShowMoreMenu(false); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#EEF4FF] text-[#3EC78F] font-bold transition text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 text-[#3EC78F] font-bold transition text-left"
                   >
                     <ShieldCheck className="w-4 h-4 text-[#3EC78F]" />
                     <span>Security & Lock Controls</span>
@@ -4887,9 +4887,9 @@ function RoomPageContent() {
                 {isHostUser && (
                   <button
                     onClick={() => { setShowAdminCenter(true); setShowMoreMenu(false); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#EEF4FF] text-amber-600 font-bold transition text-left relative"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 text-amber-400 font-bold transition text-left relative"
                   >
-                    <Users className="w-4 h-4 text-amber-600" />
+                    <Users className="w-4 h-4 text-amber-400" />
                     <span>Waiting Room</span>
                     {waitingParticipants.length > 0 && (
                       <span className="ml-auto px-1.5 py-0.5 bg-rose-600 text-white font-bold text-[10px] rounded-full">
@@ -4902,7 +4902,7 @@ function RoomPageContent() {
                 {/* Invite Link */}
                 <button
                   onClick={() => { setShowInvitePopup(true); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#EEF4FF] text-[#232333] font-bold transition text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200 font-bold transition text-left"
                 >
                   <Share2 className="w-4 h-4 text-[#0B5CFF]" />
                   <span>Invite Link & Share</span>
@@ -4910,7 +4910,7 @@ function RoomPageContent() {
 
                 <button
                   onClick={() => { setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes'); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#EEF4FF] text-[#232333] font-bold transition text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200 font-bold transition text-left"
                 >
                   <FileText className="w-4 h-4 text-[#0B5CFF]" />
                   <span>Shared Notes Workspace</span>
@@ -4918,7 +4918,7 @@ function RoomPageContent() {
 
                 <button
                   onClick={() => { setIsOnToGoMode(true); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#EEF4FF] text-[#232333] font-bold transition text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200 font-bold transition text-left"
                 >
                   <Footprints className="w-4 h-4 text-[#3EC78F]" />
                   <span>On-The-Go Low Data Mode</span>
@@ -4926,7 +4926,7 @@ function RoomPageContent() {
 
                 <button
                   onClick={() => { setIsSummaryPanelOpen(true); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#EEF4FF] text-[#7B61FF] font-bold transition text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 text-[#7B61FF] font-bold transition text-left"
                 >
                   <Brain className="w-4 h-4 text-[#7B61FF]" />
                   <span>AI Meeting Summary & Notes</span>
@@ -4934,7 +4934,7 @@ function RoomPageContent() {
 
                 <button
                   onClick={() => { setIsAnnotationActive(!isAnnotationActive); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#EEF4FF] text-[#232333] font-bold transition text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200 font-bold transition text-left"
                 >
                   <Paintbrush className="w-4 h-4 text-[#0B5CFF]" />
                   <span>Screen Annotation & Draw</span>
@@ -4942,17 +4942,17 @@ function RoomPageContent() {
 
                 <button
                   onClick={() => { setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse'); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-600 font-bold transition text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-rose-600/20 text-rose-400 font-bold transition text-left"
                 >
-                  <Flag className="w-4 h-4 text-rose-600" />
+                  <Flag className="w-4 h-4 text-rose-400" />
                   <span>Report Abuse</span>
                 </button>
 
                 <button
                   onClick={() => { setShowOnboardingTour(true); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#EEF4FF] text-[#67677E] font-bold transition text-left border-t border-slate-200 mt-1 pt-2"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-400 font-bold transition text-left border-t border-slate-800 mt-1 pt-2"
                 >
-                  <HelpCircle className="w-4 h-4 text-[#67677E]" />
+                  <HelpCircle className="w-4 h-4 text-slate-400" />
                   <span>Help & Walkthrough Tour</span>
                 </button>
               </div>
@@ -4966,38 +4966,38 @@ function RoomPageContent() {
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
             className={`hidden md:flex w-10 h-10 rounded-full items-center justify-center transition ${
-              activeSidebar === 'participants' ? 'bg-[#0B5CFF] border-2 border-[#0B5CFF] text-white' : 'bg-[#F8F9FA] border-2 border-slate-300 text-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-white hover:border-[#0B5CFF]'
+              activeSidebar === 'participants' ? 'bg-[#0B5CFF] border-2 border-blue-400 text-white' : 'bg-slate-800 border-2 border-slate-600 text-slate-200 hover:bg-slate-700 hover:text-white'
             }`}
             title="Participants"
           >
-            <Users className="w-4 h-4" />
+            <Users className="w-4 h-4 text-[#0B5CFF]" />
           </button>
 
           {/* Network Stats (Desktop Only) */}
           <button
             onClick={() => setIsStatsModalOpen(true)}
-            className="hidden md:flex w-10 h-10 rounded-full bg-[#F8F9FA] border-2 border-slate-300 text-[#3EC78F] hover:bg-[#3EC78F] hover:text-white hover:border-[#3EC78F] items-center justify-center transition"
+            className="hidden md:flex w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-600 text-slate-200 hover:bg-slate-700 hover:text-white items-center justify-center transition"
             title="Network Status"
           >
-            <Activity className="w-4 h-4" />
+            <Activity className="w-4 h-4 text-[#3EC78F]" />
           </button>
 
           {/* Device Settings (Desktop Only) */}
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
-            className="hidden md:flex w-10 h-10 rounded-full bg-[#F8F9FA] border-2 border-slate-300 text-[#232333] hover:bg-[#0B5CFF] hover:text-white hover:border-[#0B5CFF] items-center justify-center transition"
+            className="hidden md:flex w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-600 text-slate-200 hover:bg-slate-700 hover:text-white items-center justify-center transition"
             title="Device & Effects"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-4 h-4 text-slate-300" />
           </button>
 
           {/* Export (Desktop Only) */}
           <button
             onClick={() => setIsExportModalOpen(true)}
-            className="hidden md:flex w-10 h-10 rounded-full bg-[#F8F9FA] border-2 border-slate-300 text-[#00B8FF] hover:bg-[#00B8FF] hover:text-white hover:border-[#00B8FF] items-center justify-center transition"
+            className="hidden md:flex w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-600 text-slate-200 hover:bg-slate-700 hover:text-white items-center justify-center transition"
             title="Export Package"
           >
-            <Archive className="w-4 h-4" />
+            <Archive className="w-4 h-4 text-[#00B8FF]" />
           </button>
 
           {/* End Button (Host / Admin ONLY) */}
@@ -5008,7 +5008,7 @@ function RoomPageContent() {
                   handleEndMeetingForAll()
                 }
               }}
-              className="h-9 p-0 sm:h-10 sm:w-auto sm:px-4 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md border-2 border-rose-700 flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+              className="h-9 p-0 sm:h-10 sm:w-auto sm:px-4 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-lg shadow-rose-600/40 border-2 border-rose-400 flex items-center justify-center gap-1.5 active:scale-95 transition-all"
               title="Permanently End Meeting for Everyone (Host Only)"
             >
               <StopCircle className="w-4 h-4 shrink-0" />
@@ -5019,7 +5019,7 @@ function RoomPageContent() {
           {/* Leave Button (Everyone) */}
           <Button
             onClick={handleLeaveCall}
-            className="h-9 p-0 sm:h-10 sm:w-auto sm:px-4 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md border-2 border-rose-700 flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+            className="h-9 p-0 sm:h-10 sm:w-auto sm:px-4 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-lg shadow-rose-600/40 border-2 border-rose-400 flex items-center justify-center gap-1.5 active:scale-95 transition-all"
             title="Leave Meeting"
           >
             <PhoneOff className="w-4 h-4 shrink-0 fill-current" />
