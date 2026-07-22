@@ -7,7 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { 
-  ArrowRight, Video, Terminal, GitBranch, Cpu, Zap, Layout, 
+  ArrowRight, Video, Terminal, GitBranch, Cpu, Zap, Layout, Calendar,
   MessageSquareCode, Rocket, Shield, Users, CheckCircle, Play, Menu, X
 } from 'lucide-react'
 
@@ -264,26 +264,30 @@ export default function LandingPage() {
               icon: MessageSquareCode,
               title: 'Live Shared Editor',
               desc: 'Write and debug code side-by-side. See remote cursors, edit files in real-time, and resolve conflicts in the moment.',
+              image: '/code-workspace-3d.png',
             },
             {
               icon: Video,
               title: 'HD Video & Huddles',
               desc: 'High-definition video huddles, crystal-clear audio, reactions, and screen-sharing tailored specifically for tech teams.',
+              image: '/video-huddle-3d.png',
             },
             {
-              icon: Terminal,
-              title: 'Integrated Terminal',
-              desc: 'Run commands, boot dev servers, and review logs collaboratively. Fully synchronized sandbox shell.',
-            },
-            {
-              icon: GitBranch,
-              title: 'GitHub Integration',
-              desc: 'Pull repositories, create branches, review pull requests, and commit updates without leaving the session.',
+              icon: Calendar,
+              title: 'Smart Calendar & Sync',
+              desc: 'Schedule developer meetings, sync calendar events, set agendas, and coordinate across team time zones.',
+              image: '/calendar-schedule-3d.png',
             },
             {
               icon: Zap,
               title: 'AI pair programming',
               desc: 'Draft unit tests, analyze code context, and resolve bugs instantly using our collaborative AI gateway.',
+              image: '/ai-copilot-3d.png',
+            },
+            {
+              icon: GitBranch,
+              title: 'GitHub Integration',
+              desc: 'Pull repositories, create branches, review pull requests, and commit updates without leaving the session.',
             },
             {
               icon: Layout,
@@ -293,17 +297,26 @@ export default function LandingPage() {
           ].map((f, i) => (
             <motion.div
               key={i}
-              className="premium-card p-8 group"
+              className="premium-card p-8 group flex flex-col justify-between overflow-hidden relative"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
             >
-              <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
-                <f.icon className="h-6 w-6 text-primary" />
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
+                    <f.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  {f.image && (
+                    <div className="relative w-14 h-14 opacity-90 group-hover:scale-110 transition-transform duration-300">
+                      <Image src={f.image} alt={f.title} fill className="object-contain" />
+                    </div>
+                  )}
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">{f.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">{f.title}</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -320,17 +333,17 @@ export default function LandingPage() {
               transition={{ duration: 0.7 }}
             >
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest mb-6">
-                Meeting Intelligence
+                Meeting Intelligence & Scheduling
               </div>
               <h2 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight">
                 Meetings that write <br />
-                <span className="text-muted-foreground">their own code.</span>
+                <span className="text-muted-foreground">their own code & schedules.</span>
               </h2>
               <ul className="space-y-6">
                 {[
+                  { title: 'Smart 3D Calendar Scheduling', desc: 'Sync calendar invitations, calculate time zones automatically, and manage developer meeting timelines.' },
                   { title: 'Auto-Meeting Summaries', desc: 'Never take notes again. Get action items, decisions made, and technical context extracted automatically.' },
                   { title: 'Meeting-to-Code Conversion', desc: 'Discuss an architecture, and watch our AI generate boilerplate code and architecture diagrams live.' },
-                  { title: 'Speaker Insights & Timeline', desc: 'Search past meetings by codebase context, variable names, or technical decisions.' },
                 ].map((item, i) => (
                   <li key={i} className="flex gap-4">
                     <div className="mt-1 w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/30">
@@ -352,17 +365,27 @@ export default function LandingPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
             >
-              <div className="glass-card p-6 relative z-10">
-                <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
-                  <h3 className="font-bold text-white flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-primary" /> AI Summary
-                  </h3>
+              <div className="glass-card p-6 relative z-10 space-y-4">
+                <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-8 h-8">
+                      <Image src="/calendar-schedule-3d.png" alt="Calendar Schedule" fill className="object-contain" />
+                    </div>
+                    <h3 className="font-bold text-white flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-primary" /> AI Schedule & Summary
+                    </h3>
+                  </div>
                   <span className="text-xs text-muted-foreground bg-white/5 px-2 py-1 rounded">Just now</span>
                 </div>
                 <div className="space-y-4">
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/5">
-                    <h4 className="text-sm font-semibold text-white mb-2">Decision Made</h4>
-                    <p className="text-sm text-muted-foreground">Migrate the authentication service from JWT to NextAuth.js to support GitHub SSO.</p>
+                  <div className="bg-white/5 rounded-lg p-4 border border-white/5 flex items-center gap-4">
+                    <div className="relative w-14 h-14 shrink-0">
+                      <Image src="/calendar-schedule-3d.png" alt="Calendar 3D" fill className="object-contain" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-white mb-1">Calendar Event Synced</h4>
+                      <p className="text-xs text-muted-foreground">Sprint Architecture Sync scheduled for 10:00 AM EST (GMT-5).</p>
+                    </div>
                   </div>
                   <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
                     <h4 className="text-sm font-semibold text-primary mb-2">Action Item (Assigned to JD)</h4>

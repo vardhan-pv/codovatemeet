@@ -494,26 +494,15 @@ export default function DashboardPage() {
           </div>
 
           {/* Right 3D Illustration Mockup */}
-          <div className="relative z-10 shrink-0 w-44 sm:w-56 h-36 sm:h-44 flex items-center justify-center select-none">
-            {/* 3D Calendar Graphic Card */}
-            <div className="relative w-36 sm:w-44 h-28 sm:h-36 bg-white rounded-2xl shadow-2xl p-3 transform rotate-3 hover:rotate-0 transition-transform duration-300 border-2 border-white/80">
-              <div className="bg-[#2563EB] h-6 sm:h-8 rounded-xl w-full flex items-center justify-between px-3 mb-2">
-                <div className="flex gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
-                </div>
-                <div className="w-2 sm:w-3 h-2 sm:h-3 rounded-full bg-white/90" />
-              </div>
-              <div className="grid grid-cols-4 gap-1.5 p-1">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className={`h-2.5 sm:h-3.5 rounded-md ${i === 2 ? 'bg-[#2563EB]' : 'bg-[#E2E8F0]'}`} />
-                ))}
-              </div>
-
-              {/* Floating 3D Clock Badge */}
-              <div className="absolute -bottom-3 -left-4 w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-[#FFFFFF] shadow-xl border-2 border-[#BFDBFE] flex items-center justify-center text-[#2563EB] animate-bounce duration-1000">
-                <Clock className="w-6 sm:w-8 h-6 sm:h-8 text-[#2563EB]" strokeWidth={2.5} />
-              </div>
+          <div className="relative z-10 shrink-0 w-44 sm:w-60 h-36 sm:h-44 flex items-center justify-center select-none">
+            <div className="relative w-44 sm:w-52 h-36 sm:h-44 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
+              <Image 
+                src="/calendar-schedule-3d.png" 
+                alt="3D Calendar and Clock Schedule Illustration" 
+                fill 
+                priority
+                className="object-contain"
+              />
             </div>
           </div>
         </motion.div>
@@ -956,12 +945,18 @@ export default function DashboardPage() {
             animate={{ scale: 1, opacity: 1 }}
             className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
           >
-            <div className="px-5 py-4 bg-[#F8FAFC] border-b border-[#E2E8F0] flex justify-between items-center text-[#0F172A] shrink-0">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-[#0B5CFF]" />
-                <h3 className="font-extrabold text-base">Schedule Event (Google Calendar)</h3>
+            {/* 3D Header Banner */}
+            <div className="px-6 py-4 bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#3B82F6] text-white flex justify-between items-center shrink-0 relative overflow-hidden">
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="relative w-12 h-12 shrink-0 drop-shadow-md">
+                  <Image src="/calendar-schedule-3d.png" alt="Schedule Calendar" fill className="object-contain" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base leading-tight">Schedule Calendar Event</h3>
+                  <p className="text-xs text-blue-100 mt-0.5">Organize team meetings & sync time zones</p>
+                </div>
               </div>
-              <button onClick={() => setShowCalendarModal(false)} className="text-[#64748B] hover:text-[#0F172A] transition">
+              <button onClick={() => setShowCalendarModal(false)} className="text-white/80 hover:text-white transition relative z-10">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -990,7 +985,20 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-extrabold text-[#334155]">Event Description</label>
+                  <div className="flex justify-between items-center">
+                    <label className="font-extrabold text-[#334155]">Event Description</label>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleGenerateAiDescription}
+                      disabled={isGeneratingDesc}
+                      className="h-6 text-[10px] text-[#0B5CFF] hover:bg-[#EEF4FF] font-bold px-2 rounded-md"
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      {isGeneratingDesc ? 'Generating...' : 'AI Auto-Fill Agenda'}
+                    </Button>
+                  </div>
                   <textarea
                     value={calDesc}
                     onChange={(e) => setCalDesc(e.target.value)}
@@ -1023,8 +1031,10 @@ export default function DashboardPage() {
           >
             <div className="bg-[#0B5CFF] p-3.5 border-b border-[#0846CC] flex justify-between items-center text-white">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-white" />
-                <h4 className="font-extrabold text-xs text-white">Codovate AI Assistant</h4>
+                <div className="relative w-6 h-6">
+                  <Image src="/ai-copilot-3d.png" alt="AI" fill className="object-contain" />
+                </div>
+                <h4 className="font-extrabold text-xs text-white">Codovate AI Copilot</h4>
               </div>
               <button type="button" onClick={() => setShowFloatingAi(false)} className="text-white/80 hover:text-white transition">
                 <X className="h-4 w-4" />
@@ -1055,6 +1065,18 @@ export default function DashboardPage() {
             </form>
           </motion.div>
         )}
+
+        {/* Floating AI Trigger Button */}
+        <button
+          onClick={() => setShowFloatingAi(!showFloatingAi)}
+          className="w-14 h-14 rounded-2xl bg-[#0B5CFF] text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center relative group border-2 border-white/20 cursor-pointer"
+          title="Toggle AI Copilot"
+        >
+          <div className="relative w-9 h-9">
+            <Image src="/ai-copilot-3d.png" alt="AI Copilot" fill className="object-contain" />
+          </div>
+          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full" />
+        </button>
       </div>
 
     </div>
