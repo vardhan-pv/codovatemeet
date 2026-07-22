@@ -23,7 +23,7 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert,
   X, Maximize2, Minimize2, Subtitles, Expand, Shrink, Sparkles, Code, Paintbrush,
   BarChart2, ShieldCheck, Crown, Flag, Calendar, Heart, Send, Clock,
-  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio, Settings, StopCircle, MoreHorizontal, Brain
+  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio, Settings, StopCircle, MoreHorizontal, Brain, Wrench, LogOut
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const CodeEditor = dynamic(() => import('@/components/room/CodeEditor').then(m => ({ default: m.CodeEditor })), { ssr: false })
@@ -4542,219 +4542,93 @@ function RoomPageContent() {
         </div>
       )}
 
-      {/* ── ONE SINGLE FLOATING ACTION DOCK (Replaced according to user images - Zero Duplicates) ── */}
-      <footer className="px-2 sm:px-4 py-3 bg-[#161B26] border-t-2 border-[#2B3344] flex items-center justify-between gap-2 z-[100] shrink-0 shadow-2xl select-none relative">
+      {/* ── ONE SINGLE FLOATING ACTION DOCK (Replaced according to user image - Brighter Clear Border & Buttons) ── */}
+      <footer className="px-2 sm:px-4 py-3 bg-[#0D1015] border-t-2 border-[#31343C] flex items-center justify-between gap-2 z-[100] shrink-0 shadow-2xl select-none relative">
         
-        {/* Left Card: Dynamically Tailored Workspace Buttons (Desktop Only) */}
-        <div className="hidden md:flex items-center gap-1.5 bg-[#1A1D24] border-2 border-[#2B3344] rounded-2xl p-1.5 shadow-inner">
+        {/* Left Card: Tailored Workspace Buttons (Matching User Image Layout) */}
+        <div className="hidden md:flex items-center gap-1 bg-[#161B26] border-2 border-[#31343C] rounded-2xl p-1 shadow-inner">
           {(meetingType === 'technical' || meetingType === 'interview') && (
             <>
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'code' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
+                  activeWorkspace === 'code' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold shadow-md' : 'hover:bg-[#1A1D24] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold'
                 }`}
                 title="Code Workspace Editor"
               >
-                <Code className="w-4 h-4 text-[#22C55E]" />
-                <span className="text-[9px] font-bold mt-0.5">Code</span>
+                <Code className="w-4 h-4 text-[#0B5CFF]" />
+                <span className="text-[10px] font-bold mt-0.5">Code</span>
               </button>
 
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
+                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold shadow-md' : 'hover:bg-[#1A1D24] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold'
                 }`}
                 title="Whiteboard Workspace"
               >
-                <Paintbrush className="w-4 h-4 text-[#FBBF24]" />
-                <span className="text-[9px] font-bold mt-0.5">Whiteboard</span>
+                <Paintbrush className="w-4 h-4 text-[#0B5CFF]" />
+                <span className="text-[10px] font-bold mt-0.5">Tools</span>
               </button>
 
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'uno' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
+                  activeWorkspace === 'uno' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold shadow-md' : 'hover:bg-[#1A1D24] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold'
                 }`}
                 title="UNO! Game"
               >
-                <span className="text-sm">🃏</span>
-                <span className="text-[9px] font-bold mt-0.5">UNO Game</span>
+                <Calendar className="w-4 h-4 text-[#0B5CFF]" />
+                <span className="text-[10px] font-bold mt-0.5">Agenda</span>
               </button>
             </>
           )}
 
-          {meetingType === 'business' && (
+          {meetingType !== 'technical' && meetingType !== 'interview' && (
             <>
               <button
-                onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
+                  showMoreMenu ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold' : 'hover:bg-[#1A1D24] text-[#0B5CFF] hover:text-[#FFFFFF] font-bold'
                 }`}
-                title="Shared Meeting Notes"
+                title="More Options"
               >
-                <Sparkles className="w-4 h-4 text-[#3B82F6]" />
-                <span className="text-[9px] font-bold mt-0.5">Notes</span>
+                <MoreHorizontal className="w-4 h-4 text-[#0B5CFF]" />
+                <span className="text-[10px] font-bold mt-0.5">More</span>
               </button>
 
               <button
-                onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
+                onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeSidebar === 'tasks' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
+                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold' : 'hover:bg-[#1A1D24] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold'
                 }`}
-                title="Tasks & Action Items"
+                title="Tools & Whiteboard"
               >
-                <Check className="w-4 h-4 text-[#22C55E]" />
-                <span className="text-[9px] font-bold mt-0.5">Tasks</span>
+                <Wrench className="w-4 h-4 text-[#9CA3AF]" />
+                <span className="text-[10px] font-bold mt-0.5">Tools</span>
               </button>
 
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'agenda' ? 'none' : 'agenda')}
                 className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'agenda' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
+                  activeWorkspace === 'agenda' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold' : 'hover:bg-[#1A1D24] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold'
                 }`}
                 title="Meeting Agenda"
               >
-                <Calendar className="w-4 h-4 text-[#3B82F6]" />
-                <span className="text-[9px] font-bold mt-0.5">Agenda</span>
-              </button>
-            </>
-          )}
-
-          {meetingType === 'education' && (
-            <>
-              <button
-                onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
-                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
-                }`}
-                title="Classroom Whiteboard"
-              >
-                <Paintbrush className="w-4 h-4 text-[#FBBF24]" />
-                <span className="text-[9px] font-bold mt-0.5">Whiteboard</span>
-              </button>
-
-              <button
-                onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
-                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
-                }`}
-                title="Classroom Notes"
-              >
-                <Sparkles className="w-4 h-4 text-[#3B82F6]" />
-                <span className="text-[9px] font-bold mt-0.5">Notes</span>
-              </button>
-
-              <button
-                onClick={() => setActiveSidebar(activeSidebar === 'polls' ? null : 'polls')}
-                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeSidebar === 'polls' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
-                }`}
-                title="Live Quizzes & Polls"
-              >
-                <BarChart2 className="w-4 h-4 text-[#3B82F6]" />
-                <span className="text-[9px] font-bold mt-0.5">Quizzes</span>
-              </button>
-            </>
-          )}
-
-          {meetingType === 'brainstorm' && (
-            <>
-              <button
-                onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
-                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
-                }`}
-                title="Brainstorm Canvas"
-              >
-                <Paintbrush className="w-4 h-4 text-[#FBBF24]" />
-                <span className="text-[9px] font-bold mt-0.5">Canvas</span>
-              </button>
-
-              <button
-                onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
-                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
-                }`}
-                title="Idea Notes"
-              >
-                <Sparkles className="w-4 h-4 text-[#3B82F6]" />
-                <span className="text-[9px] font-bold mt-0.5">Notes</span>
-              </button>
-            </>
-          )}
-
-          {meetingType === 'standup' && (
-            <>
-              <button
-                onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
-                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeSidebar === 'tasks' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
-                }`}
-                title="Sprint Tasks Board"
-              >
-                <Check className="w-4 h-4 text-[#22C55E]" />
-                <span className="text-[9px] font-bold mt-0.5">Sprint Tasks</span>
-              </button>
-
-              <button
-                onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
-                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
-                }`}
-                title="Standup Notes"
-              >
-                <Sparkles className="w-4 h-4 text-[#3B82F6]" />
-                <span className="text-[9px] font-bold mt-0.5">Standup Notes</span>
-              </button>
-
-              <button
-                onClick={() => setActiveWorkspace(activeWorkspace === 'agenda' ? 'none' : 'agenda')}
-                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'agenda' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
-                }`}
-                title="Standup Agenda & Timer"
-              >
-                <Calendar className="w-4 h-4 text-[#3B82F6]" />
-                <span className="text-[9px] font-bold mt-0.5">Agenda</span>
-              </button>
-            </>
-          )}
-
-          {meetingType !== 'technical' && meetingType !== 'interview' && meetingType !== 'business' && meetingType !== 'education' && meetingType !== 'brainstorm' && meetingType !== 'standup' && (
-            <>
-              <button
-                onClick={() => setActiveWorkspace(activeWorkspace === 'notes' ? 'none' : 'notes')}
-                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'notes' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
-                }`}
-                title="Notes Workspace"
-              >
-                <Sparkles className="w-4 h-4 text-[#3B82F6]" />
-                <span className="text-[9px] font-bold mt-0.5">Notes</span>
-              </button>
-
-              <button
-                onClick={() => setActiveWorkspace(activeWorkspace === 'whiteboard' ? 'none' : 'whiteboard')}
-                className={`flex flex-col items-center justify-center px-3 py-1 rounded-xl transition ${
-                  activeWorkspace === 'whiteboard' ? 'bg-[#0B5CFF] text-[#FFFFFF] font-extrabold border-2 border-[#3B82F6] shadow-md' : 'hover:bg-[#161B26] text-[#9CA3AF] hover:text-[#FFFFFF] font-bold border border-transparent'
-                }`}
-                title="Whiteboard Workspace"
-              >
-                <Paintbrush className="w-4 h-4 text-[#FBBF24]" />
-                <span className="text-[9px] font-bold mt-0.5">Whiteboard</span>
+                <Calendar className="w-4 h-4 text-[#0B5CFF]" />
+                <span className="text-[10px] font-bold mt-0.5">Agenda</span>
               </button>
             </>
           )}
         </div>
 
-        {/* Center Group: High-Visibility Compact Round Filled Icon Buttons */}
+        {/* Center Group: High-Visibility Circular Buttons (Matching Image) */}
         <div className="flex items-center gap-2 relative">
           {/* Mic Button */}
           <button
             onClick={handleMuteToggle}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
-              isMuted ? 'bg-[#F43F5E] border-2 border-[#EF4444] text-[#FFFFFF] shadow-[#F43F5E]/40 hover:bg-[#e11d48]' : 'bg-[#0B5CFF] border-2 border-[#3B82F6] text-[#FFFFFF] shadow-[#0B5CFF]/40 hover:bg-[#0846CC]'
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
+              isMuted ? 'bg-[#F43F5E] border-2 border-[#EF4444] text-[#FFFFFF] shadow-[#F43F5E]/40 hover:bg-[#e11d48]' : 'bg-[#0B5CFF] border-2 border-[#2F6DFF] text-[#FFFFFF] shadow-[#0B5CFF]/40 hover:bg-[#0846CC]'
             }`}
             title={isMuted ? 'Unmute Mic' : 'Mute Mic'}
           >
@@ -4764,75 +4638,64 @@ function RoomPageContent() {
           {/* Camera Button */}
           <button
             onClick={handleVideoToggle}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
-              isVideoOff ? 'bg-[#F43F5E] border-2 border-[#EF4444] text-[#FFFFFF] shadow-[#F43F5E]/40 hover:bg-[#e11d48]' : 'bg-[#0B5CFF] border-2 border-[#3B82F6] text-[#FFFFFF] shadow-[#0B5CFF]/40 hover:bg-[#0846CC]'
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
+              isVideoOff ? 'bg-[#F43F5E] border-2 border-[#EF4444] text-[#FFFFFF] shadow-[#F43F5E]/40 hover:bg-[#e11d48]' : 'bg-[#0B5CFF] border-2 border-[#2F6DFF] text-[#FFFFFF] shadow-[#0B5CFF]/40 hover:bg-[#0846CC]'
             }`}
             title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
           >
             {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
           </button>
 
-          {/* Raise Hand Button (Mobile & Desktop) */}
+          {/* Raise Hand Button */}
           <button
             onClick={toggleHandRaise}
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
-              isHandRaised ? 'bg-[#FBBF24] border-2 border-[#FBBF24] text-[#111827] shadow-[#FBBF24]/30 hover:bg-[#f59e0b]' : 'bg-[#1A1D24] border-2 border-[#2B3344] text-[#FBBF24] hover:bg-[#FBBF24] hover:text-[#111827]'
+            className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
+              isHandRaised ? 'bg-[#FBBF24] border-2 border-[#FBBF24] text-[#111827] shadow-[#FBBF24]/30' : 'bg-[#161B26] border-2 border-[#31343C] text-[#FBBF24] hover:border-[#FBBF24]'
             }`}
             title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
           >
             <span className="text-base sm:text-lg leading-none">🖐️</span>
           </button>
 
-          {/* Reaction Emojis Button (Mobile & Desktop) */}
+          {/* Reaction Emojis Button */}
           <button
             onClick={() => setShowReactionTray(!showReactionTray)}
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
-              showReactionTray ? 'bg-[#EC4899] border-2 border-[#F472B6] text-[#FFFFFF] shadow-[#EC4899]/40 hover:bg-[#db2777]' : 'bg-[#1A1D24] border-2 border-[#2B3344] text-[#EC4899] hover:bg-[#EC4899] hover:text-[#FFFFFF]'
+            className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
+              showReactionTray ? 'bg-[#EC4899] border-2 border-[#F472B6] text-[#FFFFFF]' : 'bg-[#161B26] border-2 border-[#31343C] text-[#F43F5E] hover:border-[#F43F5E]'
             }`}
             title="Send Reaction Emojis"
           >
             <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
-          {/* UNO Game Button (Mobile & Desktop) */}
-          <button
-            onClick={() => setActiveWorkspace(activeWorkspace === 'uno' ? 'none' : 'uno')}
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
-              activeWorkspace === 'uno' ? 'bg-[#F97316] border-2 border-[#FB923C] text-[#FFFFFF] shadow-[#F97316]/40 hover:bg-[#ea580c]' : 'bg-[#1A1D24] border-2 border-[#2B3344] text-[#F97316] hover:bg-[#F97316] hover:text-[#FFFFFF]'
-            }`}
-            title="UNO Game"
-          >
-            <span className="text-base sm:text-lg leading-none">🃏</span>
-          </button>
-
-          {/* Desktop-Only Share Screen Button */}
+          {/* Screen Share Button */}
           <button
             onClick={handleScreenShareToggle}
-            className={`hidden md:flex w-12 h-12 rounded-full items-center justify-center transition shadow-lg active:scale-95 ${
-              isScreenSharing ? 'bg-[#0B5CFF] border-2 border-[#3B82F6] text-[#FFFFFF] shadow-[#0B5CFF]/40 hover:bg-[#0846CC]' : 'bg-[#1A1D24] border-2 border-[#2B3344] text-[#3B82F6] hover:bg-[#0B5CFF] hover:text-[#FFFFFF]'
+            className={`hidden md:flex w-11 h-11 rounded-full items-center justify-center transition shadow-lg active:scale-95 ${
+              isScreenSharing ? 'bg-[#0B5CFF] border-2 border-[#2F6DFF] text-[#FFFFFF]' : 'bg-[#161B26] border-2 border-[#31343C] text-[#0B5CFF] hover:border-[#0B5CFF]'
             }`}
             title={isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
           >
             <MonitorUp className="w-5 h-5" />
           </button>
 
-          {/* Desktop-Only Chat Button */}
+          {/* Chat Button */}
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
-            className={`hidden md:flex w-12 h-12 rounded-full items-center justify-center transition shadow-lg active:scale-95 ${
-              activeSidebar === 'chat' ? 'bg-[#0B5CFF] border-2 border-[#3B82F6] text-[#FFFFFF] shadow-[#0B5CFF]/40 hover:bg-[#0846CC]' : 'bg-[#1A1D24] border-2 border-[#2B3344] text-[#3B82F6] hover:bg-[#0B5CFF] hover:text-[#FFFFFF]'
+            className={`hidden md:flex w-11 h-11 rounded-full items-center justify-center transition shadow-lg active:scale-95 ${
+              activeSidebar === 'chat' ? 'bg-[#0B5CFF] border-2 border-[#2F6DFF] text-[#FFFFFF]' : 'bg-[#161B26] border-2 border-[#31343C] text-[#0B5CFF] hover:border-[#0B5CFF]'
             }`}
             title="Chat"
           >
             <MessageSquare className="w-5 h-5" />
           </button>
 
-          {/* Desktop-Only ••• More Button */}
+          {/* Desktop ••• More Button */}
           <div className="hidden md:block relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
-                showMoreMenu ? 'bg-[#2B3344] border-2 border-[#3B82F6] text-[#FFFFFF]' : 'bg-[#1A1D24] border-2 border-[#2B3344] text-[#FFFFFF] hover:bg-[#2B3344]'
+              className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
+                showMoreMenu ? 'bg-[#31343C] border-2 border-[#0B5CFF] text-[#FFFFFF]' : 'bg-[#161B26] border-2 border-[#31343C] text-[#D9DEE7] hover:border-[#D9DEE7]'
               }`}
               title="More Tools"
             >
@@ -4841,7 +4704,7 @@ function RoomPageContent() {
 
             {/* Floating Popover Menu */}
             {showMoreMenu && (
-              <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-64 max-h-[70vh] overflow-y-auto bg-[#161B26] border-2 border-[#2B3344] backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-[300] animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-[#FFFFFF] text-xs font-semibold custom-scrollbar">
+              <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-64 max-h-[70vh] overflow-y-auto bg-[#161B26] border-2 border-[#31343C] backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-[300] animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-[#FFFFFF] text-xs font-semibold custom-scrollbar">
                 {/* Record Session Button — respects admin recording permission */}
                 {canRecord ? (
                   <button
@@ -4950,7 +4813,7 @@ function RoomPageContent() {
 
                 <button
                   onClick={() => { setShowOnboardingTour(true); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#1A1D24] text-[#9CA3AF] font-bold transition text-left border-t border-[#2B3344] mt-1 pt-2"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#1A1D24] text-[#9CA3AF] font-bold transition text-left border-t border-[#31343C] mt-1 pt-2"
                 >
                   <HelpCircle className="w-4 h-4 text-[#9CA3AF]" />
                   <span>Help & Walkthrough Tour</span>
@@ -4960,47 +4823,46 @@ function RoomPageContent() {
           </div>
         </div>
 
-        {/* Right Section: Quick icon actions (Desktop) + End/Leave (Mobile & Desktop) */}
+        {/* Right Section: Quick Icon Actions & End/Leave Buttons (Matching User Image) */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Participants (Desktop Only) */}
+          {/* Participants with Count Pill (Matching Image: 👥 2) */}
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
-            className={`hidden md:flex w-10 h-10 rounded-full items-center justify-center transition ${
-              activeSidebar === 'participants' ? 'bg-[#0B5CFF] border-2 border-[#3B82F6] text-[#FFFFFF]' : 'bg-[#1A1D24] border-2 border-[#2B3344] text-[#FFFFFF] hover:bg-[#0B5CFF]'
-            }`}
+            className={`hidden md:flex h-9 px-3 rounded-xl border-2 border-[#31343C] bg-[#161B26] text-[#0B5CFF] font-bold text-xs items-center gap-1.5 hover:border-[#0B5CFF] transition`}
             title="Participants"
           >
-            <Users className="w-4 h-4 text-[#3B82F6]" />
+            <Users className="w-4 h-4 text-[#0B5CFF]" />
+            <span>{participants.length || 1}</span>
           </button>
 
-          {/* Network Stats (Desktop Only) */}
+          {/* Network Stats Pulse (Matching Image) */}
           <button
             onClick={() => setIsStatsModalOpen(true)}
-            className="hidden md:flex w-10 h-10 rounded-full bg-[#1A1D24] border-2 border-[#2B3344] text-[#FFFFFF] hover:bg-[#0B5CFF] items-center justify-center transition"
+            className="hidden md:flex w-9 h-9 rounded-xl bg-[#161B26] border-2 border-[#31343C] text-[#22C55E] hover:border-[#22C55E] items-center justify-center transition"
             title="Network Status"
           >
             <Activity className="w-4 h-4 text-[#22C55E]" />
           </button>
 
-          {/* Device Settings (Desktop Only) */}
+          {/* Device Settings Gear (Matching Image) */}
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
-            className="hidden md:flex w-10 h-10 rounded-full bg-[#1A1D24] border-2 border-[#2B3344] text-[#FFFFFF] hover:bg-[#0B5CFF] items-center justify-center transition"
+            className="hidden md:flex w-9 h-9 rounded-xl bg-[#161B26] border-2 border-[#31343C] text-[#D9DEE7] hover:border-[#D9DEE7] items-center justify-center transition"
             title="Device & Effects"
           >
-            <Settings className="w-4 h-4 text-[#9CA3AF]" />
+            <Settings className="w-4 h-4 text-[#D9DEE7]" />
           </button>
 
-          {/* Export (Desktop Only) */}
+          {/* Export Package (Matching Image) */}
           <button
             onClick={() => setIsExportModalOpen(true)}
-            className="hidden md:flex w-10 h-10 rounded-full bg-[#1A1D24] border-2 border-[#2B3344] text-[#FFFFFF] hover:bg-[#0B5CFF] items-center justify-center transition"
+            className="hidden md:flex w-9 h-9 rounded-xl bg-[#161B26] border-2 border-[#31343C] text-[#0B5CFF] hover:border-[#0B5CFF] items-center justify-center transition"
             title="Export Package"
           >
-            <Archive className="w-4 h-4 text-[#3B82F6]" />
+            <Archive className="w-4 h-4 text-[#0B5CFF]" />
           </button>
 
-          {/* End Button (Host / Admin ONLY) */}
+          {/* End Button (Host Only: Solid Red Pill with Record Dot) */}
           {isHostUser && (
             <Button
               onClick={() => {
@@ -5008,22 +4870,22 @@ function RoomPageContent() {
                   handleEndMeetingForAll()
                 }
               }}
-              className="h-9 p-0 sm:h-10 sm:w-auto sm:px-4 rounded-full bg-[#F43F5E] hover:bg-[#e11d48] text-[#FFFFFF] font-extrabold text-xs shadow-lg shadow-[#F43F5E]/40 border-2 border-[#EF4444] flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+              className="h-9 px-3 sm:px-4 rounded-full bg-[#F43F5E] hover:bg-[#e11d48] text-[#FFFFFF] font-extrabold text-xs shadow-lg shadow-[#F43F5E]/30 border-2 border-[#EF4444] flex items-center justify-center gap-1.5 active:scale-95 transition-all"
               title="Permanently End Meeting for Everyone (Host Only)"
             >
-              <StopCircle className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline">End</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-white border border-[#F43F5E] shrink-0" />
+              <span>End</span>
             </Button>
           )}
 
-          {/* Leave Button (Everyone) */}
+          {/* Leave Button (Matching Image: Red Outline Pill Button) */}
           <Button
             onClick={handleLeaveCall}
-            className="h-9 p-0 sm:h-10 sm:w-auto sm:px-4 rounded-full bg-[#F43F5E] hover:bg-[#e11d48] text-[#FFFFFF] font-extrabold text-xs shadow-lg shadow-[#F43F5E]/40 border-2 border-[#EF4444] flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+            className="h-9 px-3 sm:px-4 rounded-full bg-transparent hover:bg-[#F43F5E]/15 text-[#F43F5E] font-extrabold text-xs border-2 border-[#EF4444] flex items-center justify-center gap-1.5 active:scale-95 transition-all"
             title="Leave Meeting"
           >
-            <PhoneOff className="w-4 h-4 shrink-0 fill-current" />
-            <span className="hidden sm:inline">Leave</span>
+            <LogOut className="w-4 h-4 shrink-0 text-[#F43F5E]" />
+            <span>Leave</span>
           </Button>
         </div>
       </footer>
