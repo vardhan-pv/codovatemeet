@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
 import { meetingService } from '@/services/meeting'
 import {
-  LogOut, Plus, Video, Copy, Check, ArrowRight, Clock, Calendar,
+  LogOut, Plus, Video, Copy, Check, ArrowRight, Clock, Calendar, Terminal, Layout,
   LayoutDashboard, Users, X, Globe, Tag, AlignLeft, Paperclip, Mail, Sparkles,
   ShieldCheck, KeyRound, Lock, MonitorPlay, Briefcase, GraduationCap, Lightbulb, Play, Zap, Shield, Cloud
 } from 'lucide-react'
@@ -71,16 +71,41 @@ export default function DashboardPage() {
   // Selected meeting card state (instant, schedule, recurring)
   const [selectedCategory, setSelectedCategory] = useState<'instant' | 'later' | 'recurring'>('instant')
 
-  // Advanced Calendar Scheduler Modal states
+  // Selected meeting type for room allocation (technical, business, educational, startup)
+  const [selectedMeetingType, setSelectedMeetingType] = useState<'technical' | 'business' | 'educational' | 'startup'>('technical')
+
+  // Advanced Calendar Scheduler Modal states (matching images 1, 2, 3, 4)
   const [showCalendarModal, setShowCalendarModal] = useState(false)
-  const [calTitle, setCalTitle] = useState('')
-  const [calDate, setCalDate] = useState('')
-  const [calTz, setCalTz] = useState('GMT-5 (EST)')
-  const [calColor, setCalColor] = useState('blue')
+  const [calTitle, setCalTitle] = useState('My Meeting')
+  const [calDescExpanded, setCalDescExpanded] = useState(false)
   const [calDesc, setCalDesc] = useState('')
+  const [calDate, setCalDate] = useState('')
+  const [calTime, setCalTime] = useState('03:30')
+  const [calAmPm, setCalAmPm] = useState<'AM' | 'PM'>('PM')
+  const [calTz, setCalTz] = useState('(GMT+5:30) India')
+  const [calColor, setCalColor] = useState('blue')
   const [calGuests, setCalGuests] = useState('')
-  const [calDuration, setCalDuration] = useState(60)
-  const [calMeetingType, setCalMeetingType] = useState('technical')
+  const [calDurationHours, setCalDurationHours] = useState(0)
+  const [calDurationMinutes, setCalDurationMinutes] = useState(40)
+  const [calMeetingType, setCalMeetingType] = useState<'technical' | 'business' | 'educational' | 'startup'>('technical')
+  const [calRecurring, setCalRecurring] = useState(false)
+  const [calMeetingIdType, setCalMeetingIdType] = useState<'auto' | 'personal'>('auto')
+  const [calPersonalId, setCalPersonalId] = useState('691 209 2953')
+  const [calTemplate, setCalTemplate] = useState('Select a template')
+  const [calAddWhiteboard, setCalAddWhiteboard] = useState(true)
+  const [calAddDocs, setCalAddDocs] = useState(true)
+  const [calPasscodeEnabled, setCalPasscodeEnabled] = useState(true)
+  const [calPasscode, setCalPasscode] = useState('X128h4')
+  const [calWaitingRoom, setCalWaitingRoom] = useState(false)
+  const [calEncryption, setCalEncryption] = useState<'enhanced' | 'e2ee'>('enhanced')
+  const [calAutoStartAi, setCalAutoStartAi] = useState(false)
+  const [calAutoStartQuestions, setCalAutoStartQuestions] = useState(false)
+  const [calAutoStartSummary, setCalAutoStartSummary] = useState(true)
+  const [calAllowTranscribe, setCalAllowTranscribe] = useState(true)
+  const [calTranscribeScope, setCalTranscribeScope] = useState<'all' | 'org'>('all')
+  const [calAllowChatBeforeAfter, setCalAllowChatBeforeAfter] = useState(true)
+  const [calHostVideo, setCalHostVideo] = useState<'on' | 'off'>('off')
+  const [calParticipantVideo, setCalParticipantVideo] = useState<'on' | 'off'>('off')
   const [isGeneratingDesc, setIsGeneratingDesc] = useState(false)
 
   // Track created meeting details for WhatsApp sharing
@@ -296,16 +321,21 @@ export default function DashboardPage() {
   const handleCreateMeeting = async () => {
     setIsCreating(true)
     try {
-      const effectiveName = roomName.trim() || 'Instant Meeting'
+      const effectiveName = roomName.trim() || `${selectedMeetingType.toUpperCase()} Session`
+      const serializedRoomName = JSON.stringify({
+        name: effectiveName,
+        type: selectedMeetingType,
+        color: 'blue'
+      })
       const data = await meetingService.createMeeting({
-        roomName: effectiveName,
+        roomName: serializedRoomName,
         scheduledAt: scheduledAt || new Date().toISOString(),
-        type: 'technical'
+        type: selectedMeetingType
       })
       setCreatedCode(data.meetingId)
       setCreatedScheduledAt(scheduledAt || new Date().toISOString())
       setCreatedTitle(effectiveName)
-      setCreatedType('instant')
+      setCreatedType(selectedMeetingType)
       setCreatedDesc('')
       
       const meetings = await meetingService.getRecentMeetings()
@@ -323,32 +353,50 @@ export default function DashboardPage() {
 
   const handleCreateCalendarMeeting = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!calTitle.trim() || !calDate) return
+    if (!calTitle.trim()) return
     setIsCreating(true)
+
+    const effectiveDate = calDate || new Date().toISOString().split('T')[0]
+    const effectiveTimeStr = `${effectiveDate}T${calTime}:00`
+    const durationMins = calDurationHours * 60 + calDurationMinutes
 
     const serializedRoomName = JSON.stringify({
       name: calTitle.trim(),
+      type: calMeetingType,
       color: calColor,
       desc: calDesc.trim(),
       tz: calTz,
-      guests: calGuests.trim()
+      guests: calGuests.trim(),
+      durationMinutes: durationMins,
+      passcode: calPasscodeEnabled ? calPasscode : undefined,
+      waitingRoom: calWaitingRoom,
+      encryption: calEncryption,
+      addWhiteboard: calAddWhiteboard,
+      addDocs: calAddDocs,
+      autoAi: calAutoStartAi,
+      autoQuestions: calAutoStartQuestions,
+      autoSummary: calAutoStartSummary,
+      transcribe: calAllowTranscribe,
+      transcribeScope: calTranscribeScope,
+      chatBeforeAfter: calAllowChatBeforeAfter,
+      hostVideo: calHostVideo,
+      participantVideo: calParticipantVideo
     })
 
     try {
       const data = await meetingService.createMeeting({
         roomName: serializedRoomName,
-        scheduledAt: calDate,
-        durationMinutes: calDuration,
+        scheduledAt: effectiveTimeStr,
+        durationMinutes: durationMins,
         guests: calGuests.trim(),
         type: calMeetingType
       })
       setCreatedCode(data.meetingId)
-      setCreatedScheduledAt(calDate)
+      setCreatedScheduledAt(effectiveTimeStr)
       setCreatedTitle(calTitle.trim())
       setCreatedType(calMeetingType)
       setCreatedDesc(calDesc.trim())
       
-      setCalTitle(''); setCalDate(''); setCalDesc(''); setCalGuests(''); setCalDuration(60); setCalMeetingType('technical')
       setShowCalendarModal(false)
 
       const meetings = await meetingService.getRecentMeetings()
@@ -937,23 +985,27 @@ export default function DashboardPage() {
 
       </main>
 
-      {/* ── ADVANCED CALENDAR SCHEDULER MODAL ── */}
+      {/* ── ADVANCED CALENDAR SCHEDULER MODAL (Matching Images 1, 2, 3, 4) ── */}
       {showCalendarModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] font-sans"
           >
-            {/* 3D Header Banner */}
+            {/* Header Navigation & Banner */}
             <div className="px-6 py-4 bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#3B82F6] text-white flex justify-between items-center shrink-0 relative overflow-hidden">
               <div className="flex items-center gap-3 relative z-10">
-                <div className="relative w-12 h-12 shrink-0 drop-shadow-md">
-                  <Image src="/calendar-schedule-3d.png" alt="Schedule Calendar" fill className="object-contain" />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCalendarModal(false)}
+                  className="text-xs font-bold text-blue-100 hover:text-white flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-lg border border-white/15"
+                >
+                  ‹ Back to Meetings
+                </button>
                 <div>
-                  <h3 className="font-extrabold text-base leading-tight">Schedule Calendar Event</h3>
-                  <p className="text-xs text-blue-100 mt-0.5">Organize team meetings & sync time zones</p>
+                  <h3 className="font-black text-lg leading-tight">Schedule Meeting</h3>
+                  <p className="text-[11px] text-blue-100 mt-0.5">Configure room options & invite participants</p>
                 </div>
               </div>
               <button onClick={() => setShowCalendarModal(false)} className="text-white/80 hover:text-white transition relative z-10">
@@ -962,31 +1014,84 @@ export default function DashboardPage() {
             </div>
 
             <form onSubmit={handleCreateCalendarMeeting} className="flex flex-col flex-1 overflow-hidden">
-              <div className="p-5 space-y-4 overflow-y-auto flex-1 custom-scrollbar text-xs">
+              <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar text-xs">
+                
+                {/* 1. Topic */}
                 <div className="space-y-1">
-                  <label className="font-extrabold text-[#334155]">Event Title</label>
-                  <Input placeholder="Tech Architecture Review..." value={calTitle} onChange={(e) => setCalTitle(e.target.value)} required className="h-10 border-[#E2E8F0]" />
+                  <label className="font-extrabold text-[#334155]">
+                    <span className="text-rose-500 mr-1">*</span>Topic
+                  </label>
+                  <Input
+                    placeholder="My Meeting"
+                    value={calTitle}
+                    onChange={(e) => setCalTitle(e.target.value)}
+                    required
+                    className="h-10 border-[#CBD5E1] focus:border-[#0B5CFF] text-sm font-semibold rounded-xl"
+                  />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="font-extrabold text-[#334155]">Start Date & Time</label>
-                    <Input type="datetime-local" value={calDate} onChange={(e) => setCalDate(e.target.value)} required className="h-10 border-[#E2E8F0]" />
+                {/* 2. Purpose & Meeting Type Selection (Core Requirement) */}
+                <div className="space-y-2">
+                  <label className="font-extrabold text-[#334155] flex items-center justify-between">
+                    <span>Purpose & Meeting Type (Room Option Allocation)</span>
+                    <span className="text-[10px] text-[#0B5CFF] font-bold">Allocates Workspaces Dynamically</span>
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    {[
+                      { id: 'technical', label: 'Technical', icon: Terminal, color: 'border-blue-500 bg-blue-50/60 text-blue-700' },
+                      { id: 'business', label: 'Business', icon: Briefcase, color: 'border-indigo-500 bg-indigo-50/60 text-indigo-700' },
+                      { id: 'educational', label: 'Educational', icon: GraduationCap, color: 'border-emerald-500 bg-emerald-50/60 text-emerald-700' },
+                      { id: 'startup', label: 'Startup', icon: Lightbulb, color: 'border-amber-500 bg-amber-50/60 text-amber-700' },
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setCalMeetingType(t.id as any)}
+                        className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition cursor-pointer text-center ${
+                          calMeetingType === t.id
+                            ? `${t.color} ring-2 ring-[#0B5CFF]/30 font-bold shadow-xs`
+                            : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:bg-[#FFFFFF]'
+                        }`}
+                      >
+                        <t.icon className="h-5 w-5" />
+                        <span className="text-xs font-extrabold">{t.label}</span>
+                      </button>
+                    ))}
                   </div>
-                  <div className="space-y-1">
-                    <label className="font-extrabold text-[#334155]">Time Zone</label>
-                    <select value={calTz} onChange={(e) => setCalTz(e.target.value)} className="w-full h-10 bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl px-3 text-xs font-semibold">
-                      <option>GMT-5 (EST)</option>
-                      <option>GMT-8 (PST)</option>
-                      <option>GMT+0 (UTC)</option>
-                      <option>GMT+5:30 (IST)</option>
-                    </select>
+
+                  {/* Room Option Allocation Badge Box */}
+                  <div className="p-3 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl space-y-1.5">
+                    <p className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#0B5CFF]" /> Allocated Room Tools & Options:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {calMeetingType === 'technical' && ['💻 Live Code Editor', '🖥️ Terminal', '🐙 GitHub Sync', '🤖 AI Pair Programmer', '🎨 Architecture Canvas'].map((b, i) => (
+                        <span key={i} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md font-bold text-[10px]">{b}</span>
+                      ))}
+                      {calMeetingType === 'business' && ['📋 Action Items Tracker', '📊 Financial Whiteboard', '⚡ Meeting Summarizer', '📄 Docs & Presentation'].map((b, i) => (
+                        <span key={i} className="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md font-bold text-[10px]">{b}</span>
+                      ))}
+                      {calMeetingType === 'educational' && ['🎨 Infinite Whiteboard Canvas', '📝 Lecture Notes', '📊 Student Polls & Q&A', '🎙️ Audio Transcribe'].map((b, i) => (
+                        <span key={i} className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-bold text-[10px]">{b}</span>
+                      ))}
+                      {calMeetingType === 'startup' && ['🎯 Lean Canvas Builder', '🚀 Rapid Code Sandbox', '💼 Pitch Deck Notes', '📌 Rapid Kanban Board'].map((b, i) => (
+                        <span key={i} className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-bold text-[10px]">{b}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <label className="font-extrabold text-[#334155]">Event Description</label>
+                {/* 3. Description Toggle */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setCalDescExpanded(!calDescExpanded)}
+                      className="text-xs font-bold text-[#0B5CFF] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      {calDescExpanded ? '− Hide Description' : '+ Add Description'}
+                    </button>
+
                     <Button 
                       type="button" 
                       variant="ghost" 
@@ -999,21 +1104,428 @@ export default function DashboardPage() {
                       {isGeneratingDesc ? 'Generating...' : 'AI Auto-Fill Agenda'}
                     </Button>
                   </div>
-                  <textarea
-                    value={calDesc}
-                    onChange={(e) => setCalDesc(e.target.value)}
-                    className="w-full p-2.5 bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl text-xs font-medium h-20 outline-none focus:border-[#0B5CFF]"
-                    placeholder="Define deliverables and goals..."
-                  />
+
+                  {(calDescExpanded || calDesc) && (
+                    <textarea
+                      value={calDesc}
+                      onChange={(e) => setCalDesc(e.target.value)}
+                      className="w-full p-2.5 bg-[#FFFFFF] border border-[#CBD5E1] rounded-xl text-xs font-medium h-20 outline-none focus:border-[#0B5CFF] shadow-2xs"
+                      placeholder="Enter meeting agenda, objectives, and topics..."
+                    />
+                  )}
                 </div>
+
+                {/* 4. When (Date & Time) */}
+                <div className="space-y-2">
+                  <label className="font-extrabold text-[#334155]">When</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <Input
+                      type="date"
+                      value={calDate}
+                      onChange={(e) => setCalDate(e.target.value)}
+                      className="h-10 border-[#CBD5E1] text-xs font-semibold rounded-xl"
+                    />
+                    <select
+                      value={calTime}
+                      onChange={(e) => setCalTime(e.target.value)}
+                      className="h-10 bg-[#FFFFFF] border border-[#CBD5E1] rounded-xl px-3 text-xs font-semibold"
+                    >
+                      {['01:00', '01:30', '02:00', '02:30', '03:00', '03:30', '04:00', '04:30', '05:00', '05:30', '06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30'].map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={calAmPm}
+                      onChange={(e) => setCalAmPm(e.target.value as any)}
+                      className="h-10 bg-[#FFFFFF] border border-[#CBD5E1] rounded-xl px-3 text-xs font-semibold"
+                    >
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* 5. Duration & Plan Warning Card (Matching Image 1) */}
+                <div className="space-y-2">
+                  <label className="font-extrabold text-[#334155]">Duration</label>
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={calDurationHours}
+                      onChange={(e) => setCalDurationHours(Number(e.target.value))}
+                      className="h-10 bg-[#FFFFFF] border border-[#CBD5E1] rounded-xl px-3 text-xs font-semibold w-28"
+                    >
+                      <option value={0}>0 hr</option>
+                      <option value={1}>1 hr</option>
+                      <option value={2}>2 hr</option>
+                    </select>
+                    <select
+                      value={calDurationMinutes}
+                      onChange={(e) => setCalDurationMinutes(Number(e.target.value))}
+                      className="h-10 bg-[#FFFFFF] border border-[#CBD5E1] rounded-xl px-3 text-xs font-semibold w-32"
+                    >
+                      <option value={15}>15 min</option>
+                      <option value={30}>30 min</option>
+                      <option value={40}>40 min</option>
+                      <option value={45}>45 min</option>
+                      <option value={60}>60 min</option>
+                    </select>
+                  </div>
+
+                  {/* Plan Warning Card (Exact match for Image 1) */}
+                  <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-xl flex items-start gap-3 text-amber-900">
+                    <div className="mt-0.5 text-amber-600 text-base">⚠️</div>
+                    <div className="text-xs leading-relaxed">
+                      <p className="font-bold text-amber-900">Basic Plan Limit Notice</p>
+                      <p className="text-[11px] text-amber-800 mt-0.5">
+                        You can schedule meetings for up to 40 minutes each with your current Basic plan. Need more time? <span className="font-bold underline cursor-pointer text-amber-950">Upgrade to Pro</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 6. Time Zone (Matching Image 2) */}
+                <div className="space-y-1">
+                  <label className="font-extrabold text-[#334155]">Time Zone</label>
+                  <select
+                    value={calTz}
+                    onChange={(e) => setCalTz(e.target.value)}
+                    className="w-full h-10 bg-[#FFFFFF] border border-[#CBD5E1] rounded-xl px-3 text-xs font-semibold"
+                  >
+                    <option>(GMT+5:30) India</option>
+                    <option>(GMT-5:00) Eastern Time (US & Canada)</option>
+                    <option>(GMT+0:00) Universal Coordinated Time (UTC)</option>
+                    <option>(GMT-8:00) Pacific Time (US & Canada)</option>
+                    <option>(GMT+1:00) Central European Time</option>
+                  </select>
+                </div>
+
+                {/* 7. Recurring Meeting Checkbox */}
+                <label className="flex items-center gap-2 text-xs font-bold text-[#334155] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={calRecurring}
+                    onChange={(e) => setCalRecurring(e.target.checked)}
+                    className="w-4 h-4 rounded border-[#CBD5E1] text-[#0B5CFF]"
+                  />
+                  <span>Recurring meeting</span>
+                </label>
+
+                {/* 8. Invitees & Calendar Email Invite Card (Matching Image 2) */}
+                <div className="space-y-2">
+                  <label className="font-extrabold text-[#334155]">Invitees</label>
+                  <Input
+                    placeholder="Enter user names or email addresses"
+                    value={calGuests}
+                    onChange={(e) => setCalGuests(e.target.value)}
+                    className="h-10 border-[#CBD5E1] text-xs font-medium rounded-xl"
+                  />
+                  <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-xl flex items-start gap-3 text-amber-900">
+                    <div className="mt-0.5 text-amber-600 text-base">⚠️</div>
+                    <div className="text-xs leading-relaxed">
+                      <p className="font-bold text-amber-900">Email Invitation Dispatch</p>
+                      <p className="text-[11px] text-amber-800 mt-0.5">
+                        Participants will automatically receive email invites with join links. <span className="font-bold text-[#0B5CFF] underline cursor-pointer">Connect Calendar</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 9. Theme Color Palette Selection */}
+                <div className="space-y-1.5">
+                  <label className="font-extrabold text-[#334155]">Theme Color</label>
+                  <div className="flex items-center gap-2">
+                    {[
+                      { id: 'blue', color: 'bg-[#0B5CFF]' },
+                      { id: 'red', color: 'bg-[#F43F5E]' },
+                      { id: 'green', color: 'bg-[#10B981]' },
+                      { id: 'yellow', color: 'bg-[#F59E0B]' },
+                      { id: 'indigo', color: 'bg-[#6366F1]' }
+                    ].map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setCalColor(c.id)}
+                        className={`w-7 h-7 rounded-full ${c.color} flex items-center justify-center transition ${
+                          calColor === c.id ? 'ring-2 ring-offset-2 ring-[#0B5CFF] scale-110' : 'opacity-80 hover:opacity-100'
+                        }`}
+                      >
+                        {calColor === c.id && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 10. Meeting ID (Matching Image 2) */}
+                <div className="space-y-2">
+                  <label className="font-extrabold text-[#334155]">Meeting ID</label>
+                  <div className="space-y-1.5">
+                    <label className="flex items-center gap-2 text-xs font-semibold text-[#334155] cursor-pointer">
+                      <input
+                        type="radio"
+                        name="meetingIdType"
+                        checked={calMeetingIdType === 'auto'}
+                        onChange={() => setCalMeetingIdType('auto')}
+                        className="text-[#0B5CFF]"
+                      />
+                      <span>Generate Automatically</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-xs font-semibold text-[#334155] cursor-pointer">
+                      <input
+                        type="radio"
+                        name="meetingIdType"
+                        checked={calMeetingIdType === 'personal'}
+                        onChange={() => setCalMeetingIdType('personal')}
+                        className="text-[#0B5CFF]"
+                      />
+                      <span>Personal Meeting ID {calPersonalId}</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* 11. Template & Workspace Allocation Badges (Matching Image 2) */}
+                <div className="space-y-2">
+                  <label className="font-extrabold text-[#334155]">Template & Workspaces</label>
+                  <select
+                    value={calTemplate}
+                    onChange={(e) => setCalTemplate(e.target.value)}
+                    className="w-full h-10 bg-[#FFFFFF] border border-[#CBD5E1] rounded-xl px-3 text-xs font-semibold mb-2"
+                  >
+                    <option>Select a template</option>
+                    <option>Technical Sprint Review</option>
+                    <option>Business Strategy Sync</option>
+                    <option>Educational Lecture & Tutorial</option>
+                    <option>Startup Pitch & Product Launch</option>
+                  </select>
+
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCalAddWhiteboard(!calAddWhiteboard)}
+                      className={`h-9 text-xs font-bold rounded-xl border ${calAddWhiteboard ? 'bg-[#EEF4FF] border-[#0B5CFF] text-[#0B5CFF]' : 'border-[#CBD5E1] text-[#64748B]'}`}
+                    >
+                      <Layout className="w-3.5 h-3.5 mr-1.5" />
+                      {calAddWhiteboard ? '✓ Whiteboard Added' : '+ Add Whiteboard'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCalAddDocs(!calAddDocs)}
+                      className={`h-9 text-xs font-bold rounded-xl border ${calAddDocs ? 'bg-[#EEF4FF] border-[#0B5CFF] text-[#0B5CFF]' : 'border-[#CBD5E1] text-[#64748B]'}`}
+                    >
+                      <Paperclip className="w-3.5 h-3.5 mr-1.5" />
+                      {calAddDocs ? '✓ Docs Added' : '+ Add Docs'}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* 12. Security (Matching Image 3) */}
+                <div className="space-y-2 pt-2 border-t border-[#F1F5F9]">
+                  <label className="font-extrabold text-[#334155] text-xs">Security</label>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={calPasscodeEnabled}
+                        onChange={(e) => setCalPasscodeEnabled(e.target.checked)}
+                        className="w-4 h-4 text-[#0B5CFF]"
+                      />
+                      <span className="font-bold text-xs text-[#334155]">Passcode</span>
+                      {calPasscodeEnabled && (
+                        <Input
+                          value={calPasscode}
+                          onChange={(e) => setCalPasscode(e.target.value)}
+                          className="h-8 w-36 text-xs font-mono border-[#CBD5E1] ml-2 font-bold"
+                        />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[#64748B] ml-6">Only users who have the invite link or passcode can join the meeting</p>
+
+                    <div className="pt-1">
+                      <label className="flex items-center gap-2 text-xs font-bold text-[#334155] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={calWaitingRoom}
+                          onChange={(e) => setCalWaitingRoom(e.target.checked)}
+                          className="w-4 h-4 text-[#0B5CFF]"
+                        />
+                        <span>Waiting Room</span>
+                      </label>
+                      <p className="text-[11px] text-[#64748B] ml-6 mt-0.5">Only users admitted by the host can join the meeting</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 13. Encryption (Matching Image 3) */}
+                <div className="space-y-2 pt-2 border-t border-[#F1F5F9]">
+                  <label className="font-extrabold text-[#334155] text-xs">Encryption</label>
+                  <div className="space-y-1.5">
+                    <label className="flex items-center gap-2 text-xs font-semibold text-[#334155] cursor-pointer">
+                      <input
+                        type="radio"
+                        name="encryptionType"
+                        checked={calEncryption === 'enhanced'}
+                        onChange={() => setCalEncryption('enhanced')}
+                        className="text-[#0B5CFF]"
+                      />
+                      <span>🛡️ Enhanced encryption</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-xs font-semibold text-[#334155] cursor-pointer">
+                      <input
+                        type="radio"
+                        name="encryptionType"
+                        checked={calEncryption === 'e2ee'}
+                        onChange={() => setCalEncryption('e2ee')}
+                        className="text-[#0B5CFF]"
+                      />
+                      <span>🔒 End-to-end encryption</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* 14. Codovate AI Options (Matching Image 4) */}
+                <div className="space-y-2 pt-2 border-t border-[#F1F5F9]">
+                  <label className="font-extrabold text-[#334155] text-xs flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#0B5CFF]" /> Codovate AI
+                  </label>
+
+                  <div className="space-y-2 pl-1">
+                    <label className="flex items-center gap-2 text-xs font-medium text-[#334155] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={calAutoStartAi}
+                        onChange={(e) => setCalAutoStartAi(e.target.checked)}
+                        className="w-4 h-4 text-[#0B5CFF]"
+                      />
+                      <span>Automatically start Codovate AI</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-medium text-[#334155] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={calAutoStartQuestions}
+                        onChange={(e) => setCalAutoStartQuestions(e.target.checked)}
+                        className="w-4 h-4 text-[#0B5CFF]"
+                      />
+                      <span>Automatically start meeting questions</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-medium text-[#334155] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={calAutoStartSummary}
+                        onChange={(e) => setCalAutoStartSummary(e.target.checked)}
+                        className="w-4 h-4 text-[#0B5CFF]"
+                      />
+                      <span>Automatically start meeting summary</span>
+                    </label>
+                  </div>
+
+                  <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-xl text-[11px] text-blue-900 mt-2">
+                    <span className="font-bold text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded uppercase mr-1.5">NEW</span>
+                    <span className="font-semibold">Meeting summary template:</span> You can select summary templates tailored to your meeting type.
+                  </div>
+                </div>
+
+                {/* 15. My Notes & Transcription (Matching Image 4) */}
+                <div className="space-y-2 pt-2 border-t border-[#F1F5F9]">
+                  <label className="font-extrabold text-[#334155] text-xs">My Notes & Transcription</label>
+                  <label className="flex items-center gap-2 text-xs font-bold text-[#334155] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={calAllowTranscribe}
+                      onChange={(e) => setCalAllowTranscribe(e.target.checked)}
+                      className="w-4 h-4 text-[#0B5CFF]"
+                    />
+                    <span>Allow participants to transcribe meeting with My Notes</span>
+                  </label>
+
+                  {calAllowTranscribe && (
+                    <div className="pl-6 space-y-1">
+                      <label className="flex items-center gap-2 text-xs text-[#334155] cursor-pointer">
+                        <input
+                          type="radio"
+                          name="transcribeScope"
+                          checked={calTranscribeScope === 'org'}
+                          onChange={() => setCalTranscribeScope('org')}
+                        />
+                        <span>Only participants in your organization</span>
+                      </label>
+                      <label className="flex items-center gap-2 text-xs text-[#334155] cursor-pointer">
+                        <input
+                          type="radio"
+                          name="transcribeScope"
+                          checked={calTranscribeScope === 'all'}
+                          onChange={() => setCalTranscribeScope('all')}
+                        />
+                        <span>All participants</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                {/* 16. Meeting Chat (Matching Image 4) */}
+                <div className="space-y-2 pt-2 border-t border-[#F1F5F9]">
+                  <label className="font-extrabold text-[#334155] text-xs">Meeting Chat</label>
+                  <label className="flex items-center gap-2 text-xs font-bold text-[#334155] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={calAllowChatBeforeAfter}
+                      onChange={(e) => setCalAllowChatBeforeAfter(e.target.checked)}
+                      className="w-4 h-4 text-[#0B5CFF]"
+                    />
+                    <span>Allow users to access meeting chats before and after the meeting</span>
+                  </label>
+                </div>
+
+                {/* 17. Default Video State (Matching Image 4) */}
+                <div className="space-y-2 pt-2 border-t border-[#F1F5F9]">
+                  <label className="font-extrabold text-[#334155] text-xs">Video Default State</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between bg-[#F8FAFC] p-2.5 rounded-xl border border-[#E2E8F0]">
+                      <span className="font-bold text-xs text-[#334155]">Host Video</span>
+                      <div className="flex gap-2 text-xs">
+                        <label className="flex items-center gap-1 cursor-pointer">
+                          <input type="radio" name="hostVideo" checked={calHostVideo === 'on'} onChange={() => setCalHostVideo('on')} /> On
+                        </label>
+                        <label className="flex items-center gap-1 cursor-pointer">
+                          <input type="radio" name="hostVideo" checked={calHostVideo === 'off'} onChange={() => setCalHostVideo('off')} /> Off
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-[#F8FAFC] p-2.5 rounded-xl border border-[#E2E8F0]">
+                      <span className="font-bold text-xs text-[#334155]">Participant Video</span>
+                      <div className="flex gap-2 text-xs">
+                        <label className="flex items-center gap-1 cursor-pointer">
+                          <input type="radio" name="partVideo" checked={calParticipantVideo === 'on'} onChange={() => setCalParticipantVideo('on')} /> On
+                        </label>
+                        <label className="flex items-center gap-1 cursor-pointer">
+                          <input type="radio" name="partVideo" checked={calParticipantVideo === 'off'} onChange={() => setCalParticipantVideo('off')} /> Off
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
 
+              {/* Action Buttons Footer (Matching Image 1 & 4) */}
               <div className="p-4 bg-[#F8FAFC] border-t border-[#E2E8F0] flex gap-3 shrink-0">
-                <Button type="button" variant="outline" onClick={() => setShowCalendarModal(false)} className="flex-1 h-10 rounded-xl font-bold border-[#E2E8F0]">
-                  Cancel
-                </Button>
-                <Button type="submit" className="flex-1 bg-[#0B5CFF] hover:bg-[#0846CC] text-white font-bold h-10 rounded-xl border-none">
+                <Button
+                  type="submit"
+                  className="bg-[#0B5CFF] hover:bg-[#0846CC] text-white font-extrabold h-11 px-8 rounded-xl border-none shadow-md shadow-[#0B5CFF]/20"
+                >
                   {isCreating ? 'Saving...' : 'Save & Schedule'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCalendarModal(false)}
+                  className="h-11 px-6 rounded-xl font-bold border-[#CBD5E1] text-[#334155] bg-white hover:bg-slate-100"
+                >
+                  Cancel
                 </Button>
               </div>
             </form>

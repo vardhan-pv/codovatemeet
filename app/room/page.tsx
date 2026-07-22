@@ -1534,10 +1534,16 @@ function RoomPageContent() {
 
         if (meetingData.type) {
           setMeetingType(meetingData.type)
-          // Always default workspaces to none so they do not show automatically
-          setActiveWorkspace('none')
           
-          if (meetingData.type === 'interview') {
+          if (meetingData.type === 'technical') {
+            setActiveWorkspace('code')
+          } else if (meetingData.type === 'business') {
+            setActiveWorkspace('agenda')
+          } else if (meetingData.type === 'educational') {
+            setActiveWorkspace('whiteboard')
+          } else if (meetingData.type === 'startup') {
+            setActiveWorkspace('notes')
+          } else if (meetingData.type === 'interview') {
             setActiveSidebar('interview')
           } else if (meetingData.type === 'focus') {
             setActiveSidebar('focus')
