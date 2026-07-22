@@ -8,7 +8,7 @@ import { meetingService } from '@/services/meeting'
 import {
   LogOut, Plus, Video, Copy, Check, ArrowRight, Clock, Calendar,
   LayoutDashboard, Users, X, Globe, Tag, AlignLeft, Paperclip, Mail, Sparkles,
-  ShieldCheck, KeyRound, Lock, MonitorPlay, Briefcase, GraduationCap, Lightbulb, Play, Zap, Shield, Cloud
+  ShieldCheck, KeyRound, Lock, MonitorPlay, Briefcase, GraduationCap, Lightbulb, Play
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -30,21 +30,7 @@ interface MeetingRecord {
   duration_minutes?: number
 }
 
-const parseMeetingName = (nameStr?: string) => {
-  if (!nameStr) return { name: 'Developer Collaboration Session', desc: '', tz: '', guests: '' }
-  try {
-    if (nameStr.startsWith('{')) {
-      const parsed = JSON.parse(nameStr)
-      return {
-        name: parsed.name || 'Developer Collaboration Session',
-        desc: parsed.desc || '',
-        tz: parsed.tz || '',
-        guests: parsed.guests || ''
-      }
-    }
-  } catch (_) {}
-  return { name: nameStr, desc: '', tz: '', guests: '' }
-}
+
 
 export default function DashboardPage() {
   const { user, token, loadProfile, logout } = useAuth()
@@ -60,11 +46,14 @@ export default function DashboardPage() {
   const [joinError, setJoinError] = useState<string | null>(null)
   const [meetingType, setMeetingType] = useState('technical')
 
+
   // Meeting types definition
   const meetingTypes = [
-    { id: 'technical', label: 'Instant Meeting', sub: 'Start now', icon: MonitorPlay, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
-    { id: 'business', label: 'Schedule Later', sub: 'Plan for later', icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
-    { id: 'education', label: 'Recurring', sub: 'Repeat meeting', icon: GraduationCap, color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
+    { id: 'technical', label: 'Technical', icon: MonitorPlay, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+    { id: 'business', label: 'Business', icon: Briefcase, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+    { id: 'education', label: 'Education', icon: GraduationCap, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { id: 'brainstorming', label: 'Brainstorm', icon: Lightbulb, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
+    { id: 'standup', label: 'Standup', icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
   ]
 
   // Advanced Calendar Scheduler Modal states
@@ -164,6 +153,7 @@ export default function DashboardPage() {
       const activeToken = localStorage.getItem('token')
       if (!activeToken) return
 
+      // Fetch profile details including mfa_enabled and role
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const profRes = await fetch(`${backendUrl}/api/profile`, {
         headers: { 'Authorization': `Bearer ${activeToken}` }
@@ -267,7 +257,7 @@ export default function DashboardPage() {
         body: JSON.stringify({ email: user.email })
       })
       if (res.ok) {
-        setPasswordResetStatus('🔑 Success! A simulated reset link has been printed in server logs.')
+        setPasswordResetStatus('🔑 Success! A simulated reset link has been printed in your server logs console output.')
       } else {
         setPasswordResetStatus('❌ Failed to request password reset.')
       }
@@ -275,6 +265,8 @@ export default function DashboardPage() {
       setPasswordResetStatus('❌ Connection error requesting reset link.')
     }
   }
+
+
 
   useEffect(() => {
     if (!token) { window.location.href = '/login'; return }
@@ -290,16 +282,16 @@ export default function DashboardPage() {
   }, [token])
 
   const handleCreateMeeting = async () => {
+    if (!scheduledAt) {
+      alert("Please select a date and time to schedule this meeting.")
+      return
+    }
     setIsCreating(true)
     try {
-      const data = await meetingService.createMeeting({
-        roomName: roomName.trim() || 'Instant Developer Session',
-        scheduledAt: new Date().toISOString(),
-        type: meetingType
-      })
+      const data = await meetingService.createMeeting({ roomName, scheduledAt, type: meetingType })
       setCreatedCode(data.meetingId)
-      setCreatedScheduledAt(new Date().toISOString())
-      setCreatedTitle(roomName.trim() || 'Instant Developer Session')
+      setCreatedScheduledAt(scheduledAt || new Date().toISOString())
+      setCreatedTitle(roomName.trim() || 'Developer Collaboration Session')
       setCreatedType(meetingType || 'technical')
       setCreatedDesc('')
       const meetings = await meetingService.getRecentMeetings()
@@ -314,6 +306,7 @@ export default function DashboardPage() {
     if (!calTitle.trim() || !calDate) return
     setIsCreating(true)
 
+    // Serialize calendar options into roomName as a JSON string to avoid DB schema alterations
     const serializedRoomName = JSON.stringify({
       name: calTitle.trim(),
       color: calColor,
@@ -336,6 +329,7 @@ export default function DashboardPage() {
       setCreatedType(calMeetingType)
       setCreatedDesc(calDesc.trim())
       
+      // Reset forms and close modal
       setCalTitle(''); setCalDate(''); setCalDesc(''); setCalGuests(''); setCalDuration(60); setCalMeetingType('technical')
       setShowCalendarModal(false)
 
@@ -406,476 +400,469 @@ export default function DashboardPage() {
     if (!joinCode.trim()) return
     setIsJoining(true); setJoinError(null)
     try {
-      const codeClean = joinCode.trim()
-      window.location.href = `/room?id=${codeClean}`
+      const cleanCode = joinCode.trim().toUpperCase()
+      await meetingService.validateMeeting(cleanCode)
+      window.location.href = `/room?id=${cleanCode}`
     } catch (err: any) {
-      setJoinError('Invalid meeting code or room not found.')
-    } finally { setIsJoining(false) }
+      setJoinError(err.response?.data?.error || 'Invalid meeting code')
+      setIsJoining(false)
+    }
   }
 
-  const userNameDisplay = user?.name || user?.email?.split('@')[0] || 'codovatesolutions'
-  const userEmailDisplay = user?.email || 'codovatesolutions@gmail.com'
-  const userInitial = userNameDisplay.charAt(0).toUpperCase()
+  // Parse rich serialized calendar data
+  const parseMeetingName = (nameField?: string) => {
+    if (!nameField) return { name: 'Untitled Meeting', color: 'blue', desc: '', tz: '', guests: '' }
+    if (nameField.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(nameField)
+        return {
+          name: parsed.name || 'Untitled Meeting',
+          color: parsed.color || 'blue',
+          desc: parsed.desc || '',
+          tz: parsed.tz || '',
+          guests: parsed.guests || ''
+        }
+      } catch (e) {}
+    }
+    return { name: nameField, color: 'blue', desc: '', tz: '', guests: '' }
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#030712] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative w-20 h-20 flex items-center justify-center">
+            {/* Spinning outer loader */}
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-4 border-t-primary animate-spin" />
+            {/* Inner logo */}
+            <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shadow-lg bg-slate-900 border border-slate-800 relative">
+              <Image src="/logo.jpeg" fill className="object-cover" alt="Codovate Logo" />
+            </div>
+          </div>
+          <p className="text-muted-foreground text-sm font-medium tracking-wide">Initializing Collaborative Workspace...</p>
+        </div>
+      </div>
+    )
+  }
+
+  const colorDotClasses: Record<string, string> = {
+    red: 'bg-rose-500',
+    blue: 'bg-[#0B5CFF]',
+    green: 'bg-[#3EC78F]',
+    yellow: 'bg-amber-500',
+    indigo: 'bg-[#7B61FF]'
+  }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-100 flex flex-col">
-
-      {/* ── HEADER NAVIGATION ── */}
-      <header className="bg-white border-b border-slate-200/80 px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-50 shadow-xs">
-        <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-2xl bg-[#0B5CFF] flex items-center justify-center text-white shadow-md shadow-blue-500/20 transition-transform group-hover:scale-105">
-            <Video className="w-5 h-5 stroke-[2.5]" />
+    <div className="min-h-screen bg-[#FFFFFF] text-[#3D3D50] flex flex-col font-sans selection:bg-[#EEF4FF]">
+      
+      {/* ── HEADER ── */}
+      <header className="bg-[#FFFFFF] border-b border-[#C4C4CF]/50 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.location.href = '/'}>
+          <div className="w-9 h-9 rounded-xl overflow-hidden shadow-xs relative bg-[#F8F9FA] border border-[#C4C4CF]/60">
+            <Image src="/logo.jpeg" fill className="object-cover" alt="Codovate Meet Logo" />
           </div>
-          <div className="flex flex-col leading-none">
-            <span className="font-extrabold text-lg tracking-tight text-slate-900 group-hover:text-[#0B5CFF] transition-colors">
+          <div>
+            <h1 className="font-extrabold text-[#000000] tracking-tight text-lg leading-none">
               Codovate <span className="text-[#0B5CFF]">Meet</span>
-            </span>
-            <span className="text-[10px] font-extrabold tracking-wider text-slate-400 uppercase mt-0.5">
-              DEVELOPER WORKSPACE
-            </span>
+            </h1>
+            <p className="text-[10px] text-[#67677E] font-mono mt-0.5 tracking-wider">DEVELOPER WORKSPACE</p>
           </div>
-        </Link>
+        </div>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="text-right hidden sm:block leading-tight">
-              <p className="font-extrabold text-sm text-slate-900 leading-none">{userNameDisplay}</p>
-              <p className="text-xs font-medium text-slate-400 mt-0.5">{userEmailDisplay}</p>
-            </div>
-            <div className="w-9 h-9 rounded-full bg-blue-100 text-[#0B5CFF] font-black text-sm flex items-center justify-center border border-blue-200 shadow-xs">
-              {userInitial}
-            </div>
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex flex-col items-end select-none">
+            <p className="text-sm font-bold text-[#000000] leading-tight">{user.name}</p>
+            <p className="text-[11px] text-[#67677E]">{user.email}</p>
           </div>
-
-          <Button
-            variant="outline"
-            onClick={logout}
-            className="h-9 px-3 sm:px-4 text-xs font-extrabold rounded-xl border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 flex items-center gap-1.5 transition cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5 text-slate-500" />
-            <span>Logout</span>
+          <div className="w-9 h-9 rounded-full bg-[#EEF4FF] border border-[#0B5CFF]/30 flex items-center justify-center text-[#0B5CFF] font-bold text-sm select-none">
+            {user.name?.[0]?.toUpperCase()}
+          </div>
+          <Button variant="outline" size="sm" onClick={logout}
+            className="border-[#C4C4CF] text-[#232333] hover:bg-[#F8F9FA] font-semibold h-9 rounded-xl transition-all">
+            <LogOut className="h-4 w-4 mr-1.5 text-[#67677E]" /> Logout
           </Button>
         </div>
       </header>
 
-      {/* ── MAIN CONTENT CONTAINER ── */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      {/* ── MAIN CONTENT ── */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-10 space-y-10">
 
-        {/* ── HERO BANNER ── */}
-        <motion.div
-          {...fadeInUp}
-          className="w-full rounded-2xl md:rounded-3xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#60A5FA] p-6 sm:p-8 md:p-10 text-white relative overflow-hidden shadow-xl shadow-blue-500/15"
-        >
-          {/* Background Decorative Rings */}
-          <div className="absolute right-0 top-0 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-          <div className="absolute right-40 bottom-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-2xl">
-              <div className="flex items-center gap-1.5 text-blue-100 font-extrabold text-xs tracking-widest uppercase">
-                <span>👋</span>
-                <span>WELCOME BACK</span>
-              </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-xs">
-                {userNameDisplay}
-              </h1>
-              <p className="text-sm sm:text-base font-medium text-blue-50/90 leading-relaxed max-w-xl">
-                Create instant meetings or schedule calendar sessions in your workspace.
-              </p>
-            </div>
-
-            {/* Glossy 3D Illustration Graphic */}
-            <div className="hidden md:flex shrink-0 items-center justify-center relative w-48 h-36">
-              <div className="w-36 h-28 bg-white/15 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl p-4 flex flex-col justify-between transform -rotate-3 hover:rotate-0 transition-transform duration-300">
-                <div className="flex items-center justify-between">
-                  <div className="w-6 h-6 rounded-lg bg-white/30 flex items-center justify-center">
-                    <Calendar className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                </div>
-                <div className="space-y-1">
-                  <div className="h-2 w-20 bg-white/40 rounded-full" />
-                  <div className="h-2 w-12 bg-white/20 rounded-full" />
-                </div>
-                <div className="flex justify-end">
-                  <div className="w-7 h-7 rounded-full bg-white text-[#2563EB] flex items-center justify-center font-black text-xs shadow-md">
-                    ✓
-                  </div>
-                </div>
-              </div>
-              <div className="absolute -bottom-2 -left-2 w-20 h-20 bg-white/20 backdrop-blur-lg rounded-2xl border border-white/30 shadow-xl p-3 flex flex-col justify-between transform rotate-6 hover:rotate-0 transition-transform duration-300">
-                <Clock className="w-5 h-5 text-white" />
-                <span className="text-[10px] font-black text-white">10:00 AM</span>
-              </div>
-            </div>
+        {/* Welcome banner */}
+        <motion.div {...fadeInUp} className="relative overflow-hidden bg-gradient-to-r from-[#0B5CFF] to-[#0846CC] rounded-2xl p-8 shadow-md text-white">
+          <div className="absolute rounded-full blur-[100px] pointer-events-none w-64 h-64 bg-white/10 top-[-40px] right-0" />
+          <div className="relative z-10 select-none">
+            <p className="text-[#EEF4FF] text-xs font-bold uppercase tracking-wider mb-1">👋 Welcome back</p>
+            <h1 className="text-3xl font-black text-white mb-2">{user.name}</h1>
+            <p className="text-white/80 text-sm">Create instant meetings or schedule calendar sessions in your workspace.</p>
           </div>
         </motion.div>
 
-        {/* ── 2-COLUMN MAIN ACTION CARDS ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Action Cards */}
+        <div className="grid md:grid-cols-2 gap-6">
 
-          {/* ── CARD 1: NEW MEETING ── */}
-          <motion.div
-            {...fadeInUp}
-            className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow"
-          >
-            <div>
-              {/* Card Header */}
-              <div className="flex items-center justify-between gap-4 mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0B5CFF]">
-                    <Video className="w-6 h-6 stroke-[2.2]" />
-                  </div>
-                  <div>
-                    <h2 className="font-extrabold text-lg text-slate-900 leading-tight">New Meeting</h2>
-                    <p className="text-xs font-medium text-slate-400">Generate a shareable meeting link</p>
-                  </div>
+          {/* Create / Schedule Meeting Card */}
+          <motion.div {...fadeInUp} className="bg-[#FFFFFF] border border-[#C4C4CF]/80 rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-[#F8F9FA] border-b border-[#C4C4CF]/60 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-xs border border-[#C4C4CF]/60 shrink-0 bg-[#F8F9FA]">
+                  <Image src="/logo.jpeg" fill className="object-cover" alt="Codovate Logo" />
                 </div>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setShowCalendarModal(true)}
-                  className="h-9 px-3 bg-blue-50/70 hover:bg-blue-100 text-[#0B5CFF] border border-blue-200/80 font-bold text-xs rounded-xl flex items-center gap-1.5 transition cursor-pointer"
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Schedule Calendar Event</span>
-                  <span className="sm:hidden">Schedule</span>
-                </Button>
-              </div>
-
-              {/* Form Fields */}
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <LayoutDashboard className="w-3.5 h-3.5 text-[#0B5CFF]" />
-                    Meeting Name
-                  </label>
-                  <Input
-                    placeholder="e.g. Sprint Sync, Daily Standup"
-                    value={roomName}
-                    onChange={(e) => setRoomName(e.target.value)}
-                    className="h-11 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white text-slate-900 text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <Tag className="w-3.5 h-3.5 text-[#0B5CFF]" />
-                    Meeting Type
-                  </label>
-
-                  <div className="grid grid-cols-3 gap-2.5">
-                    {meetingTypes.map((type) => {
-                      const Icon = type.icon
-                      const isSelected = meetingType === type.id
-                      return (
-                        <button
-                          key={type.id}
-                          type="button"
-                          onClick={() => {
-                            setMeetingType(type.id)
-                            if (type.id !== 'technical') {
-                              setShowCalendarModal(true)
-                            }
-                          }}
-                          className={`p-3 rounded-xl border text-center transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
-                            isSelected
-                              ? 'border-2 border-[#0B5CFF] bg-blue-50/60 shadow-xs'
-                              : 'border-slate-200 bg-slate-50/40 hover:bg-slate-100/80'
-                          }`}
-                        >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${type.bg}`}>
-                            <Icon className={`w-4 h-4 ${type.color}`} />
-                          </div>
-                          <span className="text-xs font-extrabold text-slate-900 leading-tight">{type.label}</span>
-                          <span className="text-[10px] font-medium text-slate-400">{type.sub}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
+                <div>
+                  <h2 className="font-bold text-[#000000] text-base">New Meeting</h2>
+                  <p className="text-xs text-[#67677E]">Generate a shareable meeting link</p>
                 </div>
               </div>
+              <Button
+                onClick={() => setShowCalendarModal(true)}
+                variant="outline"
+                className="h-9 text-xs font-extrabold border-2 border-[#0B5CFF] text-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-white rounded-xl shadow-xs transition-all"
+              >
+                📅 Schedule Calendar Event
+              </Button>
             </div>
 
-            {/* Action Button */}
-            <div className="mt-6">
-              <Button
-                onClick={handleCreateMeeting}
-                disabled={isCreating}
-                className="w-full h-12 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-extrabold text-sm rounded-xl shadow-md shadow-blue-500/20 active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Plus className="w-5 h-5 stroke-[2.5]" />
-                <span>{isCreating ? 'Creating Meeting...' : 'Create Meeting'}</span>
-              </Button>
+            <div className="p-6 space-y-4">
+              {createdCode ? (
+                <div className="space-y-4">
+                  <div className="bg-[#EEF4FF] border-2 border-[#0B5CFF]/40 rounded-xl p-4 text-center select-none shadow-xs">
+                    <p className="text-xs text-[#67677E] mb-1 font-bold uppercase tracking-wider">Your meeting link</p>
+                    <p className="font-mono text-sm font-extrabold text-[#0B5CFF] truncate select-all">
+                      {typeof window !== 'undefined' ? `${window.location.origin}/room?id=${createdCode}` : createdCode}
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={handleCopyLink} className="flex-1 rounded-xl font-bold border-2 border-slate-300 text-[#232333] hover:bg-[#F8F9FA]">
+                      {copied ? <><Check className="h-4 w-4 mr-2 text-[#3EC78F]" /> Copied!</> : <><Copy className="h-4 w-4 mr-2 text-[#67677E]" /> Copy Link</>}
+                    </Button>
+                    <Button className="flex-1 bg-[#0B5CFF] hover:bg-[#0846CC] text-white font-extrabold rounded-xl shadow-md shadow-[#0B5CFF]/25 border-none"
+                      onClick={() => window.location.href = `/room?id=${createdCode}`}>
+                      Start Call <ArrowRight className="h-4 w-4 ml-1.5" />
+                    </Button>
+                  </div>
+                  <Button 
+                    className="w-full bg-[#3EC78F] hover:bg-[#34b07e] text-white font-extrabold rounded-xl border-none shadow-md shadow-[#3EC78F]/25 flex items-center justify-center gap-2 h-11"
+                    onClick={() => handleShareWhatsApp()}
+                  >
+                    <svg viewBox="0 0 448 512" fill="currentColor" className="h-4.5 w-4.5">
+                      <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
+                    </svg>
+                    Share on WhatsApp
+                  </Button>
+                  <button className="w-full text-xs text-[#0B5CFF] hover:underline transition-colors text-center font-extrabold"
+                    onClick={() => { setCreatedCode(null); setRoomName(''); setScheduledAt('') }}>
+                    + Create another meeting
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-extrabold text-[#232333] flex items-center gap-1.5">
+                      <LayoutDashboard className="h-3.5 w-3.5 text-[#0B5CFF]" /> Meeting Name
+                    </label>
+                    <Input placeholder="e.g. Sprint Sync, Daily Standup"
+                      value={roomName} onChange={(e) => setRoomName(e.target.value)}
+                      className="bg-[#FFFFFF] border-2 border-slate-300 text-[#000000] font-semibold placeholder:text-slate-500 placeholder:font-medium rounded-xl h-11 focus:border-[#0B5CFF] focus:ring-2 focus:ring-[#0B5CFF]/20" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-extrabold text-[#232333] flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-[#0B5CFF]" /> Meeting Type
+                    </label>
+                    <div className="grid grid-cols-3 gap-2 mt-1">
+                      {meetingTypes.map((type) => (
+                        <button
+                          key={type.id}
+                          onClick={() => setMeetingType(type.id)}
+                          className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl border-2 transition-all ${
+                            meetingType === type.id
+                              ? 'border-[#0B5CFF] bg-[#EEF4FF] text-[#0B5CFF] font-extrabold shadow-md shadow-[#0B5CFF]/15 scale-[1.02]'
+                              : 'border-slate-300 bg-slate-50/80 text-[#3D3D50] hover:border-[#0B5CFF]/60 hover:bg-[#EEF4FF]/40 font-bold'
+                          }`}
+                        >
+                          <div className={`p-1.5 rounded-lg ${type.bg}`}>
+                            <type.icon className={`h-4 w-4 ${type.color}`} />
+                          </div>
+                          <span className="text-[11px] font-extrabold">{type.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-extrabold text-[#232333] flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 text-[#0B5CFF]" /> Schedule Date & Time
+                    </label>
+                    <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)}
+                      className="bg-[#FFFFFF] border-2 border-slate-300 text-[#000000] font-semibold placeholder:text-slate-500 rounded-xl h-11 focus:border-[#0B5CFF] focus:ring-2 focus:ring-[#0B5CFF]/20" />
+                  </div>
+                  <Button className="w-full h-12 rounded-xl font-extrabold text-base bg-[#0B5CFF] hover:bg-[#0846CC] text-white border-none shadow-md shadow-[#0B5CFF]/30 transition-all cursor-pointer"
+                    onClick={handleCreateMeeting} disabled={isCreating}>
+                    {isCreating ? 'Creating...' : <><Plus className="h-4 w-4 mr-1.5" /> Schedule Meeting</>}
+                  </Button>
+                </div>
+              )}
             </div>
           </motion.div>
 
-          {/* ── CARD 2: JOIN MEETING ── */}
-          <motion.div
-            {...fadeInUp}
-            className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow relative"
-          >
-            <div>
-              {/* Card Header */}
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0B5CFF]">
-                  <Play className="w-5 h-5 fill-[#0B5CFF] ml-0.5" />
+          {/* Join Meeting Card */}
+          <motion.div {...fadeInUp} className="bg-[#FFFFFF] border border-[#C4C4CF]/80 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+            <div className="bg-[#F8F9FA] border-b border-[#C4C4CF]/60 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#0B5CFF] flex items-center justify-center shadow-md shadow-[#0B5CFF]/30">
+                  <Play className="h-5 w-5 text-white ml-0.5" />
                 </div>
                 <div>
-                  <h2 className="font-extrabold text-lg text-slate-900 leading-tight">Join Meeting</h2>
-                  <p className="text-xs font-medium text-slate-400">Enter a code to enter a live call</p>
+                  <h2 className="font-bold text-[#000000] text-base">Join Meeting</h2>
+                  <p className="text-xs text-[#67677E]">Enter a code to enter a live call</p>
                 </div>
               </div>
+            </div>
 
-              {/* Decorative Graphic Banner */}
-              <div className="my-4 py-6 bg-slate-50/60 rounded-2xl border border-slate-100 flex items-center justify-center relative overflow-hidden">
-                <div className="w-16 h-16 rounded-full bg-blue-100/70 flex items-center justify-center relative">
-                  <div className="w-10 h-10 rounded-full bg-[#0B5CFF] flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-500/30">
-                    +
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-indigo-400 border-2 border-white" />
-                  <div className="absolute -bottom-1 -left-1 w-5 h-5 rounded-full bg-sky-400 border-2 border-white" />
-                </div>
-              </div>
-
-              {/* Input Form */}
+            <div className="p-6 flex-1 flex flex-col justify-center">
               <form onSubmit={handleJoinMeeting} className="space-y-4">
+                {joinError && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl font-semibold">
+                    ⚠ {joinError}
+                  </div>
+                )}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <KeyRound className="w-3.5 h-3.5 text-[#0B5CFF]" />
-                    Meeting Code
-                  </label>
-                  <Input
-                    placeholder="e.g. AB12-CD34-EF56"
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value)}
-                    className="h-11 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white text-slate-900 text-sm font-semibold tracking-wider focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
-                  />
-                  {joinError && (
-                    <p className="text-xs font-bold text-rose-500 mt-1">{joinError}</p>
-                  )}
+                  <label className="text-sm font-extrabold text-[#232333]">Meeting Code</label>
+                  <Input placeholder="CDV-XXXX-XXXX"
+                    className="bg-[#FFFFFF] border-2 border-slate-300 text-[#000000] placeholder:text-slate-500 placeholder:font-semibold rounded-xl h-12 uppercase font-mono tracking-widest text-center text-lg font-black focus:border-[#0B5CFF] focus:ring-2 focus:ring-[#0B5CFF]/20"
+                    value={joinCode} onChange={(e) => setJoinCode(e.target.value)} required />
+                  <p className="text-xs text-[#67677E] text-center font-medium select-none">Paste the meeting code shared with you</p>
                 </div>
-
-                {/* Join Button */}
-                <Button
-                  type="submit"
-                  disabled={isJoining || !joinCode.trim()}
-                  className="w-full h-11 bg-blue-50/80 hover:bg-blue-100 text-[#0B5CFF] font-extrabold text-sm rounded-xl border border-blue-200/80 shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Play className="w-4 h-4 fill-[#0B5CFF]" />
-                  <span>{isJoining ? 'Joining Call...' : 'Join Meeting'}</span>
+                <Button type="submit"
+                  className="w-full h-12 rounded-xl font-extrabold text-base bg-[#0B5CFF] hover:bg-[#0846CC] text-white shadow-md shadow-[#0B5CFF]/30 border-none cursor-pointer transition-all"
+                  disabled={isJoining}>
+                  {isJoining ? 'Joining...' : <><ArrowRight className="h-4 w-4 mr-2" />Join Meeting</>}
                 </Button>
               </form>
             </div>
-
-            {/* Bottom Right Floating Sparkles Badge */}
-            <button
-              onClick={() => setShowFloatingAi(true)}
-              className="w-11 h-11 rounded-full bg-[#0B5CFF] text-white flex items-center justify-center shadow-lg shadow-blue-600/30 absolute bottom-6 right-6 hover:scale-110 active:scale-95 transition cursor-pointer"
-              title="Ask AI Assistant"
-            >
-              <Sparkles className="w-5 h-5 animate-pulse" />
-            </button>
           </motion.div>
-
         </div>
 
-        {/* ── BOTTOM FEATURE BADGES ROW ── */}
-        <motion.div
-          {...fadeInUp}
-          className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#0B5CFF] border border-blue-100 flex items-center justify-center shrink-0">
-              <Shield className="w-5 h-5 stroke-[2.2]" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-slate-900 text-xs">Secure Meetings</h4>
-              <p className="text-[11px] font-medium text-slate-400">End-to-end encrypted</p>
-            </div>
+        {/* Meeting History Section */}
+        <motion.section {...fadeInUp} className="space-y-4">
+          <div className="flex items-center gap-3 select-none">
+            <Clock className="h-4 w-4 text-[#0B5CFF]" />
+            <h2 className="font-black text-[#232333] uppercase tracking-widest text-xs">Upcoming & Recent Meetings</h2>
           </div>
 
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-              <Zap className="w-5 h-5 stroke-[2.2]" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-slate-900 text-xs">High Performance</h4>
-              <p className="text-[11px] font-medium text-slate-400">HD video & audio quality</p>
-            </div>
+          <div className="bg-[#FFFFFF] border border-[#C4C4CF]/80 rounded-2xl overflow-hidden shadow-xs">
+            {recentMeetings.length === 0 ? (
+              <div className="py-16 text-center flex flex-col items-center gap-4 select-none">
+                <div className="w-16 h-16 rounded-2xl bg-[#EEF4FF] flex items-center justify-center">
+                  <Video className="h-8 w-8 text-[#0B5CFF]" />
+                </div>
+                <div>
+                  <p className="font-bold text-[#000000] mb-1">No scheduled sessions</p>
+                  <p className="text-sm text-[#67677E]">Schedule a calendar event or create instant meetings above.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-[#F8F9FA] border-b border-[#C4C4CF]/70 select-none">
+                    <tr>
+                      <th className="text-left px-6 py-3.5 text-xs font-bold text-[#67677E] uppercase tracking-wider">Event</th>
+                      <th className="text-left px-6 py-3.5 text-xs font-bold text-[#67677E] uppercase tracking-wider">Code</th>
+                      <th className="text-left px-6 py-3.5 text-xs font-bold text-[#67677E] uppercase tracking-wider">Date & Time</th>
+                      <th className="text-left px-6 py-3.5 text-xs font-bold text-[#67677E] uppercase tracking-wider">Duration</th>
+                      <th className="text-left px-6 py-3.5 text-xs font-bold text-[#67677E] uppercase tracking-wider">Timezone / Guests</th>
+                      <th className="text-right px-6 py-3.5 text-xs font-bold text-[#67677E] uppercase tracking-wider">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#C4C4CF]/40">
+                    {recentMeetings.map((m) => {
+                      const calData = parseMeetingName(m.room_name)
+                      
+                      return (
+                        <tr key={m.id} className="hover:bg-[#EEF4FF]/50 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2.5">
+                              <span className={`w-3 h-3 rounded-full shrink-0 ${colorDotClasses[calData.color] || 'bg-[#0B5CFF]'}`} title={`Color category: ${calData.color}`} />
+                              <div>
+                                <p className="font-bold text-[#000000] text-sm leading-none">{calData.name}</p>
+                                {calData.desc && <p className="text-xs text-[#67677E] mt-1 truncate max-w-44">{calData.desc}</p>}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="font-mono text-xs font-bold bg-[#EEF4FF] text-[#0B5CFF] px-2.5 py-1 rounded-lg border border-[#0B5CFF]/20 select-all">
+                              {m.meeting_code}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-[#3D3D50] text-sm">
+                            {new Date(m.scheduled_at || m.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                          </td>
+                          <td className="px-6 py-4 text-[#232333] text-sm font-semibold">
+                            {m.duration_minutes || 60} mins
+                          </td>
+                          <td className="px-6 py-4 text-xs text-[#67677E]">
+                            {calData.tz && <p className="font-bold text-[#232333]">{calData.tz}</p>}
+                            {calData.guests && <p className="text-xs truncate max-w-44 text-[#67677E]">{calData.guests}</p>}
+                          </td>
+                          <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
+                            <Button size="sm" onClick={() => handleShareWhatsApp(m)} title="Share meeting details via WhatsApp"
+                              className="bg-[#3EC78F]/10 text-[#3EC78F] hover:bg-[#3EC78F] hover:text-white border-0 font-semibold rounded-lg transition-all h-8 px-2.5">
+                              <svg viewBox="0 0 448 512" fill="currentColor" className="h-3.5 w-3.5">
+                                <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
+                              </svg>
+                            </Button>
+                            <Button size="sm" onClick={() => window.location.href = `/room?id=${m.meeting_code}`}
+                              className="bg-[#0B5CFF] text-white hover:bg-[#0846CC] border-0 font-semibold rounded-lg transition-all h-8">
+                              Join →
+                            </Button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
+        </motion.section>
 
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
-              <Users className="w-5 h-5 stroke-[2.2]" />
-            </div>
+        {/* ── SECURITY SETTINGS SECTION ── */}
+        <motion.section {...fadeInUp} className="max-w-2xl mx-auto w-full pt-4">
+          {/* Security controls */}
+          <div className="bg-[#FFFFFF] border border-[#C4C4CF]/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between space-y-6">
             <div>
-              <h4 className="font-extrabold text-slate-900 text-xs">Easy Collaboration</h4>
-              <p className="text-[11px] font-medium text-slate-400">Chat, share & collaborate</p>
-            </div>
-          </div>
+              <div className="flex items-center gap-3 border-b border-[#C4C4CF]/50 pb-4 mb-4 select-none">
+                <div className="w-9 h-9 rounded-lg bg-[#7B61FF]/10 border border-[#7B61FF]/30 flex items-center justify-center text-[#7B61FF]">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-[#000000] text-sm leading-none">Security Center</h3>
+                  <p className="text-[11px] text-[#67677E] mt-1">Configure MFA, resets, and authorization</p>
+                </div>
+              </div>
 
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
-              <Cloud className="w-5 h-5 stroke-[2.2]" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-slate-900 text-xs">Cloud Sync</h4>
-              <p className="text-[11px] font-medium text-slate-400">Access anywhere, anytime</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* ── CREATED MEETING MODAL POPUP ── */}
-        <AnimatePresence>
-          {createdCode && (
-            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-[100]">
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-200 text-slate-900 relative"
-              >
-                <button
-                  onClick={() => setCreatedCode(null)}
-                  className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 transition p-1 cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0B5CFF] mb-4">
-                  <Check className="w-6 h-6 stroke-[3]" />
+              <div className="space-y-4 text-sm">
+                {/* Email Verification status */}
+                <div className="flex items-center justify-between p-3.5 bg-[#F8F9FA] border border-[#C4C4CF]/50 rounded-xl">
+                  <div className="flex items-center gap-2.5">
+                    <ShieldCheck className="h-4.5 w-4.5 text-[#3EC78F]" />
+                    <div>
+                      <p className="font-bold text-[#000000] text-xs leading-none">Account Status</p>
+                      <p className="text-[10px] text-[#67677E] mt-1">Verification and validation</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-extrabold bg-[#3EC78F]/10 text-[#3EC78F] px-2.5 py-0.5 rounded-full border border-[#3EC78F]/30">
+                    ✓ Verified Email
+                  </span>
                 </div>
 
-                <h3 className="text-xl font-extrabold text-slate-900 mb-1">Meeting Created Successfully!</h3>
-                <p className="text-xs font-medium text-slate-500 mb-6">
-                  Share this meeting code or link with your teammates to get started.
-                </p>
-
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 space-y-3">
-                  <div>
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Meeting Code</span>
-                    <p className="text-lg font-black text-[#0B5CFF] font-mono tracking-widest">{createdCode}</p>
+                {/* Two Factor setup */}
+                <div className="flex items-center justify-between p-3.5 bg-[#F8F9FA] border border-[#C4C4CF]/50 rounded-xl">
+                  <div className="flex items-center gap-2.5">
+                    <KeyRound className="h-4.5 w-4.5 text-[#0B5CFF]" />
+                    <div>
+                      <p className="font-bold text-[#000000] text-xs leading-none">Two-Factor Auth (2FA)</p>
+                      <p className="text-[10px] text-[#67677E] mt-1">Protect with authenticator codes</p>
+                    </div>
                   </div>
-
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-200/60">
-                    <Button
-                      onClick={handleCopyLink}
-                      className="flex-1 bg-[#0B5CFF] hover:bg-[#0846CC] text-white font-extrabold text-xs h-10 rounded-xl gap-1.5 cursor-pointer"
-                    >
-                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      <span>{copied ? 'Copied Link!' : 'Copy Meeting Link'}</span>
-                    </Button>
-                    <Button
-                      onClick={() => handleShareWhatsApp()}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs h-10 px-3 rounded-xl gap-1.5 cursor-pointer"
-                      title="Share via WhatsApp"
-                    >
-                      <svg viewBox="0 0 448 512" fill="currentColor" className="h-4 w-4">
-                        <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
-                      </svg>
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
                   <Button
-                    onClick={() => window.location.href = `/room?id=${createdCode}`}
-                    className="w-full bg-[#0B5CFF] hover:bg-[#0846CC] text-white font-extrabold text-sm h-12 rounded-xl cursor-pointer"
+                    size="sm"
+                    onClick={handleToggleMfa}
+                    className={`h-8 text-xs font-bold px-3 rounded-xl border-none ${mfaEnabled ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-[#0B5CFF] hover:bg-[#0846CC] text-white'}`}
                   >
-                    Start Call Now →
+                    {mfaEnabled ? 'Disable 2FA' : 'Enable 2FA'}
                   </Button>
                 </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
 
-        {/* ── RECENT MEETINGS HISTORY TABLE SECTION ── */}
-        {recentMeetings.length > 0 && (
-          <motion.section {...fadeInUp} className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-[#0B5CFF]" />
-                <h3 className="font-extrabold text-base text-slate-900">Recent Meetings History</h3>
+                {/* 2FA confirmation input popover */}
+                {showMfaSetup && mfaSecret && (
+                  <form onSubmit={handleConfirmMfa} className="p-4 bg-[#F8F9FA] border border-[#C4C4CF] rounded-xl text-[#3D3D50] space-y-3 animate-in slide-in-from-top-2">
+                    <p className="text-xs font-bold text-[#000000]">Set Up Two-Factor Authentication</p>
+                    <p className="text-xs text-[#67677E] leading-relaxed">
+                      Scan QR code or use manual key: <strong className="text-[#0B5CFF] font-mono select-all bg-[#EEF4FF] px-2 py-0.5 rounded border border-[#0B5CFF]/20">{mfaSecret}</strong>
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="Enter 6-digit code (e.g. 123456)"
+                        value={mfaSetupCode}
+                        onChange={(e) => setMfaSetupCode(e.target.value)}
+                        className="h-8 bg-[#FFFFFF] text-xs text-[#000000] border-[#C4C4CF]"
+                        required
+                      />
+                      <Button type="submit" size="sm" className="h-8 text-xs font-bold px-3 bg-[#0B5CFF] hover:bg-[#0846CC] text-white border-none">Confirm</Button>
+                    </div>
+                    <button type="button" onClick={() => setShowMfaSetup(false)} className="text-[10px] text-[#67677E] hover:text-[#000000] underline bg-transparent border-none">Cancel</button>
+                  </form>
+                )}
+                <div className="flex items-center justify-between p-3.5 bg-[#F8F9FA] border border-[#C4C4CF]/50 rounded-xl select-none">
+                  <div className="flex items-center gap-2.5">
+                    <Users className="h-4.5 w-4.5 text-[#0B5CFF]" />
+                    <div>
+                      <p className="font-bold text-[#000000] text-xs leading-none">Security Role (RBAC)</p>
+                      <p className="text-[10px] text-[#67677E] mt-1">Access control groups</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-extrabold bg-[#EEF4FF] text-[#0B5CFF] px-2.5 py-0.5 rounded-full border border-[#0B5CFF]/30 uppercase">
+                    👥 {user.role || 'user'}
+                  </span>
+                </div>
               </div>
-              <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
-                {recentMeetings.length} sessions
-              </span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-100 text-slate-400 font-extrabold uppercase tracking-wider">
-                    <th className="pb-3">Meeting Name</th>
-                    <th className="pb-3">Code</th>
-                    <th className="pb-3">Scheduled Date</th>
-                    <th className="pb-3 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                  {recentMeetings.map((m) => {
-                    const parsed = parseMeetingName(m.room_name)
-                    return (
-                      <tr key={m.id || m.meeting_code} className="hover:bg-slate-50/80 transition">
-                        <td className="py-3 font-bold text-slate-900">{parsed.name}</td>
-                        <td className="py-3 font-mono font-bold text-[#0B5CFF]">{m.meeting_code}</td>
-                        <td className="py-3 text-slate-500">{formatMeetingDate(m.scheduled_at || m.created_at)}</td>
-                        <td className="py-3 text-right">
-                          <Button
-                            size="sm"
-                            onClick={() => window.location.href = `/room?id=${m.meeting_code}`}
-                            className="bg-[#0B5CFF] hover:bg-[#0846CC] text-white font-bold text-xs h-8 px-3 rounded-lg cursor-pointer"
-                          >
-                            Join →
-                          </Button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+            {/* Reset password */}
+            <div className="border-t border-[#C4C4CF]/50 pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRequestPasswordReset}
+                className="w-full text-xs font-bold border-2 border-slate-300 text-[#232333] hover:bg-[#F8F9FA] h-10 rounded-xl"
+              >
+                🔒 Request Password Reset Link
+              </Button>
+              {passwordResetStatus && (
+                <p className="text-xs font-semibold mt-2 text-center text-[#67677E] leading-tight">
+                  {passwordResetStatus}
+                </p>
+              )}
             </div>
-          </motion.section>
-        )}
+          </div>
+        </motion.section>
 
       </main>
 
       {/* ── ADVANCED CALENDAR SCHEDULER MODAL ── */}
       {showCalendarModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-[100] animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-[#232333]/60 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-[100] animate-in fade-in duration-200">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[92vh] my-auto text-slate-900"
+            className="bg-[#FFFFFF] border border-[#C4C4CF] rounded-2xl sm:rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[92vh] my-auto text-[#3D3D50]"
           >
-            <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center text-slate-900 shrink-0">
+            {/* Modal header (Fixed at top) */}
+            <div className="px-5 py-4 bg-[#F8F9FA] border-b border-[#C4C4CF]/60 flex justify-between items-center text-[#000000] shrink-0">
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-[#0B5CFF]" />
                 <h3 className="font-extrabold text-base">Schedule Event (Google Calendar)</h3>
               </div>
-              <button onClick={() => setShowCalendarModal(false)} className="text-slate-400 hover:text-slate-900 transition p-1 rounded-lg hover:bg-slate-100 cursor-pointer">
+              <button onClick={() => setShowCalendarModal(false)} className="text-[#67677E] hover:text-[#000000] transition p-1 rounded-lg hover:bg-[#EEF4FF]">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
+            {/* Modal form & scrollable body */}
             <form onSubmit={handleCreateCalendarMeeting} className="flex flex-col flex-1 overflow-hidden">
               <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
                 <div className="space-y-1">
-                  <label className="text-xs font-extrabold text-slate-800 uppercase flex items-center gap-1.5"><LayoutDashboard className="h-3.5 w-3.5 text-[#0B5CFF]" /> Event Title</label>
-                  <Input placeholder="Tech Architecture Review, Sprint Kickoff..." value={calTitle} onChange={(e) => setCalTitle(e.target.value)} required className="h-10 border border-slate-200 text-slate-900 font-semibold focus:border-[#0B5CFF]" />
+                  <label className="text-xs font-extrabold text-[#232333] uppercase flex items-center gap-1.5"><LayoutDashboard className="h-3.5 w-3.5 text-[#0B5CFF]" /> Event Title</label>
+                  <Input placeholder="Tech Architecture Review, Sprint Kickoff..." value={calTitle} onChange={(e) => setCalTitle(e.target.value)} required className="h-10 border-2 border-slate-300 text-[#000000] font-semibold placeholder:text-slate-500 placeholder:font-medium focus:border-[#0B5CFF] focus:ring-2 focus:ring-[#0B5CFF]/20" />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-extrabold text-slate-800 uppercase flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-[#0B5CFF]" /> Start Date & Time</label>
-                    <Input type="datetime-local" value={calDate} onChange={(e) => setCalDate(e.target.value)} required className="h-10 border border-slate-200 text-slate-900 font-semibold focus:border-[#0B5CFF]" />
+                    <label className="text-xs font-extrabold text-[#232333] uppercase flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-[#0B5CFF]" /> Start Date & Time</label>
+                    <Input type="datetime-local" value={calDate} onChange={(e) => setCalDate(e.target.value)} required className="h-10 border-2 border-slate-300 text-[#000000] font-semibold focus:border-[#0B5CFF] focus:ring-2 focus:ring-[#0B5CFF]/20" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-extrabold text-slate-800 uppercase flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-[#0B5CFF]" /> Time Zone</label>
-                    <select value={calTz} onChange={(e) => setCalTz(e.target.value)} className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 text-sm text-slate-900 font-semibold outline-none focus:border-[#0B5CFF]">
+                    <label className="text-xs font-extrabold text-[#232333] uppercase flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-[#0B5CFF]" /> Time Zone</label>
+                    <select value={calTz} onChange={(e) => setCalTz(e.target.value)} className="w-full h-10 bg-[#FFFFFF] border-2 border-slate-300 rounded-xl px-3 text-sm text-[#000000] font-semibold outline-none focus:border-[#0B5CFF]">
                       <option>GMT-5 (EST)</option>
                       <option>GMT-8 (PST)</option>
                       <option>GMT+0 (UTC)</option>
@@ -887,8 +874,8 @@ export default function DashboardPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-extrabold text-slate-800 uppercase flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-[#0B5CFF]" /> Meeting Type</label>
-                    <select value={calMeetingType} onChange={(e) => setCalMeetingType(e.target.value)} className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 text-sm text-slate-900 font-semibold outline-none focus:border-[#0B5CFF]">
+                    <label className="text-xs font-extrabold text-[#232333] uppercase flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-[#0B5CFF]" /> Meeting Type</label>
+                    <select value={calMeetingType} onChange={(e) => setCalMeetingType(e.target.value)} className="w-full h-10 bg-[#FFFFFF] border-2 border-slate-300 rounded-xl px-3 text-sm text-[#000000] font-semibold outline-none focus:border-[#0B5CFF]">
                       <option value="technical">💻 Technical / Code Review</option>
                       <option value="business">💼 Business / Standup</option>
                       <option value="education">🎓 Classroom / Education</option>
@@ -897,8 +884,21 @@ export default function DashboardPage() {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-extrabold text-slate-800 uppercase flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-[#0B5CFF]" /> Duration</label>
-                    <select value={calDuration} onChange={(e) => setCalDuration(Number(e.target.value))} className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 text-sm text-slate-900 font-semibold outline-none focus:border-[#0B5CFF]">
+                    <label className="text-xs font-extrabold text-[#232333] uppercase flex items-center gap-1.5"><Tag className="h-3.5 w-3.5 text-[#0B5CFF]" /> Event Color</label>
+                    <select value={calColor} onChange={(e) => setCalColor(e.target.value)} className="w-full h-10 bg-[#FFFFFF] border-2 border-slate-300 rounded-xl px-3 text-sm text-[#000000] font-semibold outline-none focus:border-[#0B5CFF]">
+                      <option value="blue">🔵 Royal Blue</option>
+                      <option value="red">🔴 Coral Red</option>
+                      <option value="green">🟢 Mint Green</option>
+                      <option value="yellow">🟡 Amber Yellow</option>
+                      <option value="indigo">🟣 Deep Indigo</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-extrabold text-[#232333] uppercase flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-[#0B5CFF]" /> Duration</label>
+                    <select value={calDuration} onChange={(e) => setCalDuration(Number(e.target.value))} className="w-full h-10 bg-[#FFFFFF] border-2 border-slate-300 rounded-xl px-3 text-sm text-[#000000] font-semibold outline-none focus:border-[#0B5CFF]">
                       <option value="15">15 Minutes</option>
                       <option value="30">30 Minutes</option>
                       <option value="45">45 Minutes</option>
@@ -907,35 +907,40 @@ export default function DashboardPage() {
                       <option value="120">2 Hours</option>
                     </select>
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-extrabold text-[#232333] uppercase flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-[#0B5CFF]" /> Invite Guests (Emails)</label>
+                    <Input placeholder="developer@company.com..." value={calGuests} onChange={(e) => setCalGuests(e.target.value)} className="h-10 border-2 border-slate-300 text-[#000000] font-semibold placeholder:text-slate-500 placeholder:font-medium focus:border-[#0B5CFF]" />
+                  </div>
                 </div>
 
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-extrabold text-slate-800 uppercase flex items-center gap-1.5"><AlignLeft className="h-3.5 w-3.5 text-[#0B5CFF]" /> Event Description</label>
+                    <label className="text-xs font-extrabold text-[#232333] uppercase flex items-center gap-1.5"><AlignLeft className="h-3.5 w-3.5 text-[#0B5CFF]" /> Event Description</label>
                     <button
                       type="button"
                       onClick={handleGenerateAiDescription}
                       disabled={isGeneratingDesc}
-                      className="text-[11px] font-extrabold text-[#0B5CFF] hover:bg-blue-50 flex items-center gap-1 bg-blue-50/60 px-2.5 py-1 rounded-lg border border-blue-200 transition disabled:opacity-50 cursor-pointer"
+                      className="text-[11px] font-extrabold text-[#7B61FF] hover:bg-[#7B61FF] hover:text-white flex items-center gap-1 bg-[#7B61FF]/15 px-2.5 py-1 rounded-lg border-2 border-[#7B61FF] transition-all cursor-pointer disabled:opacity-50 shadow-xs"
                     >
                       <Sparkles className={`h-3 w-3 ${isGeneratingDesc ? 'animate-spin' : ''}`} />
-                      {isGeneratingDesc ? 'Generating...' : 'Generate with AI'}
+                      {isGeneratingDesc ? 'Generating with AI...' : 'Generate with AI'}
                     </button>
                   </div>
                   <textarea
                     value={calDesc}
                     onChange={(e) => setCalDesc(e.target.value)}
-                    className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 font-medium h-24 outline-none focus:border-[#0B5CFF]"
+                    className="w-full p-3 bg-[#FFFFFF] border-2 border-slate-300 rounded-xl text-sm text-[#000000] font-semibold placeholder:text-slate-500 placeholder:font-medium h-24 outline-none focus:border-[#0B5CFF] custom-scrollbar"
                     placeholder="Define deliverables, agendas, and goals..."
                   />
                 </div>
               </div>
 
-              <div className="p-4 bg-slate-50 border-t border-slate-200 flex gap-3 shrink-0">
-                <Button type="button" variant="outline" onClick={() => setShowCalendarModal(false)} className="flex-1 h-11 rounded-xl font-extrabold border-slate-200 text-slate-700 cursor-pointer">
+              {/* Modal Action Footer (Fixed at bottom) */}
+              <div className="p-4 bg-[#F8F9FA] border-t border-[#C4C4CF]/60 flex gap-3 shrink-0">
+                <Button type="button" variant="outline" onClick={() => setShowCalendarModal(false)} className="flex-1 h-11 rounded-xl font-extrabold border-2 border-slate-300 text-[#3D3D50] hover:bg-[#EEF4FF]">
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1 bg-[#0B5CFF] hover:bg-[#0846CC] text-white font-extrabold h-11 rounded-xl border-none shadow-md shadow-blue-500/20 cursor-pointer">
+                <Button type="submit" className="flex-1 bg-[#0B5CFF] hover:bg-[#0846CC] text-white font-extrabold h-11 rounded-xl border-none shadow-md shadow-[#0B5CFF]/30">
                   {isCreating ? 'Saving...' : 'Save & Schedule'}
                 </Button>
               </div>
@@ -950,39 +955,40 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, y: 15, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            className="w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col h-96 text-slate-900"
+            className="w-80 bg-[#FFFFFF] border border-[#C4C4CF] rounded-2xl shadow-2xl overflow-hidden flex flex-col h-96 text-[#3D3D50]"
           >
-            <div className="bg-[#0B5CFF] p-4 flex justify-between items-center text-white">
+            {/* Header */}
+            <div className="bg-[#0B5CFF] p-4 border-b border-[#0846CC] flex justify-between items-center text-white">
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
-                <h4 className="font-extrabold text-sm text-white flex items-center gap-1">
-                  <Sparkles className="h-4 w-4 text-white" /> AI Assistant
-                </h4>
+                <div className="w-2.5 h-2.5 bg-[#3EC78F] rounded-full animate-ping" />
+                <h4 className="font-extrabold text-sm text-white flex items-center gap-1"><Sparkles className="h-4 w-4 text-white" /> AI Assistant</h4>
               </div>
-              <button type="button" onClick={() => setShowFloatingAi(false)} className="text-white/80 hover:text-white transition cursor-pointer">
+              <button type="button" onClick={() => setShowFloatingAi(false)} className="text-white/80 hover:text-white transition">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 select-text custom-scrollbar bg-slate-50">
+            {/* Message Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 select-text custom-scrollbar bg-[#F8F9FA]">
               {floatingAiMessages.map((msg, i) => (
-                <div key={i} className={`p-2.5 rounded-xl text-xs leading-relaxed max-w-[85%] ${msg.sender === 'user' ? 'bg-[#0B5CFF] text-white ml-auto' : 'bg-white text-slate-900 border border-slate-200 mr-auto shadow-xs'}`}>
+                <div key={i} className={`p-2.5 rounded-xl text-xs leading-relaxed max-w-[85%] ${msg.sender === 'user' ? 'bg-[#0B5CFF] text-white ml-auto' : 'bg-[#EEF4FF] text-[#232333] border border-[#C4C4CF]/50 mr-auto'}`}>
                   <p className="whitespace-pre-wrap">{msg.text}</p>
                 </div>
               ))}
               {floatingAiLoading && (
-                <div className="text-[10px] text-slate-400 italic animate-pulse">Thinking...</div>
+                <div className="text-[10px] text-[#67677E] italic animate-pulse">Thinking...</div>
               )}
             </div>
 
-            <form onSubmit={handleFloatingAiSend} className="p-3 bg-white border-t border-slate-200 flex gap-2">
+            {/* Input Form */}
+            <form onSubmit={handleFloatingAiSend} className="p-3 bg-[#FFFFFF] border-t border-[#C4C4CF] flex gap-2">
               <Input
                 placeholder="Ask AI anything..."
                 value={floatingAiInput}
                 onChange={(e) => setFloatingAiInput(e.target.value)}
-                className="h-8 bg-slate-50 border-slate-200 text-xs text-slate-900"
+                className="h-8 bg-[#F8F9FA] border-[#C4C4CF] text-xs text-[#000000]"
               />
-              <Button type="submit" disabled={!floatingAiInput.trim()} className="h-8 text-xs font-bold px-3 bg-[#0B5CFF] hover:bg-[#0846CC] text-white border-none cursor-pointer">
+              <Button type="submit" disabled={!floatingAiInput.trim()} className="h-8 text-xs font-bold px-3 bg-[#0B5CFF] hover:bg-[#0846CC] text-white border-none">
                 Send
               </Button>
             </form>
@@ -991,7 +997,7 @@ export default function DashboardPage() {
 
         <button
           onClick={() => setShowFloatingAi(!showFloatingAi)}
-          className="w-14 h-14 bg-[#0B5CFF] hover:bg-[#0846CC] rounded-full flex items-center justify-center shadow-xl shadow-blue-500/30 hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+          className="w-14 h-14 bg-[#0B5CFF] hover:bg-[#0846CC] rounded-full flex items-center justify-center shadow-xl shadow-[#0B5CFF]/30 hover:scale-105 active:scale-95 transition-transform"
           title="Ask Codovate AI Anything"
         >
           <Sparkles className="h-6 w-6 text-white animate-pulse" />
