@@ -4007,127 +4007,129 @@ function RoomPageContent() {
           )}
         </div>
         
-        {/* Right Header Navigation Pill Buttons (Filtered by Meeting Type) */}
-        <div className="hidden lg:flex items-center gap-1.5">
+        {/* Right Header Navigation Pill Buttons (Simple, Clean UI Color Palette matching Bottom Row Buttons) */}
+        <div className="hidden lg:flex items-center gap-1 bg-[#161B26] rounded-2xl p-1 border border-slate-800/80 shadow-inner">
           {/* GitHub & Deploy (Technical/Interview ONLY) */}
-          {(meetingType === 'technical' || meetingType === 'interview') && (
+          {(meetingType === 'business' || meetingType === 'technical' || meetingType === 'interview') && (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
+                type="button"
                 onClick={() => window.open('https://github.com/vardhan-pv/codovatemeet', '_blank')}
-                className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-[#FFFFFF] bg-[#1A1D24] border-2 border-[#2B3344] hover:border-[#0B5CFF] hover:bg-[#0B5CFF]"
+                className="px-3 py-1 rounded-xl text-xs font-bold text-[#9CA3AF] hover:text-white hover:bg-[#1A1D24] transition flex items-center gap-1.5 cursor-pointer border-none"
               >
-                <GitBranch className="w-3.5 h-3.5 text-[#3B82F6]" /> GitHub
-              </Button>
+                <GitBranch className="w-3.5 h-3.5 text-[#0B5CFF]" />
+                <span>GitHub</span>
+              </button>
 
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
+                type="button"
                 onClick={() => window.open('https://vercel.com/dashboard', '_blank')}
-                className="h-8 px-3 text-xs font-bold rounded-xl gap-1.5 transition text-[#FFFFFF] bg-[#1A1D24] border-2 border-[#2B3344] hover:border-[#0B5CFF] hover:bg-[#0B5CFF]"
+                className="px-3 py-1 rounded-xl text-xs font-bold text-[#9CA3AF] hover:text-white hover:bg-[#1A1D24] transition flex items-center gap-1.5 cursor-pointer border-none"
               >
-                <Rocket className="w-3.5 h-3.5 text-[#3B82F6]" /> Deploy
-              </Button>
+                <Rocket className="w-3.5 h-3.5 text-[#0B5CFF]" />
+                <span>Deploy</span>
+              </button>
             </>
           )}
 
           {/* AI Notes */}
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            type="button"
             onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
-            className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
+            className={`px-3 py-1 rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer border-none ${
               activeSidebar === 'ai'
-                ? 'bg-[#0B5CFF] text-[#FFFFFF] border-[#0B5CFF] shadow-md'
-                : 'bg-[#1A1D24] border-[#2B3344] text-[#9CA3AF] hover:border-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-[#FFFFFF]'
+                ? 'bg-[#0B5CFF] text-white font-extrabold shadow-md shadow-[#0B5CFF]/30'
+                : 'text-[#9CA3AF] hover:text-white hover:bg-[#1A1D24] font-bold'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#3B82F6] animate-pulse" /> Notes
-          </Button>
+            <Sparkles className={`w-3.5 h-3.5 ${activeSidebar === 'ai' ? 'text-white' : 'text-[#0B5CFF]'}`} />
+            <span>Notes</span>
+          </button>
 
           {/* Tasks */}
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            type="button"
             onClick={() => setActiveSidebar(activeSidebar === 'tasks' ? null : 'tasks')}
-            className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
+            className={`px-3 py-1 rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer border-none ${
               activeSidebar === 'tasks'
-                ? 'bg-[#0B5CFF] text-[#FFFFFF] border-[#0B5CFF] shadow-md'
-                : 'bg-[#1A1D24] border-[#2B3344] text-[#9CA3AF] hover:border-[#22C55E] hover:bg-[#22C55E] hover:text-[#FFFFFF]'
+                ? 'bg-[#0B5CFF] text-white font-extrabold shadow-md shadow-[#0B5CFF]/30'
+                : 'text-[#9CA3AF] hover:text-white hover:bg-[#1A1D24] font-bold'
             }`}
           >
-            <Check className="w-3.5 h-3.5 text-[#22C55E]" /> Tasks
-          </Button>
+            <Check className={`w-3.5 h-3.5 ${activeSidebar === 'tasks' ? 'text-white' : 'text-[#0B5CFF]'}`} />
+            <span>Tasks</span>
+          </button>
 
           {/* Polls */}
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            type="button"
             onClick={() => setActiveSidebar(activeSidebar === 'polls' ? null : 'polls')}
-            className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
+            className={`px-3 py-1 rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer border-none ${
               activeSidebar === 'polls'
-                ? 'bg-[#0B5CFF] text-[#FFFFFF] border-[#0B5CFF] shadow-md'
-                : 'bg-[#1A1D24] border-[#2B3344] text-[#9CA3AF] hover:border-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-[#FFFFFF]'
+                ? 'bg-[#0B5CFF] text-white font-extrabold shadow-md shadow-[#0B5CFF]/30'
+                : 'text-[#9CA3AF] hover:text-white hover:bg-[#1A1D24] font-bold'
             }`}
           >
-            <BarChart2 className="w-3.5 h-3.5 text-[#3B82F6]" /> Polls
-          </Button>
+            <BarChart2 className={`w-3.5 h-3.5 ${activeSidebar === 'polls' ? 'text-white' : 'text-[#0B5CFF]'}`} />
+            <span>Polls</span>
+          </button>
 
           {/* Interview Mode (Technical/Interview ONLY) */}
           {(meetingType === 'technical' || meetingType === 'interview') && (
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
+              type="button"
               onClick={() => setActiveSidebar(activeSidebar === 'interview' ? null : 'interview')}
-              className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
+              className={`px-3 py-1 rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer border-none ${
                 activeSidebar === 'interview'
-                  ? 'bg-[#0B5CFF] text-[#FFFFFF] border-[#0B5CFF] shadow-md'
-                  : 'bg-[#1A1D24] border-[#2B3344] text-[#9CA3AF] hover:border-[#0B5CFF] hover:bg-[#0B5CFF] hover:text-[#FFFFFF]'
+                  ? 'bg-[#0B5CFF] text-white font-extrabold shadow-md shadow-[#0B5CFF]/30'
+                  : 'text-[#9CA3AF] hover:text-white hover:bg-[#1A1D24] font-bold'
               }`}
             >
-              <Target className="w-3.5 h-3.5 text-[#3B82F6]" /> Interview Mode
-            </Button>
+              <Target className={`w-3.5 h-3.5 ${activeSidebar === 'interview' ? 'text-white' : 'text-[#0B5CFF]'}`} />
+              <span>Interview Mode</span>
+            </button>
           )}
 
-          <Button
-            variant="ghost"
-            size="sm"
+          {/* Timeline */}
+          <button
+            type="button"
             onClick={() => setActiveSidebar(activeSidebar === 'timetravel' ? null : 'timetravel')}
-            className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
+            className={`px-3 py-1 rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer border-none ${
               activeSidebar === 'timetravel'
-                ? 'bg-[#0B5CFF] text-[#FFFFFF] border-[#0B5CFF] shadow-md'
-                : 'bg-[#1A1D24] border-[#2B3344] text-[#9CA3AF] hover:border-[#3B82F6] hover:bg-[#3B82F6] hover:text-[#FFFFFF]'
+                ? 'bg-[#0B5CFF] text-white font-extrabold shadow-md shadow-[#0B5CFF]/30'
+                : 'text-[#9CA3AF] hover:text-white hover:bg-[#1A1D24] font-bold'
             }`}
           >
-            <Clock className="w-3.5 h-3.5 text-[#3B82F6]" /> Timeline
-          </Button>
+            <Clock className={`w-3.5 h-3.5 ${activeSidebar === 'timetravel' ? 'text-white' : 'text-[#0B5CFF]'}`} />
+            <span>Timeline</span>
+          </button>
 
-          <Button
-            variant="ghost"
-            size="sm"
+          {/* Focus */}
+          <button
+            type="button"
             onClick={() => setActiveSidebar(activeSidebar === 'focus' ? null : 'focus')}
-            className={`h-8 px-3 text-xs font-extrabold rounded-xl gap-1.5 transition border-2 ${
+            className={`px-3 py-1 rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer border-none ${
               activeSidebar === 'focus'
-                ? 'bg-[#FBBF24] text-[#111827] border-[#FBBF24] shadow-md'
-                : 'bg-[#1A1D24] border-[#2B3344] text-[#9CA3AF] hover:border-[#FBBF24] hover:bg-[#FBBF24] hover:text-[#111827]'
+                ? 'bg-[#0B5CFF] text-white font-extrabold shadow-md shadow-[#0B5CFF]/30'
+                : 'text-[#9CA3AF] hover:text-white hover:bg-[#1A1D24] font-bold'
             }`}
           >
-            <Timer className="w-3.5 h-3.5 text-[#FBBF24]" /> Focus
-          </Button>
+            <Timer className={`w-3.5 h-3.5 ${activeSidebar === 'focus' ? 'text-white' : 'text-[#0B5CFF]'}`} />
+            <span>Focus</span>
+          </button>
 
           <div className="relative ml-1">
             <button
               onClick={() => setShowProfilePopup(prev => !prev)}
-              className="w-8 h-8 rounded-full bg-[#0B5CFF] text-[#FFFFFF] border-2 border-[#3B82F6] flex items-center justify-center font-black text-xs hover:scale-105 transition shadow-md shadow-[#0B5CFF]/30"
+              className="w-8 h-8 rounded-full bg-[#0B5CFF] text-[#FFFFFF] border-none flex items-center justify-center font-black text-xs hover:scale-105 transition shadow-md shadow-[#0B5CFF]/30 cursor-pointer"
               title="Your Profile"
             >
               {(lobbyName || 'U').charAt(0).toUpperCase()}
             </button>
             {showProfilePopup && (
-              <div className="absolute right-0 top-10 w-64 bg-[#161B26] border-2 border-[#2B3344] backdrop-blur-xl rounded-2xl p-4 shadow-2xl z-[250] animate-in fade-in slide-in-from-top-2 duration-150 text-[#FFFFFF]">
+              <div className="absolute right-0 top-10 w-64 bg-[#161B26] border border-slate-700/80 backdrop-blur-xl rounded-2xl p-4 shadow-2xl z-[250] animate-in fade-in slide-in-from-top-2 duration-150 text-[#FFFFFF]">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-full bg-[#0B5CFF] border-2 border-[#3B82F6] flex items-center justify-center text-[#FFFFFF] font-black text-lg">
+                  <div className="w-12 h-12 rounded-full bg-[#0B5CFF] flex items-center justify-center text-[#FFFFFF] font-black text-lg shadow-md">
                     {(lobbyName || 'U').charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -4171,7 +4173,7 @@ function RoomPageContent() {
           {isHostUser && (
             <button
               onClick={() => setShowAdminCenter(true)}
-              className="h-8 px-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition hover:bg-amber-500/30 cursor-pointer"
+              className="h-8 px-3 rounded-full bg-[#1E2330] hover:bg-[#2A3040] text-amber-400 font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition border-none cursor-pointer"
               title="Admin Command Center"
             >
               <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />

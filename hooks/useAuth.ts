@@ -5,6 +5,7 @@ interface User {
   id: string
   name: string
   email: string
+  username?: string
   is_verified?: boolean
   mfa_enabled?: boolean
   role?: string
