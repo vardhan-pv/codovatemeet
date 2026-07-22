@@ -1535,15 +1535,9 @@ function RoomPageContent() {
         if (meetingData.type) {
           setMeetingType(meetingData.type)
           
-          if (meetingData.type === 'technical') {
-            setActiveWorkspace('code')
-          } else if (meetingData.type === 'business') {
-            setActiveWorkspace('agenda')
-          } else if (meetingData.type === 'educational') {
-            setActiveWorkspace('whiteboard')
-          } else if (meetingData.type === 'startup') {
-            setActiveWorkspace('notes')
-          } else if (meetingData.type === 'interview') {
+          // Do NOT auto-open any workspace — user opens it manually via toolbar
+          // Code Editor is available only in technical meetings (but not auto-launched)
+          if (meetingData.type === 'interview') {
             setActiveSidebar('interview')
           } else if (meetingData.type === 'focus') {
             setActiveSidebar('focus')
@@ -4015,8 +4009,8 @@ function RoomPageContent() {
         
         {/* Right Header Navigation Pill Buttons (Simple, Clean UI Color Palette matching Bottom Row Buttons) */}
         <div className="hidden lg:flex items-center gap-1 bg-[#161B26] rounded-2xl p-1 border border-slate-800/80 shadow-inner">
-          {/* GitHub & Deploy (Technical/Interview ONLY) */}
-          {(meetingType === 'business' || meetingType === 'technical' || meetingType === 'interview') && (
+          {/* GitHub & Deploy (Technical ONLY) */}
+          {(meetingType === 'technical' || meetingType === 'interview') && (
             <>
               <button
                 type="button"
@@ -4559,7 +4553,8 @@ function RoomPageContent() {
         
         {/* Left Card: Dynamic Workspace Buttons per Meeting Type */}
         <div className="hidden md:flex items-center gap-1 bg-[#161B26] rounded-2xl p-1 shadow-inner">
-          {(meetingType === 'business' || meetingType === 'technical' || meetingType === 'interview') ? (
+          {/* Left Card: Workspace buttons — Code Editor only for Technical, not Business */}
+          {(meetingType === 'technical' || meetingType === 'interview') ? (
             <>
               <button
                 onClick={() => setActiveWorkspace(activeWorkspace === 'code' ? 'none' : 'code')}
