@@ -8,7 +8,8 @@ import { meetingService } from '@/services/meeting'
 import {
   LogOut, Plus, Video, Copy, Check, ArrowRight, Clock, Calendar, Terminal, Layout,
   LayoutDashboard, Users, X, Globe, Tag, AlignLeft, Paperclip, Mail, Sparkles,
-  ShieldCheck, KeyRound, Lock, MonitorPlay, Briefcase, GraduationCap, Lightbulb, Play, Zap, Shield, Cloud
+  ShieldCheck, KeyRound, Lock, MonitorPlay, Briefcase, GraduationCap, Lightbulb, Play, Zap, Shield, Cloud,
+  MessageSquare, Share2, PhoneCall, ChevronDown, ChevronUp, Settings2
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -61,12 +62,18 @@ export default function DashboardPage() {
   const [createdCode, setCreatedCode] = useState<string | null>(null)
   const [createdScheduledAt, setCreatedScheduledAt] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [copiedCode, setCopiedCode] = useState(false)
+  const [copiedMsg, setCopiedMsg] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [roomName, setRoomName] = useState('')
+  const [roomPurpose, setRoomPurpose] = useState('')
+  const [roomDesc, setRoomDesc] = useState('')
+  const [showRoomDesc, setShowRoomDesc] = useState(false)
   const [scheduledAt, setScheduledAt] = useState('')
   const [joinCode, setJoinCode] = useState('')
   const [isJoining, setIsJoining] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
+  const [showShareModal, setShowShareModal] = useState(false)
 
   // Selected meeting card state (instant, schedule, recurring)
   const [selectedCategory, setSelectedCategory] = useState<'instant' | 'later' | 'recurring'>('instant')
@@ -94,9 +101,17 @@ export default function DashboardPage() {
   const [calTemplate, setCalTemplate] = useState('Select a template')
   const [calAddWhiteboard, setCalAddWhiteboard] = useState(true)
   const [calAddDocs, setCalAddDocs] = useState(true)
-  const [calPasscodeEnabled, setCalPasscodeEnabled] = useState(true)
-  const [calPasscode, setCalPasscode] = useState('X128h4')
+  const [calPasscodeEnabled] = useState(true)
+  const [calPasscode] = useState(() => Math.random().toString(36).slice(2, 8).toUpperCase())
+  const [calPurpose, setCalPurpose] = useState('')
   const [calWaitingRoom, setCalWaitingRoom] = useState(false)
+  // Admin panel options (controlled by host/admin)
+  const [adminMuteOnEntry, setAdminMuteOnEntry] = useState(false)
+  const [adminDisableParticipantVideo, setAdminDisableParticipantVideo] = useState(false)
+  const [adminLockChat, setAdminLockChat] = useState(false)
+  const [adminRequireApproval, setAdminRequireApproval] = useState(false)
+  const [adminAllowScreenShare, setAdminAllowScreenShare] = useState(true)
+  const [adminShowAdminOptions, setAdminShowAdminOptions] = useState(false)
   const [calEncryption, setCalEncryption] = useState<'enhanced' | 'e2ee'>('enhanced')
   const [calAutoStartAi, setCalAutoStartAi] = useState(false)
   const [calAutoStartQuestions, setCalAutoStartQuestions] = useState(false)
@@ -112,6 +127,7 @@ export default function DashboardPage() {
   const [createdTitle, setCreatedTitle] = useState<string>('')
   const [createdType, setCreatedType] = useState<string>('')
   const [createdDesc, setCreatedDesc] = useState<string>('')
+  const [createdPurpose, setCreatedPurpose] = useState<string>('')
 
   // Floating AI Assistant states
   const [showFloatingAi, setShowFloatingAi] = useState(false)
@@ -318,14 +334,20 @@ export default function DashboardPage() {
     init()
   }, [token])
 
+  const generatePasscode = () => Math.random().toString(36).slice(2, 8).toUpperCase()
+
   const handleCreateMeeting = async () => {
     setIsCreating(true)
     try {
-      const effectiveName = roomName.trim() || `${selectedMeetingType.toUpperCase()} Session`
+      const effectiveName = roomName.trim() || `${selectedMeetingType.charAt(0).toUpperCase() + selectedMeetingType.slice(1)} Session`
+      const autoCode = generatePasscode()
       const serializedRoomName = JSON.stringify({
         name: effectiveName,
         type: selectedMeetingType,
-        color: 'blue'
+        color: 'blue',
+        purpose: roomPurpose.trim(),
+        desc: roomDesc.trim(),
+        passcode: autoCode,
       })
       const data = await meetingService.createMeeting({
         roomName: serializedRoomName,
@@ -336,16 +358,14 @@ export default function DashboardPage() {
       setCreatedScheduledAt(scheduledAt || new Date().toISOString())
       setCreatedTitle(effectiveName)
       setCreatedType(selectedMeetingType)
-      setCreatedDesc('')
+      setCreatedDesc(roomDesc.trim())
+      setCreatedPurpose(roomPurpose.trim())
       
       const meetings = await meetingService.getRecentMeetings()
       setRecentMeetings(meetings)
 
-      // Direct redirection for instant meeting
-      if (selectedCategory === 'instant') {
-        window.location.href = `/room?id=${data.meetingId}`
-        return
-      }
+      // For instant meeting — show share modal first, then user can start call
+      setShowShareModal(true)
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to create meeting.')
     } finally { setIsCreating(false) }
@@ -364,11 +384,12 @@ export default function DashboardPage() {
       name: calTitle.trim(),
       type: calMeetingType,
       color: calColor,
+      purpose: calPurpose.trim(),
       desc: calDesc.trim(),
       tz: calTz,
       guests: calGuests.trim(),
       durationMinutes: durationMins,
-      passcode: calPasscodeEnabled ? calPasscode : undefined,
+      passcode: calPasscode,
       waitingRoom: calWaitingRoom,
       encryption: calEncryption,
       addWhiteboard: calAddWhiteboard,
@@ -380,7 +401,14 @@ export default function DashboardPage() {
       transcribeScope: calTranscribeScope,
       chatBeforeAfter: calAllowChatBeforeAfter,
       hostVideo: calHostVideo,
-      participantVideo: calParticipantVideo
+      participantVideo: calParticipantVideo,
+      adminOptions: {
+        muteOnEntry: adminMuteOnEntry,
+        disableParticipantVideo: adminDisableParticipantVideo,
+        lockChat: adminLockChat,
+        requireApproval: adminRequireApproval,
+        allowScreenShare: adminAllowScreenShare
+      }
     })
 
     try {
@@ -396,8 +424,10 @@ export default function DashboardPage() {
       setCreatedTitle(calTitle.trim())
       setCreatedType(calMeetingType)
       setCreatedDesc(calDesc.trim())
+      setCreatedPurpose(calPurpose.trim())
       
       setShowCalendarModal(false)
+      setShowShareModal(true)
 
       const meetings = await meetingService.getRecentMeetings()
       setRecentMeetings(meetings)
@@ -418,40 +448,57 @@ export default function DashboardPage() {
     }
   }
 
-  const handleShareWhatsApp = (customMeeting?: any) => {
+  const buildInviteMessage = (customMeeting?: any) => {
     let code = createdCode
-    let title = createdTitle || (roomName.trim() && !roomName.startsWith('{') ? roomName.trim() : 'Developer Collaboration Session')
+    let title = createdTitle || 'Collaboration Session'
     let timeStr = formatMeetingDate(createdScheduledAt)
     let typeStr = createdType ? (createdType.charAt(0).toUpperCase() + createdType.slice(1)) : 'Technical'
     let desc = createdDesc
+    let purpose = createdPurpose
 
     if (customMeeting) {
       code = customMeeting.meeting_code || customMeeting.meetingId
       const parsed = parseMeetingName(customMeeting.room_name || customMeeting.roomName)
       title = parsed.name || title
-      desc = parsed.desc || ''
+      desc = (parsed as any).desc || ''
+      purpose = (parsed as any).purpose || ''
       if (customMeeting.scheduled_at) timeStr = formatMeetingDate(customMeeting.scheduled_at)
-      if (customMeeting.type) {
-        typeStr = customMeeting.type.charAt(0).toUpperCase() + customMeeting.type.slice(1)
-      }
+      if (customMeeting.type) typeStr = customMeeting.type.charAt(0).toUpperCase() + customMeeting.type.slice(1)
     }
 
-    if (!code) return
-
+    if (!code) return ''
     const link = `${window.location.origin}/room?id=${code}`
 
-    let message = `🚀 *You're invited to a Codovate Meet session!*\n\n`
-    message += `📌 *Meeting Title:* ${title}\n`
-    message += `📅 *Date & Time:* ${timeStr}\n`
-    message += `💻 *Meeting Type:* ${typeStr}\n`
-    if (desc) {
-      message += `📝 *Description:* ${desc}\n`
-    }
-    message += `\n🔗 *Join Workspace:* \n${link}\n\n`
-    message += `🔑 *Meeting Code:* *${code}*\n\n`
-    message += `Powered by Codovate Meet 💻`
+    let msg = `🎯 *You're Invited to a Codovate Meet!*\n`
+    msg += `_Your collaborative workspace is ready._\n\n`
+    msg += `━━━━━━━━━━━━━━━━━━━━\n`
+    msg += `📌 *Meeting Title:* ${title}\n`
+    if (purpose) msg += `🎤 *Purpose:* ${purpose}\n`
+    msg += `💻 *Meeting Type:* ${typeStr}\n`
+    msg += `📅 *Date & Time:* ${timeStr}\n`
+    if (desc) msg += `📋 *Description:* ${desc}\n`
+    msg += `━━━━━━━━━━━━━━━━━━━━\n\n`
+    msg += `🔗 *Join Link:*\n${link}\n\n`
+    msg += `🔑 *Meeting Code:* \`${code}\`\n\n`
+    msg += `━━━━━━━━━━━━━━━━━━━━\n`
+    msg += `Thank you for using *Codovate Meet* — your all-in-one collaborative workspace for developers, educators, and teams.\n`
+    msg += `🌐 Powered by Codovate Meet`
+    return msg
+  }
 
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank')
+  const handleShareWhatsApp = (customMeeting?: any) => {
+    const msg = buildInviteMessage(customMeeting)
+    if (!msg) return
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank')
+  }
+
+  const handleCopyInviteMsg = (customMeeting?: any) => {
+    const msg = buildInviteMessage(customMeeting)
+    if (!msg) return
+    navigator.clipboard.writeText(msg).then(() => {
+      setCopiedMsg(true)
+      setTimeout(() => setCopiedMsg(false), 2000)
+    })
   }
 
   const handleJoinMeeting = async (e?: React.FormEvent) => {
@@ -476,19 +523,24 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans flex flex-col antialiased">
       
-      {/* ── TOP HEADER BAR (Matching Reference Image) ── */}
+      {/* ── TOP HEADER BAR ── */}
       <header className="bg-[#FFFFFF] border-b border-[#E2E8F0] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
-        {/* Left Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-[#0B5CFF] flex items-center justify-center shadow-md shadow-[#0B5CFF]/30 group-hover:scale-105 transition-transform">
-            <Video className="h-5 w-5 text-white" strokeWidth={2.5} />
+        {/* Left Logo — actual logo image blended */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="relative w-10 h-10 shrink-0">
+            <Image
+              src="/logo.jpeg"
+              alt="Codovate Meet Logo"
+              fill
+              className="object-contain img-blend-soft rounded-xl"
+            />
           </div>
           <div className="flex flex-col leading-none">
             <span className="font-extrabold text-base tracking-tight text-[#0F172A] group-hover:text-[#0B5CFF] transition-colors">
               Codovate Meet
             </span>
             <span className="text-[9px] font-bold tracking-widest text-[#64748B] uppercase mt-0.5">
-              DEVELOPER WORKSPACE
+              COLLABORATIVE WORKSPACE
             </span>
           </div>
         </Link>
@@ -541,15 +593,15 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          {/* Right 3D Illustration Mockup */}
+          {/* Right 3D Illustration Mockup — blended */}
           <div className="relative z-10 shrink-0 w-44 sm:w-60 h-36 sm:h-44 flex items-center justify-center select-none">
-            <div className="relative w-44 sm:w-52 h-36 sm:h-44 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
+            <div className="relative w-44 sm:w-52 h-36 sm:h-44 hover:scale-105 transition-transform duration-300">
               <Image 
                 src="/calendar-schedule-3d.png" 
                 alt="3D Calendar and Clock Schedule Illustration" 
                 fill 
                 priority
-                className="object-contain"
+                className="object-contain img-blend-hero"
               />
             </div>
           </div>
@@ -567,12 +619,12 @@ export default function DashboardPage() {
             <div>
               <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-4 mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#EEF4FF] border border-[#BFDBFE]/60 flex items-center justify-center text-[#0B5CFF]">
-                    <Video className="h-5 w-5" strokeWidth={2.2} />
+                  <div className="relative w-10 h-10 shrink-0">
+                    <Image src="/logo.jpeg" alt="Logo" fill className="object-contain img-blend-soft rounded-xl" />
                   </div>
                   <div>
                     <h2 className="font-extrabold text-base text-[#0F172A] leading-tight">New Meeting</h2>
-                    <p className="text-xs text-[#64748B] mt-0.5">Generate a shareable meeting link</p>
+                    <p className="text-xs text-[#64748B] mt-0.5">Instant or scheduled workspace</p>
                   </div>
                 </div>
 
@@ -583,96 +635,117 @@ export default function DashboardPage() {
                   className="h-8 rounded-full bg-[#EEF4FF] hover:bg-[#DBEAFE] text-[#0B5CFF] font-bold text-xs px-3.5 border border-[#BFDBFE]/50 shadow-2xs flex items-center gap-1.5 transition"
                 >
                   <Calendar className="h-3.5 w-3.5 text-[#0B5CFF]" />
-                  <span>Schedule Calendar Event</span>
+                  <span>Schedule</span>
                 </Button>
               </div>
 
-              {/* Form Input 1: Meeting Name */}
               <div className="space-y-4">
+                {/* Meeting Name */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-extrabold text-[#334155] flex items-center gap-1.5">
-                    <span className="text-[#0B5CFF] font-mono text-sm leading-none">∷</span>
-                    <span>Meeting Name</span>
-                  </label>
+                  <label className="text-xs font-extrabold text-[#334155]">Meeting Name</label>
                   <Input
                     placeholder="e.g. Sprint Sync, Daily Standup"
                     value={roomName}
                     onChange={(e) => setRoomName(e.target.value)}
-                    className="h-11 bg-[#F8FAFC] border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder:text-[#94A3B8] focus:bg-[#FFFFFF] focus:border-[#0B5CFF] focus:ring-2 focus:ring-[#0B5CFF]/15 transition px-4"
+                    className="h-10 bg-[#F8FAFC] border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder:text-[#94A3B8] focus:bg-[#FFFFFF] focus:border-[#0B5CFF] transition px-4"
                   />
                 </div>
 
-                {/* Form Input 2: Meeting Type Selector Cards */}
+                {/* Purpose */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-extrabold text-[#334155] flex items-center gap-1.5">
-                    <span className="text-[#0B5CFF] text-sm leading-none">⚙</span>
-                    <span>Meeting Type</span>
-                  </label>
+                  <label className="text-xs font-extrabold text-[#334155]">Purpose <span className="text-[#94A3B8] font-normal">(optional)</span></label>
+                  <Input
+                    placeholder="e.g. Code review, Client demo, Team standup"
+                    value={roomPurpose}
+                    onChange={(e) => setRoomPurpose(e.target.value)}
+                    className="h-10 bg-[#F8FAFC] border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder:text-[#94A3B8] focus:bg-[#FFFFFF] focus:border-[#0B5CFF] transition px-4"
+                  />
+                </div>
 
-                  <div className="grid grid-cols-3 gap-2.5 pt-1">
-                    {/* Instant Meeting Card */}
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCategory('instant')}
-                      className={`p-3 rounded-xl border text-center transition flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
-                        selectedCategory === 'instant'
-                          ? 'bg-[#EEF4FF] border-[#0B5CFF] text-[#0B5CFF] shadow-xs'
-                          : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1] hover:bg-[#FFFFFF]'
-                      }`}
-                    >
-                      <div className={`p-2 rounded-xl ${selectedCategory === 'instant' ? 'bg-[#0B5CFF] text-white' : 'bg-[#E2E8F0] text-[#64748B]'}`}>
-                        <MonitorPlay className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-extrabold leading-tight">Instant Meeting</p>
-                        <p className="text-[10px] text-[#94A3B8] mt-0.5 font-medium">Start now</p>
-                      </div>
-                    </button>
+                {/* Description toggle */}
+                <div className="space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowRoomDesc(!showRoomDesc)}
+                    className="flex items-center gap-1.5 text-xs font-bold text-[#0B5CFF] hover:underline cursor-pointer"
+                  >
+                    {showRoomDesc ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    {showRoomDesc ? 'Hide Description' : '+ Add Description'}
+                  </button>
+                  {showRoomDesc && (
+                    <textarea
+                      value={roomDesc}
+                      onChange={(e) => setRoomDesc(e.target.value)}
+                      placeholder="Brief agenda or meeting context..."
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-xs font-medium h-16 outline-none focus:border-[#0B5CFF] focus:bg-white resize-none transition"
+                    />
+                  )}
+                </div>
 
-                    {/* Schedule Later Card */}
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCategory('later')}
-                      className={`p-3 rounded-xl border text-center transition flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
-                        selectedCategory === 'later'
-                          ? 'bg-[#FFF7ED] border-[#F97316] text-[#F97316] shadow-xs'
-                          : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1] hover:bg-[#FFFFFF]'
-                      }`}
-                    >
-                      <div className={`p-2 rounded-xl ${selectedCategory === 'later' ? 'bg-[#F97316] text-white' : 'bg-[#E2E8F0] text-[#64748B]'}`}>
-                        <Calendar className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-extrabold leading-tight">Schedule Later</p>
-                        <p className="text-[10px] text-[#94A3B8] mt-0.5 font-medium">Plan for later</p>
-                      </div>
-                    </button>
-
-                    {/* Recurring Card */}
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCategory('recurring')}
-                      className={`p-3 rounded-xl border text-center transition flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
-                        selectedCategory === 'recurring'
-                          ? 'bg-[#ECFDF5] border-[#10B981] text-[#10B981] shadow-xs'
-                          : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1] hover:bg-[#FFFFFF]'
-                      }`}
-                    >
-                      <div className={`p-2 rounded-xl ${selectedCategory === 'recurring' ? 'bg-[#10B981] text-white' : 'bg-[#E2E8F0] text-[#64748B]'}`}>
-                        <GraduationCap className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-extrabold leading-tight">Recurring</p>
-                        <p className="text-[10px] text-[#94A3B8] mt-0.5 font-medium">Repeat meeting</p>
-                      </div>
-                    </button>
+                {/* Session Mode (Instant / Later / Recurring) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-extrabold text-[#334155]">Session Mode</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'instant', label: 'Instant', sub: 'Start now', icon: MonitorPlay, active: 'bg-[#EEF4FF] border-[#0B5CFF] text-[#0B5CFF]', iconActive: 'bg-[#0B5CFF] text-white' },
+                      { id: 'later', label: 'Scheduled', sub: 'Plan ahead', icon: Calendar, active: 'bg-[#FFF7ED] border-[#F97316] text-[#F97316]', iconActive: 'bg-[#F97316] text-white' },
+                      { id: 'recurring', label: 'Recurring', sub: 'Repeat', icon: GraduationCap, active: 'bg-[#ECFDF5] border-[#10B981] text-[#10B981]', iconActive: 'bg-[#10B981] text-white' },
+                    ].map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setSelectedCategory(t.id as any)}
+                        className={`p-2.5 rounded-xl border text-center transition flex flex-col items-center gap-1 cursor-pointer ${
+                          selectedCategory === t.id ? t.active + ' shadow-xs' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:bg-[#FFFFFF]'
+                        }`}
+                      >
+                        <div className={`p-1.5 rounded-lg ${selectedCategory === t.id ? t.iconActive : 'bg-[#E2E8F0] text-[#64748B]'}`}>
+                          <t.icon className="h-3.5 w-3.5" />
+                        </div>
+                        <p className="text-[10px] font-extrabold leading-tight">{t.label}</p>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* Additional DateTime picker if Schedule Later selected */}
+                {/* Meeting Type selector (Technical / Business / Educational / Startup) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-extrabold text-[#334155]">Meeting Type <span className="text-[10px] text-[#0B5CFF] font-bold ml-1">Allocates Room Tools</span></label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'technical', label: 'Technical', icon: Terminal, emoji: '💻', color: 'border-blue-400 bg-blue-50 text-blue-700' },
+                      { id: 'business', label: 'Business', icon: Briefcase, emoji: '💼', color: 'border-indigo-400 bg-indigo-50 text-indigo-700' },
+                      { id: 'educational', label: 'Educational', icon: GraduationCap, emoji: '🎓', color: 'border-emerald-400 bg-emerald-50 text-emerald-700' },
+                      { id: 'startup', label: 'Startup', icon: Lightbulb, emoji: '🚀', color: 'border-amber-400 bg-amber-50 text-amber-700' },
+                    ].map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setSelectedMeetingType(t.id as any)}
+                        className={`p-2.5 rounded-xl border flex items-center gap-2 transition cursor-pointer text-left ${
+                          selectedMeetingType === t.id
+                            ? `${t.color} ring-1 ring-offset-0 font-bold shadow-xs`
+                            : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:bg-[#FFFFFF]'
+                        }`}
+                      >
+                        <span className="text-base">{t.emoji}</span>
+                        <span className="text-xs font-bold">{t.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {/* Allocated tools preview */}
+                  <div className="flex flex-wrap gap-1 pt-0.5">
+                    {selectedMeetingType === 'technical' && ['💻 Code', '🖥️ Terminal', '🐙 GitHub'].map((b,i) => <span key={i} className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md font-bold">{b}</span>)}
+                    {selectedMeetingType === 'business' && ['📋 Actions', '📊 Whiteboard', '⚡ Summary'].map((b,i) => <span key={i} className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-md font-bold">{b}</span>)}
+                    {selectedMeetingType === 'educational' && ['🎨 Canvas', '📝 Notes', '📊 Polls'].map((b,i) => <span key={i} className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md font-bold">{b}</span>)}
+                    {selectedMeetingType === 'startup' && ['🎯 Lean Canvas', '🚀 Sandbox', '📌 Kanban'].map((b,i) => <span key={i} className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md font-bold">{b}</span>)}
+                  </div>
+                </div>
+
+                {/* Schedule date-time if mode is later */}
                 {selectedCategory === 'later' && (
-                  <div className="space-y-1 pt-1 animate-in fade-in duration-200">
-                    <label className="text-xs font-bold text-[#334155]">Select Date & Time</label>
+                  <div className="space-y-1 animate-in fade-in duration-200">
+                    <label className="text-xs font-bold text-[#334155]">Date & Time</label>
                     <Input
                       type="datetime-local"
                       value={scheduledAt}
@@ -684,7 +757,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Bottom Create Button */}
+            {/* Create Button */}
             <Button
               onClick={handleCreateMeeting}
               disabled={isCreating}
@@ -693,7 +766,7 @@ export default function DashboardPage() {
               <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
                 <Plus className="h-3.5 w-3.5 text-white" strokeWidth={3} />
               </div>
-              <span>{isCreating ? 'Creating...' : 'Create Meeting'}</span>
+              <span>{isCreating ? 'Creating...' : selectedCategory === 'instant' ? 'Create Meeting' : 'Schedule Meeting'}</span>
             </Button>
           </motion.div>
 
@@ -985,6 +1058,123 @@ export default function DashboardPage() {
 
       </main>
 
+      {/* ── SHARE MEETING MODAL ── */}
+      {showShareModal && createdCode && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <motion.div
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden font-sans"
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#0B5CFF] to-[#2563EB] p-5 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                    <Check className="h-5 w-5 text-white" strokeWidth={3} />
+                  </div>
+                  <div>
+                    <p className="font-black text-base">Meeting Ready! 🎉</p>
+                    <p className="text-xs text-blue-100 mt-0.5">Share the invite below</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowShareModal(false)} className="text-white/70 hover:text-white">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-4">
+              {/* Meeting info badge */}
+              <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3.5 space-y-2">
+                <p className="font-extrabold text-sm text-[#0F172A]">{createdTitle || 'Collaboration Session'}</p>
+                {createdPurpose && <p className="text-xs text-[#64748B]">🎤 {createdPurpose}</p>}
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-[11px] bg-[#EEF4FF] text-[#0B5CFF] px-2 py-0.5 rounded-full font-bold">
+                    {createdType ? createdType.charAt(0).toUpperCase() + createdType.slice(1) : 'Technical'}
+                  </span>
+                  <span className="text-[11px] bg-[#F1F5F9] text-[#475569] px-2 py-0.5 rounded-full font-semibold">
+                    {formatMeetingDate(createdScheduledAt)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Meeting Link */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-extrabold text-[#334155]">Meeting Link</label>
+                <div className="flex items-center gap-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2.5">
+                  <span className="text-xs text-[#334155] font-mono flex-1 truncate">{`${typeof window !== 'undefined' ? window.location.origin : ''}/room?id=${createdCode}`}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/room?id=${createdCode}`)
+                      setCopied(true); setTimeout(() => setCopied(false), 2000)
+                    }}
+                    className="text-[#0B5CFF] hover:text-[#0846CC] transition shrink-0"
+                  >
+                    {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Meeting Code */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-extrabold text-[#334155]">Meeting Code</label>
+                <div className="flex items-center gap-2 bg-[#EEF4FF] border border-[#BFDBFE]/60 rounded-xl px-3 py-2.5">
+                  <span className="text-sm text-[#0B5CFF] font-mono font-black flex-1 tracking-widest">{createdCode}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdCode || '')
+                      setCopiedCode(true); setTimeout(() => setCopiedCode(false), 2000)
+                    }}
+                    className="text-[#0B5CFF] hover:text-[#0846CC] transition shrink-0"
+                  >
+                    {copiedCode ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
+                {/* WhatsApp Share */}
+                <button
+                  onClick={() => handleShareWhatsApp()}
+                  className="flex items-center justify-center gap-2 h-10 rounded-xl bg-[#25D366] hover:bg-[#1fb855] text-white font-bold text-xs transition shadow-sm"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Share on WhatsApp
+                </button>
+
+                {/* Copy Invite Message */}
+                <button
+                  onClick={() => handleCopyInviteMsg()}
+                  className="flex items-center justify-center gap-2 h-10 rounded-xl bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#334155] font-bold text-xs transition border border-[#E2E8F0]"
+                >
+                  {copiedMsg ? <Check className="h-4 w-4 text-green-500" /> : <Share2 className="h-4 w-4" />}
+                  {copiedMsg ? 'Copied!' : 'Copy Invite'}
+                </button>
+              </div>
+
+              {/* Start Call */}
+              <button
+                onClick={() => { setShowShareModal(false); window.location.href = `/room?id=${createdCode}` }}
+                className="w-full flex items-center justify-center gap-2.5 h-12 rounded-xl bg-[#0B5CFF] hover:bg-[#0846CC] text-white font-extrabold text-sm transition shadow-md shadow-[#0B5CFF]/25 border-none"
+              >
+                <PhoneCall className="h-4.5 w-4.5" />
+                Start the Call
+              </button>
+
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="w-full text-xs text-[#64748B] hover:text-[#334155] font-semibold py-1 transition"
+              >
+                Close & Continue Later
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* ── ADVANCED CALENDAR SCHEDULER MODAL (Matching Images 1, 2, 3, 4) ── */}
       {showCalendarModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
@@ -1145,7 +1335,18 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* 5. Duration & Plan Warning Card (Matching Image 1) */}
+                {/* 4b. Purpose of Meeting (distinct from Description) */}
+                <div className="space-y-1">
+                  <label className="font-extrabold text-[#334155]">Purpose of Meeting</label>
+                  <Input
+                    placeholder="e.g. Q3 planning, Code review, Client demo"
+                    value={calPurpose}
+                    onChange={(e) => setCalPurpose(e.target.value)}
+                    className="h-10 border-[#CBD5E1] focus:border-[#0B5CFF] text-xs font-medium rounded-xl"
+                  />
+                </div>
+
+                {/* 5. Duration */}
                 <div className="space-y-2">
                   <label className="font-extrabold text-[#334155]">Duration</label>
                   <div className="flex items-center gap-3">
@@ -1169,17 +1370,6 @@ export default function DashboardPage() {
                       <option value={45}>45 min</option>
                       <option value={60}>60 min</option>
                     </select>
-                  </div>
-
-                  {/* Plan Warning Card (Exact match for Image 1) */}
-                  <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-xl flex items-start gap-3 text-amber-900">
-                    <div className="mt-0.5 text-amber-600 text-base">⚠️</div>
-                    <div className="text-xs leading-relaxed">
-                      <p className="font-bold text-amber-900">Basic Plan Limit Notice</p>
-                      <p className="text-[11px] text-amber-800 mt-0.5">
-                        You can schedule meetings for up to 40 minutes each with your current Basic plan. Need more time? <span className="font-bold underline cursor-pointer text-amber-950">Upgrade to Pro</span>
-                      </p>
-                    </div>
                   </div>
                 </div>
 
@@ -1319,28 +1509,17 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* 12. Security (Matching Image 3) */}
+                {/* 12. Security (Auto-generated passcode) */}
                 <div className="space-y-2 pt-2 border-t border-[#F1F5F9]">
                   <label className="font-extrabold text-[#334155] text-xs">Security</label>
                   
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={calPasscodeEnabled}
-                        onChange={(e) => setCalPasscodeEnabled(e.target.checked)}
-                        className="w-4 h-4 text-[#0B5CFF]"
-                      />
-                      <span className="font-bold text-xs text-[#334155]">Passcode</span>
-                      {calPasscodeEnabled && (
-                        <Input
-                          value={calPasscode}
-                          onChange={(e) => setCalPasscode(e.target.value)}
-                          className="h-8 w-36 text-xs font-mono border-[#CBD5E1] ml-2 font-bold"
-                        />
-                      )}
+                      <input type="checkbox" checked={true} readOnly className="w-4 h-4 text-[#0B5CFF]" />
+                      <span className="font-bold text-xs text-[#334155]">Auto-generated Passcode</span>
+                      <span className="font-mono font-black text-xs bg-[#EEF4FF] text-[#0B5CFF] border border-[#BFDBFE]/60 px-2 py-0.5 rounded-lg tracking-widest ml-1">{calPasscode}</span>
                     </div>
-                    <p className="text-[11px] text-[#64748B] ml-6">Only users who have the invite link or passcode can join the meeting</p>
+                    <p className="text-[11px] text-[#64748B] ml-6">A unique passcode is auto-generated and shared with invitees in the email.</p>
 
                     <div className="pt-1">
                       <label className="flex items-center gap-2 text-xs font-bold text-[#334155] cursor-pointer">
@@ -1382,6 +1561,41 @@ export default function DashboardPage() {
                       <span>🔒 End-to-end encryption</span>
                     </label>
                   </div>
+                </div>
+
+                {/* 13b. Admin Panel Options */}
+                <div className="space-y-2 pt-2 border-t border-[#F1F5F9]">
+                  <button
+                    type="button"
+                    onClick={() => setAdminShowAdminOptions(!adminShowAdminOptions)}
+                    className="flex items-center gap-2 text-xs font-extrabold text-[#334155] cursor-pointer w-full"
+                  >
+                    <Settings2 className="w-3.5 h-3.5 text-[#334155]" />
+                    Admin Panel Controls
+                    {adminShowAdminOptions ? <ChevronUp className="w-3.5 h-3.5 ml-auto" /> : <ChevronDown className="w-3.5 h-3.5 ml-auto" />}
+                  </button>
+                  {adminShowAdminOptions && (
+                    <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 space-y-2">
+                      <p className="text-[10px] font-extrabold text-[#64748B] uppercase tracking-wider">These settings are enforced during the meeting</p>
+                      {[
+                        { key: 'muteOnEntry', label: 'Mute all participants on entry', val: adminMuteOnEntry, set: setAdminMuteOnEntry },
+                        { key: 'disableParticipantVideo', label: 'Disable participant video by default', val: adminDisableParticipantVideo, set: setAdminDisableParticipantVideo },
+                        { key: 'lockChat', label: 'Restrict chat to host only', val: adminLockChat, set: setAdminLockChat },
+                        { key: 'requireApproval', label: 'Require host approval to join', val: adminRequireApproval, set: setAdminRequireApproval },
+                        { key: 'allowScreenShare', label: 'Allow participants to screen share', val: adminAllowScreenShare, set: setAdminAllowScreenShare },
+                      ].map(opt => (
+                        <label key={opt.key} className="flex items-center gap-2 text-xs font-medium text-[#334155] cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={opt.val}
+                            onChange={(e) => opt.set(e.target.checked)}
+                            className="w-4 h-4 text-[#0B5CFF] rounded"
+                          />
+                          <span>{opt.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* 14. Codovate AI Options (Matching Image 4) */}
@@ -1544,7 +1758,7 @@ export default function DashboardPage() {
             <div className="bg-[#0B5CFF] p-3.5 border-b border-[#0846CC] flex justify-between items-center text-white">
               <div className="flex items-center gap-2">
                 <div className="relative w-6 h-6">
-                  <Image src="/ai-copilot-3d.png" alt="AI" fill className="object-contain" />
+                  <Image src="/ai-copilot-3d.png" alt="AI" fill className="object-contain img-blend" />
                 </div>
                 <h4 className="font-extrabold text-xs text-white">Codovate AI Copilot</h4>
               </div>
@@ -1585,7 +1799,7 @@ export default function DashboardPage() {
           title="Toggle AI Copilot"
         >
           <div className="relative w-9 h-9">
-            <Image src="/ai-copilot-3d.png" alt="AI Copilot" fill className="object-contain" />
+            <Image src="/ai-copilot-3d.png" alt="AI Copilot" fill className="object-contain img-blend" />
           </div>
           <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full" />
         </button>
