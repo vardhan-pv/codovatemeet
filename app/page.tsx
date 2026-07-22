@@ -104,13 +104,6 @@ export default function LandingPage() {
           initial="initial"
           animate="animate"
         >
-          <motion.div variants={fadeInUp}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/30 text-primary text-xs font-bold uppercase tracking-widest mb-8 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
-              <Zap className="w-3.5 h-3.5" />
-              The Developer Communication & Collaboration Platform
-            </div>
-          </motion.div>
-
           <motion.h1
             variants={fadeInUp}
             className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.05] tracking-tight mb-8"
