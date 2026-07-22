@@ -216,7 +216,7 @@ function VideoTile({
       className={`relative bg-[#1A1D24] overflow-hidden flex items-center justify-center shadow-lg group transition-all duration-300 w-full h-full ${
         isFullscreen 
           ? 'w-screen h-screen rounded-none border-none' 
-          : `border-2 rounded-2xl ${participant.isSpeaking ? 'border-[#0B5CFF] ring-2 ring-[#0B5CFF]/40 shadow-lg shadow-[#0B5CFF]/20 scale-[1.01]' : 'border-[#2B3344]'} ${isAdminFeatured ? 'border-[#FBBF24]/80 shadow-[0_0_30px_rgba(251,191,36,0.3)] ring-2 ring-[#FBBF24]/50' : ''}`
+          : `border rounded-2xl ${participant.isSpeaking ? 'border-[#0B5CFF] ring-2 ring-[#0B5CFF]/40 shadow-lg shadow-[#0B5CFF]/20 scale-[1.01]' : 'border-slate-800/80'}`
       }`}
     >
       <video
@@ -4542,11 +4542,11 @@ function RoomPageContent() {
         </div>
       )}
 
-      {/* ── ONE SINGLE FLOATING ACTION DOCK (Replaced according to user image - Brighter Clear Border & Buttons) ── */}
-      <footer className="px-2 sm:px-4 py-3 bg-[#0D1015] border-t-2 border-[#31343C] flex items-center justify-between gap-2 z-[100] shrink-0 shadow-2xl select-none relative">
+      {/* ── ONE SINGLE FLOATING ACTION DOCK (Simple, Clean, User-Friendly Controls) ── */}
+      <footer className="px-2 sm:px-4 py-3 bg-[#0D1015] border-t border-slate-800/80 flex items-center justify-between gap-2 z-[100] shrink-0 shadow-2xl select-none relative">
         
-        {/* Left Card: Tailored Workspace Buttons (Matching User Image Layout) */}
-        <div className="hidden md:flex items-center gap-1 bg-[#161B26] border-2 border-[#31343C] rounded-2xl p-1 shadow-inner">
+        {/* Left Card: Workspace Buttons (Simple & Clean) */}
+        <div className="hidden md:flex items-center gap-1 bg-[#161B26] rounded-2xl p-1 shadow-inner">
           {(meetingType === 'technical' || meetingType === 'interview') && (
             <>
               <button
@@ -4622,24 +4622,24 @@ function RoomPageContent() {
           )}
         </div>
 
-        {/* Center Group: High-Visibility Circular Buttons (Matching Image) */}
+        {/* Center Group: Simple, Clean & User-Friendly Controls (Mic/Cam Dark Red when OFF) */}
         <div className="flex items-center gap-2 relative">
-          {/* Mic Button */}
+          {/* Mic Button (Dark Red when turned off) */}
           <button
             onClick={handleMuteToggle}
-            className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
-              isMuted ? 'bg-[#F43F5E] border-2 border-[#EF4444] text-[#FFFFFF] shadow-[#F43F5E]/40 hover:bg-[#e11d48]' : 'bg-[#0B5CFF] border-2 border-[#2F6DFF] text-[#FFFFFF] shadow-[#0B5CFF]/40 hover:bg-[#0846CC]'
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-md border-none active:scale-95 ${
+              isMuted ? 'bg-[#801313] hover:bg-[#991B1B] text-white shadow-rose-900/30' : 'bg-[#0B5CFF] hover:bg-[#0846CC] text-white shadow-blue-600/30'
             }`}
             title={isMuted ? 'Unmute Mic' : 'Mute Mic'}
           >
             {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
 
-          {/* Camera Button */}
+          {/* Camera Button (Dark Red when turned off) */}
           <button
             onClick={handleVideoToggle}
-            className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
-              isVideoOff ? 'bg-[#F43F5E] border-2 border-[#EF4444] text-[#FFFFFF] shadow-[#F43F5E]/40 hover:bg-[#e11d48]' : 'bg-[#0B5CFF] border-2 border-[#2F6DFF] text-[#FFFFFF] shadow-[#0B5CFF]/40 hover:bg-[#0846CC]'
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-md border-none active:scale-95 ${
+              isVideoOff ? 'bg-[#801313] hover:bg-[#991B1B] text-white shadow-rose-900/30' : 'bg-[#0B5CFF] hover:bg-[#0846CC] text-white shadow-blue-600/30'
             }`}
             title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
           >
@@ -4649,8 +4649,8 @@ function RoomPageContent() {
           {/* Raise Hand Button */}
           <button
             onClick={toggleHandRaise}
-            className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
-              isHandRaised ? 'bg-[#FBBF24] border-2 border-[#FBBF24] text-[#111827] shadow-[#FBBF24]/30' : 'bg-[#161B26] border-2 border-[#31343C] text-[#FBBF24] hover:border-[#FBBF24]'
+            className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition shadow-md border-none active:scale-95 ${
+              isHandRaised ? 'bg-[#FBBF24] text-[#111827]' : 'bg-[#1E2330] hover:bg-[#2A3040] text-[#FBBF24]'
             }`}
             title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
           >
@@ -4660,8 +4660,8 @@ function RoomPageContent() {
           {/* Reaction Emojis Button */}
           <button
             onClick={() => setShowReactionTray(!showReactionTray)}
-            className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
-              showReactionTray ? 'bg-[#EC4899] border-2 border-[#F472B6] text-[#FFFFFF]' : 'bg-[#161B26] border-2 border-[#31343C] text-[#F43F5E] hover:border-[#F43F5E]'
+            className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition shadow-md border-none active:scale-95 ${
+              showReactionTray ? 'bg-[#EC4899] text-white' : 'bg-[#1E2330] hover:bg-[#2A3040] text-[#F43F5E]'
             }`}
             title="Send Reaction Emojis"
           >
@@ -4671,8 +4671,8 @@ function RoomPageContent() {
           {/* Screen Share Button */}
           <button
             onClick={handleScreenShareToggle}
-            className={`hidden md:flex w-11 h-11 rounded-full items-center justify-center transition shadow-lg active:scale-95 ${
-              isScreenSharing ? 'bg-[#0B5CFF] border-2 border-[#2F6DFF] text-[#FFFFFF]' : 'bg-[#161B26] border-2 border-[#31343C] text-[#0B5CFF] hover:border-[#0B5CFF]'
+            className={`hidden md:flex w-11 h-11 rounded-full items-center justify-center transition shadow-md border-none active:scale-95 ${
+              isScreenSharing ? 'bg-[#0B5CFF] text-white' : 'bg-[#1E2330] hover:bg-[#2A3040] text-[#0B5CFF]'
             }`}
             title={isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
           >
@@ -4682,8 +4682,8 @@ function RoomPageContent() {
           {/* Chat Button */}
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}
-            className={`hidden md:flex w-11 h-11 rounded-full items-center justify-center transition shadow-lg active:scale-95 ${
-              activeSidebar === 'chat' ? 'bg-[#0B5CFF] border-2 border-[#2F6DFF] text-[#FFFFFF]' : 'bg-[#161B26] border-2 border-[#31343C] text-[#0B5CFF] hover:border-[#0B5CFF]'
+            className={`hidden md:flex w-11 h-11 rounded-full items-center justify-center transition shadow-md border-none active:scale-95 ${
+              activeSidebar === 'chat' ? 'bg-[#0B5CFF] text-white' : 'bg-[#1E2330] hover:bg-[#2A3040] text-[#0B5CFF]'
             }`}
             title="Chat"
           >
@@ -4694,8 +4694,8 @@ function RoomPageContent() {
           <div className="hidden md:block relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-lg active:scale-95 ${
-                showMoreMenu ? 'bg-[#31343C] border-2 border-[#0B5CFF] text-[#FFFFFF]' : 'bg-[#161B26] border-2 border-[#31343C] text-[#D9DEE7] hover:border-[#D9DEE7]'
+              className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-md border-none active:scale-95 ${
+                showMoreMenu ? 'bg-[#0B5CFF] text-white' : 'bg-[#1E2330] hover:bg-[#2A3040] text-slate-200'
               }`}
               title="More Tools"
             >
@@ -4704,13 +4704,13 @@ function RoomPageContent() {
 
             {/* Floating Popover Menu */}
             {showMoreMenu && (
-              <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-64 max-h-[70vh] overflow-y-auto bg-[#161B26] border-2 border-[#31343C] backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-[300] animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-[#FFFFFF] text-xs font-semibold custom-scrollbar">
+              <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-64 max-h-[70vh] overflow-y-auto bg-[#161B26] border border-slate-700/80 backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-[300] animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-1 text-[#FFFFFF] text-xs font-semibold custom-scrollbar">
                 {/* Record Session Button — respects admin recording permission */}
                 {canRecord ? (
                   <button
                     onClick={() => { setIsRecorderModalOpen(true); setShowMoreMenu(false); }}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition text-left ${
-                      isRecording ? 'bg-[#F43F5E] text-[#FFFFFF] font-bold animate-pulse' : 'hover:bg-[#1A1D24] text-[#F43F5E] font-bold'
+                      isRecording ? 'bg-[#801313] text-[#FFFFFF] font-bold animate-pulse' : 'hover:bg-[#1A1D24] text-[#F43F5E] font-bold'
                     }`}
                   >
                     <Radio className="w-4 h-4 text-[#F43F5E]" />
@@ -4755,7 +4755,7 @@ function RoomPageContent() {
                     <Users className="w-4 h-4 text-[#FBBF24]" />
                     <span>Waiting Room</span>
                     {waitingParticipants.length > 0 && (
-                      <span className="ml-auto px-1.5 py-0.5 bg-[#F43F5E] text-[#FFFFFF] font-bold text-[10px] rounded-full">
+                      <span className="ml-auto px-1.5 py-0.5 bg-[#801313] text-[#FFFFFF] font-bold text-[10px] rounded-full">
                         {waitingParticipants.length}
                       </span>
                     )}
@@ -4805,7 +4805,7 @@ function RoomPageContent() {
 
                 <button
                   onClick={() => { setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse'); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#F43F5E]/20 text-[#F43F5E] font-bold transition text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#801313]/30 text-[#F43F5E] font-bold transition text-left"
                 >
                   <Flag className="w-4 h-4 text-[#F43F5E]" />
                   <span>Report Abuse</span>
@@ -4813,7 +4813,7 @@ function RoomPageContent() {
 
                 <button
                   onClick={() => { setShowOnboardingTour(true); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#1A1D24] text-[#9CA3AF] font-bold transition text-left border-t border-[#31343C] mt-1 pt-2"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#1A1D24] text-[#9CA3AF] font-bold transition text-left border-t border-slate-800 mt-1 pt-2"
                 >
                   <HelpCircle className="w-4 h-4 text-[#9CA3AF]" />
                   <span>Help & Walkthrough Tour</span>
@@ -4823,46 +4823,46 @@ function RoomPageContent() {
           </div>
         </div>
 
-        {/* Right Section: Quick Icon Actions & End/Leave Buttons (Matching User Image) */}
+        {/* Right Section: Clean & User-Friendly End/Leave & Stats Buttons (Dark Red End & Leave) */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Participants with Count Pill (Matching Image: 👥 2) */}
+          {/* Participants */}
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'participants' ? null : 'participants')}
-            className={`hidden md:flex h-9 px-3 rounded-xl border-2 border-[#31343C] bg-[#161B26] text-[#0B5CFF] font-bold text-xs items-center gap-1.5 hover:border-[#0B5CFF] transition`}
+            className={`hidden md:flex h-9 px-3 rounded-full bg-[#1E2330] hover:bg-[#2A3040] text-[#0B5CFF] font-bold text-xs items-center gap-1.5 border-none shadow-md transition`}
             title="Participants"
           >
             <Users className="w-4 h-4 text-[#0B5CFF]" />
             <span>{participants.length || 1}</span>
           </button>
 
-          {/* Network Stats Pulse (Matching Image) */}
+          {/* Network Stats Pulse */}
           <button
             onClick={() => setIsStatsModalOpen(true)}
-            className="hidden md:flex w-9 h-9 rounded-xl bg-[#161B26] border-2 border-[#31343C] text-[#22C55E] hover:border-[#22C55E] items-center justify-center transition"
+            className="hidden md:flex w-9 h-9 rounded-full bg-[#1E2330] hover:bg-[#2A3040] text-[#22C55E] items-center justify-center border-none shadow-md transition"
             title="Network Status"
           >
             <Activity className="w-4 h-4 text-[#22C55E]" />
           </button>
 
-          {/* Device Settings Gear (Matching Image) */}
+          {/* Device Settings Gear */}
           <button
             onClick={() => setActiveSidebar(activeSidebar === 'effects' ? null : 'effects')}
-            className="hidden md:flex w-9 h-9 rounded-xl bg-[#161B26] border-2 border-[#31343C] text-[#D9DEE7] hover:border-[#D9DEE7] items-center justify-center transition"
+            className="hidden md:flex w-9 h-9 rounded-full bg-[#1E2330] hover:bg-[#2A3040] text-slate-300 items-center justify-center border-none shadow-md transition"
             title="Device & Effects"
           >
-            <Settings className="w-4 h-4 text-[#D9DEE7]" />
+            <Settings className="w-4 h-4 text-slate-300" />
           </button>
 
-          {/* Export Package (Matching Image) */}
+          {/* Export Package */}
           <button
             onClick={() => setIsExportModalOpen(true)}
-            className="hidden md:flex w-9 h-9 rounded-xl bg-[#161B26] border-2 border-[#31343C] text-[#0B5CFF] hover:border-[#0B5CFF] items-center justify-center transition"
+            className="hidden md:flex w-9 h-9 rounded-full bg-[#1E2330] hover:bg-[#2A3040] text-[#0B5CFF] items-center justify-center border-none shadow-md transition"
             title="Export Package"
           >
             <Archive className="w-4 h-4 text-[#0B5CFF]" />
           </button>
 
-          {/* End Button (Host Only: Solid Red Pill with Record Dot) */}
+          {/* End Button (Host Only: Dark Red Pill) */}
           {isHostUser && (
             <Button
               onClick={() => {
@@ -4870,21 +4870,21 @@ function RoomPageContent() {
                   handleEndMeetingForAll()
                 }
               }}
-              className="h-9 px-3 sm:px-4 rounded-full bg-[#F43F5E] hover:bg-[#e11d48] text-[#FFFFFF] font-extrabold text-xs shadow-lg shadow-[#F43F5E]/30 border-2 border-[#EF4444] flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+              className="h-9 px-3.5 sm:px-4 rounded-full bg-[#801313] hover:bg-[#991B1B] text-white font-extrabold text-xs shadow-md border-none flex items-center justify-center gap-1.5 active:scale-95 transition-all"
               title="Permanently End Meeting for Everyone (Host Only)"
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-white border border-[#F43F5E] shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-rose-200 shrink-0" />
               <span>End</span>
             </Button>
           )}
 
-          {/* Leave Button (Matching Image: Red Outline Pill Button) */}
+          {/* Leave Button (Dark Red Pill - Simple & User Friendly) */}
           <Button
             onClick={handleLeaveCall}
-            className="h-9 px-3 sm:px-4 rounded-full bg-transparent hover:bg-[#F43F5E]/15 text-[#F43F5E] font-extrabold text-xs border-2 border-[#EF4444] flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+            className="h-9 px-3.5 sm:px-4 rounded-full bg-[#801313] hover:bg-[#991B1B] text-white font-extrabold text-xs shadow-md border-none flex items-center justify-center gap-1.5 active:scale-95 transition-all"
             title="Leave Meeting"
           >
-            <LogOut className="w-4 h-4 shrink-0 text-[#F43F5E]" />
+            <LogOut className="w-4 h-4 shrink-0 text-white" />
             <span>Leave</span>
           </Button>
         </div>
