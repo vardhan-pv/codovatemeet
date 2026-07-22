@@ -8,7 +8,7 @@ import { meetingService } from '@/services/meeting'
 import {
   LogOut, Plus, Video, Copy, Check, ArrowRight, Clock, Calendar,
   LayoutDashboard, Users, X, Globe, Tag, AlignLeft, Paperclip, Mail, Sparkles,
-  ShieldCheck, KeyRound, Lock, MonitorPlay, Briefcase, GraduationCap, Lightbulb
+  ShieldCheck, KeyRound, Lock, MonitorPlay, Briefcase, GraduationCap, Lightbulb, Play
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
