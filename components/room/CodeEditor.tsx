@@ -1211,8 +1211,8 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
               onNavigateToComment={handleNavigateToComment}
               rootFolderName={rootFolderName}
             />
-          </div>
-        )}
+          )}
+        </div>
 
         {/* ── Monaco Editor Workspace ── */}
         <div className="flex-grow flex flex-col min-w-0 h-full relative">
