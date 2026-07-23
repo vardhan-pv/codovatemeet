@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { 
   ChevronRight, ChevronDown, Folder, FolderOpen, FileCode, FileJson, 
-  Settings, GitBranch, Terminal, Code2, Palette, FileText, File, Package, Plus, FolderUp, MessageSquare, CornerDownRight, MoreHorizontal
+  Settings, GitBranch, Terminal, Code2, Palette, FileText, File, Package, Plus, FolderUp, MessageSquare, CornerDownRight, MoreHorizontal,
+  X, Download, FolderPlus, FilePlus, Trash2
 } from 'lucide-react'
 
 interface Comment {
@@ -21,8 +22,12 @@ interface SidebarPaneProps {
   currentFile: string
   onSelectFile: (fname: string) => void
   onCreateFile: (defaultPath?: string) => void
+  onCreateFolder?: (defaultPath?: string) => void
   onDeleteFile: (fname: string) => void
   onFolderUploadClick: () => void
+  onCloseExplorer?: () => void
+  onDownloadFile?: (fname: string) => void
+  onDownloadWorkspaceZip?: () => void
   searchQuery: string
   setSearchQuery: (query: string) => void
   replaceQuery: string
@@ -94,8 +99,12 @@ export function SidebarPane({
   currentFile,
   onSelectFile,
   onCreateFile,
+  onCreateFolder,
   onDeleteFile,
   onFolderUploadClick,
+  onCloseExplorer,
+  onDownloadFile,
+  onDownloadWorkspaceZip,
   searchQuery,
   setSearchQuery,
   replaceQuery,
@@ -218,16 +227,28 @@ export function SidebarPane({
                 {getFolderIcon(node.name, isOpen)}
                 <span className="truncate text-slate-300 font-sans text-xs">{node.name}</span>
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onCreateFile(node.path + '/')
-                }}
-                className="opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded text-slate-500 bg-transparent border-none cursor-pointer"
-                title="Create file in folder"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onCreateFile(node.path + '/')
+                  }}
+                  className="hover:text-white p-0.5 rounded text-slate-500 bg-transparent border-none cursor-pointer"
+                  title={`New file in ${node.name}`}
+                >
+                  <FilePlus className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onCreateFolder?.(node.path + '/')
+                  }}
+                  className="hover:text-white p-0.5 rounded text-slate-500 bg-transparent border-none cursor-pointer"
+                  title={`New folder in ${node.name}`}
+                >
+                  <FolderPlus className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
             {isOpen && renderTreeNodes(node.children, depth + 1)}
           </div>
@@ -248,18 +269,32 @@ export function SidebarPane({
               {getFileIcon(node.name, fileInfo.language)}
               <span className="truncate text-xs font-sans select-none">{node.name}</span>
             </div>
-            {fileKeys.length > 1 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDeleteFile(node.path)
-                }}
-                className="opacity-0 group-hover:opacity-100 hover:text-rose-450 text-slate-500 text-xs bg-transparent border-none cursor-pointer transition-all"
-                title="Delete File"
-              >
-                ×
-              </button>
-            )}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {onDownloadFile ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDownloadFile(node.path)
+                  }}
+                  className="hover:text-sky-400 text-slate-500 p-0.5 bg-transparent border-none cursor-pointer transition-all"
+                  title={`Download ${node.name}`}
+                >
+                  <Download className="w-3 h-3" />
+                </button>
+              ) : null}
+              {fileKeys.length > 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteFile(node.path)
+                  }}
+                  className="hover:text-rose-450 text-slate-500 text-xs bg-transparent border-none cursor-pointer transition-all"
+                  title="Delete File"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
+            </div>
           </div>
         )
       }
@@ -272,49 +307,79 @@ export function SidebarPane({
     <aside className="w-56 bg-[#18181b] flex flex-col select-none shrink-0 border-r border-white/5 h-full">
       {sidebarTab === 'explorer' ? (
         <>
-          {/* Main Sidebar Header (Explorer ...) */}
-          <div className="p-3 flex justify-between items-center text-slate-400 select-none">
-            <span className="text-[11px] font-sans font-bold tracking-wider uppercase">Explorer</span>
+          {/* Main Sidebar Header (Explorer & Close button) */}
+          <div className="p-3 flex justify-between items-center text-slate-400 select-none border-b border-white/5">
+            <span className="text-[11px] font-sans font-bold tracking-wider uppercase text-slate-300">Explorer</span>
             <div className="flex items-center gap-1">
-              <button className="hover:text-white p-1 rounded transition-colors text-slate-500">
-                <MoreHorizontal className="w-3.5 h-3.5" />
-              </button>
+              {onCloseExplorer ? (
+                <button 
+                  onClick={onCloseExplorer} 
+                  className="hover:text-white hover:bg-white/10 p-1 rounded transition text-slate-400 cursor-pointer"
+                  title="Close Explorer (Ctrl+B)"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              ) : null}
             </div>
           </div>
 
-          {/* Root directory collapsible folder header (Image 1) */}
+          {/* Root directory collapsible folder header */}
           <div className="flex flex-col flex-grow overflow-y-auto">
             <div
               onClick={() => setIsRootExpanded(!isRootExpanded)}
-              className="flex items-center justify-between px-3 py-1 hover:bg-white/5 cursor-pointer text-slate-400 select-none transition-all duration-150 border-t border-b border-white/5 bg-slate-950/20"
+              className="flex items-center justify-between px-3 py-1.5 hover:bg-white/5 cursor-pointer text-slate-400 select-none transition-all duration-150 border-b border-white/5 bg-slate-950/30"
             >
               <div className="flex items-center gap-1.5 truncate">
                 {isRootExpanded ? <ChevronDown className="w-3.5 h-3.5 text-slate-500" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-500" />}
                 <span className="truncate text-xs font-bold text-slate-200 uppercase font-sans tracking-wide">{rootFolderName}</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                {/* Folder Import Button */}
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onFolderUploadClick()
-                  }} 
-                  className="hover:text-white hover:bg-white/5 p-0.5 rounded text-slate-500 bg-transparent border-none cursor-pointer transition flex items-center justify-center"
-                  title="Import Local Folder"
-                >
-                  <FolderUp className="w-3 h-3" />
-                </button>
+              <div className="flex items-center gap-1">
                 {/* New File Button */}
                 <button 
                   onClick={(e) => {
                     e.stopPropagation()
                     onCreateFile('')
                   }} 
-                  className="hover:text-white hover:bg-white/5 p-0.5 rounded text-slate-500 bg-transparent border-none cursor-pointer transition flex items-center justify-center"
-                  title="New File at Root"
+                  className="hover:text-white hover:bg-white/10 p-1 rounded text-slate-400 bg-transparent border-none cursor-pointer transition flex items-center justify-center"
+                  title="New File"
                 >
-                  <Plus className="w-3 h-3" />
+                  <FilePlus className="w-3.5 h-3.5" />
                 </button>
+                {/* New Folder Button */}
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (onCreateFolder) onCreateFolder('')
+                  }} 
+                  className="hover:text-white hover:bg-white/10 p-1 rounded text-slate-400 bg-transparent border-none cursor-pointer transition flex items-center justify-center"
+                  title="New Folder"
+                >
+                  <FolderPlus className="w-3.5 h-3.5" />
+                </button>
+                {/* Folder Import Button */}
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onFolderUploadClick()
+                  }} 
+                  className="hover:text-white hover:bg-white/10 p-1 rounded text-slate-400 bg-transparent border-none cursor-pointer transition flex items-center justify-center"
+                  title="Import Folder"
+                >
+                  <FolderUp className="w-3.5 h-3.5" />
+                </button>
+                {/* Download Workspace ZIP */}
+                {onDownloadWorkspaceZip && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDownloadWorkspaceZip()
+                    }} 
+                    className="hover:text-sky-400 hover:bg-white/10 p-1 rounded text-slate-400 bg-transparent border-none cursor-pointer transition flex items-center justify-center"
+                    title="Download Workspace (ZIP)"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
 

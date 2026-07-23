@@ -4627,24 +4627,24 @@ function RoomPageContent() {
           )}
         </div>
 
-        {/* Center Group: Simple, Clean & User-Friendly Controls (Mic/Cam Dark Red when OFF) */}
+        {/* Center Group: Simple, Clean & User-Friendly Controls (Mic/Cam Red when OFF) */}
         <div className="flex items-center gap-2 relative">
-          {/* Mic Button (Dark Red when turned off) */}
+          {/* Mic Button (Red when turned off) */}
           <button
             onClick={handleMuteToggle}
             className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-md border-none active:scale-95 ${
-              isMuted ? 'bg-[#801313] hover:bg-[#991B1B] text-white shadow-rose-900/30' : 'bg-[#0B5CFF] hover:bg-[#0846CC] text-white shadow-blue-600/30'
+              isMuted ? 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-900/40' : 'bg-[#0B5CFF] hover:bg-[#0846CC] text-white shadow-blue-600/30'
             }`}
             title={isMuted ? 'Unmute Mic' : 'Mute Mic'}
           >
             {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
 
-          {/* Camera Button (Dark Red when turned off) */}
+          {/* Camera Button (Red when turned off) */}
           <button
             onClick={handleVideoToggle}
             className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-md border-none active:scale-95 ${
-              isVideoOff ? 'bg-[#801313] hover:bg-[#991B1B] text-white shadow-rose-900/30' : 'bg-[#0B5CFF] hover:bg-[#0846CC] text-white shadow-blue-600/30'
+              isVideoOff ? 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-900/40' : 'bg-[#0B5CFF] hover:bg-[#0846CC] text-white shadow-blue-600/30'
             }`}
             title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
           >
@@ -4715,7 +4715,7 @@ function RoomPageContent() {
                   <button
                     onClick={() => { setIsRecorderModalOpen(true); setShowMoreMenu(false); }}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition text-left ${
-                      isRecording ? 'bg-[#801313] text-[#FFFFFF] font-bold animate-pulse' : 'hover:bg-[#1A1D24] text-[#F43F5E] font-bold'
+                      isRecording ? 'bg-red-600 text-[#FFFFFF] font-bold animate-pulse' : 'hover:bg-[#1A1D24] text-[#F43F5E] font-bold'
                     }`}
                   >
                     <Radio className="w-4 h-4 text-[#F43F5E]" />
@@ -4760,7 +4760,7 @@ function RoomPageContent() {
                     <Users className="w-4 h-4 text-[#FBBF24]" />
                     <span>Waiting Room</span>
                     {waitingParticipants.length > 0 && (
-                      <span className="ml-auto px-1.5 py-0.5 bg-[#801313] text-[#FFFFFF] font-bold text-[10px] rounded-full">
+                      <span className="ml-auto px-1.5 py-0.5 bg-red-600 text-[#FFFFFF] font-bold text-[10px] rounded-full">
                         {waitingParticipants.length}
                       </span>
                     )}
@@ -4810,7 +4810,7 @@ function RoomPageContent() {
 
                 <button
                   onClick={() => { setActiveSidebar(activeSidebar === 'abuse' ? null : 'abuse'); setShowMoreMenu(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#801313]/30 text-[#F43F5E] font-bold transition text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-red-900/30 text-[#F43F5E] font-bold transition text-left"
                 >
                   <Flag className="w-4 h-4 text-[#F43F5E]" />
                   <span>Report Abuse</span>
@@ -4828,7 +4828,7 @@ function RoomPageContent() {
           </div>
         </div>
 
-        {/* Right Section: Clean & User-Friendly End/Leave & Stats Buttons (Dark Red End & Leave) */}
+        {/* Right Section: Clean & User-Friendly End/Leave & Stats Buttons (Red End & Leave) */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Participants */}
           <button
@@ -4871,7 +4871,7 @@ function RoomPageContent() {
             <Archive className="w-4 h-4 text-[#0B5CFF]" />
           </button>
 
-          {/* End Button (Host Only: Dark Red Pill) */}
+          {/* End Button (Host Only: Red Pill) */}
           {isHostUser && (
             <Button
               onClick={() => {
@@ -4879,18 +4879,18 @@ function RoomPageContent() {
                   handleEndMeetingForAll()
                 }
               }}
-              className="h-9 px-3.5 sm:px-4 rounded-full bg-[#801313] hover:bg-[#991B1B] text-white font-extrabold text-xs shadow-md border-none flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+              className="h-9 px-3.5 sm:px-4 rounded-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md shadow-red-900/30 border-none flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
               title="Permanently End Meeting for Everyone (Host Only)"
             >
-              <span className="w-2 h-2 rounded-full bg-rose-200 shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse shrink-0" />
               <span>End</span>
             </Button>
           )}
 
-          {/* Leave Button (Dark Red Pill - Simple & User Friendly) */}
+          {/* Leave Button (Red Pill - Simple & User Friendly) */}
           <Button
             onClick={handleLeaveCall}
-            className="h-9 px-3.5 sm:px-4 rounded-full bg-[#801313] hover:bg-[#991B1B] text-white font-extrabold text-xs shadow-md border-none flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+            className="h-9 px-3.5 sm:px-4 rounded-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md shadow-red-900/30 border-none flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
             title="Leave Meeting"
           >
             <LogOut className="w-4 h-4 shrink-0 text-white" />

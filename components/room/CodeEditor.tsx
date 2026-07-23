@@ -9,7 +9,102 @@ import { PreviewPanel } from './editor/PreviewPanel'
 import { TerminalPanel } from './editor/TerminalPanel'
 import type { Terminal as XTerm } from 'xterm'
 import { Button } from '@/components/ui/button'
-import { X, CheckCircle, AlertCircle, Copy, Check, Users, Play, TerminalSquare, RefreshCw } from 'lucide-react'
+import { X, CheckCircle, AlertCircle, Copy, Check, Users, Play, TerminalSquare, RefreshCw, Download, FolderPlus, FilePlus } from 'lucide-react'
+
+// Pure JS ZIP generator helper for downloading full workspace
+function createZipBlob(files: { [filename: string]: { code: string } }): Blob {
+  const enc = new TextEncoder()
+  const fileEntries: { pathBytes: Uint8Array; contentBytes: Uint8Array; crc: number; offset: number }[] = []
+  const crcTable = new Uint32Array(256)
+  for (let n = 0; n < 256; n++) {
+    let c = n
+    for (let k = 0; k < 8; k++) {
+      c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1)
+    }
+    crcTable[n] = c
+  }
+  function calcCrc32(buf: Uint8Array): number {
+    let crc = 0xffffffff
+    for (let i = 0; i < buf.length; i++) {
+      crc = (crc >>> 8) ^ crcTable[(crc ^ buf[i]) & 0xff]
+    }
+    return (crc ^ 0xffffffff) >>> 0
+  }
+
+  const parts: Uint8Array[] = []
+  let currentOffset = 0
+
+  for (const filename of Object.keys(files)) {
+    const pathBytes = enc.encode(filename)
+    const contentBytes = enc.encode(files[filename]?.code || '')
+    const crc = calcCrc32(contentBytes)
+    const offset = currentOffset
+
+    const header = new Uint8Array(30 + pathBytes.length)
+    const view = new DataView(header.buffer)
+    view.setUint32(0, 0x04034b50, true)
+    view.setUint16(4, 20, true)
+    view.setUint16(6, 0, true)
+    view.setUint16(8, 0, true)
+    view.setUint16(10, 0, true)
+    view.setUint16(12, 0, true)
+    view.setUint32(14, crc, true)
+    view.setUint32(18, contentBytes.length, true)
+    view.setUint32(22, contentBytes.length, true)
+    view.setUint16(26, pathBytes.length, true)
+    view.setUint16(28, 0, true)
+    header.set(pathBytes, 30)
+
+    parts.push(header)
+    parts.push(contentBytes)
+
+    currentOffset += header.length + contentBytes.length
+    fileEntries.push({ pathBytes, contentBytes, crc, offset })
+  }
+
+  const centralDirOffset = currentOffset
+  for (const entry of fileEntries) {
+    const cdHeader = new Uint8Array(46 + entry.pathBytes.length)
+    const view = new DataView(cdHeader.buffer)
+    view.setUint32(0, 0x02014b50, true)
+    view.setUint16(4, 20, true)
+    view.setUint16(6, 20, true)
+    view.setUint16(8, 0, true)
+    view.setUint16(10, 0, true)
+    view.setUint16(12, 0, true)
+    view.setUint16(14, 0, true)
+    view.setUint32(16, entry.crc, true)
+    view.setUint32(20, entry.contentBytes.length, true)
+    view.setUint32(24, entry.contentBytes.length, true)
+    view.setUint16(28, entry.pathBytes.length, true)
+    view.setUint16(30, 0, true)
+    view.setUint16(32, 0, true)
+    view.setUint16(34, 0, true)
+    view.setUint16(36, 0, true)
+    view.setUint32(38, 0, true)
+    view.setUint32(42, entry.offset, true)
+    cdHeader.set(entry.pathBytes, 46)
+
+    parts.push(cdHeader)
+    currentOffset += cdHeader.length
+  }
+
+  const centralDirSize = currentOffset - centralDirOffset
+
+  const eocd = new Uint8Array(22)
+  const view = new DataView(eocd.buffer)
+  view.setUint32(0, 0x06054b50, true)
+  view.setUint16(4, 0, true)
+  view.setUint16(6, 0, true)
+  view.setUint16(8, fileEntries.length, true)
+  view.setUint16(10, fileEntries.length, true)
+  view.setUint32(12, centralDirSize, true)
+  view.setUint32(16, centralDirOffset, true)
+  view.setUint16(20, 0, true)
+  parts.push(eocd)
+
+  return new Blob(parts, { type: 'application/zip' })
+}
 
 interface CodeEditorProps {
   code: string
@@ -354,6 +449,68 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     }
   }
 
+  const handleCreateFolder = (defaultPath?: string) => {
+    const folderName = prompt("Enter new folder name (e.g. components, utils, styles):", defaultPath || '')
+    if (!folderName) return
+    let path = folderName.trim().replace(/\\/g, '/')
+    if (!path.endsWith('/')) path += '/'
+    const dummyFile = `${path}readme.md`
+    const updatedFiles = {
+      ...files,
+      [dummyFile]: {
+        code: `# ${folderName.split('/').filter(Boolean).pop() || 'Folder'}\n\nFolder created in workspace.`,
+        language: 'markdown'
+      }
+    }
+    setActiveFile(dummyFile)
+    onCodeChange(JSON.stringify(updatedFiles))
+    if (sendData) {
+      sendData('CODE_EDIT', { code: JSON.stringify(updatedFiles) })
+    }
+  }
+
+  const handleDownloadFile = (filename: string) => {
+    const f = files[filename]
+    if (!f) return
+    const blob = new Blob([f.code], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename.split('/').pop() || filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleDownloadWorkspaceZip = () => {
+    try {
+      const zipBlob = createZipBlob(files)
+      const url = URL.createObjectURL(zipBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${rootFolderName.toLowerCase() || 'workspace'}.zip`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      alert("Failed to create ZIP download.")
+    }
+  }
+
+  // Keyboard shortcut Ctrl+B / Cmd+B to toggle Explorer
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault()
+        setShowExplorer(prev => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   const handleDeleteFile = (fname: string) => {
     const updatedFiles = { ...files }
     delete updatedFiles[fname]
@@ -638,14 +795,14 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
         {...{ webkitdirectory: '', directory: '', multiple: true }} 
       />
 
-      {/* ── VS Code Style Header Menu Bar (Image 1 & 3) ── */}
-      <div className="h-9 bg-[#1c1c1e] border-b border-white/5 flex items-center justify-between px-3 shrink-0 shadow-md select-none text-[11px] font-sans">
-        <div className="flex items-center gap-1">
+      {/* ── VS Code Style Header Menu Bar (Single Line Non-wrapping Layout) ── */}
+      <div className="h-10 bg-[#1c1c1e] border-b border-white/10 flex items-center justify-between px-3 shrink-0 shadow-md select-none text-[11px] font-sans overflow-x-auto whitespace-nowrap scrollbar-none gap-2">
+        <div className="flex items-center gap-1 shrink-0">
           {/* Logo icon */}
           <div className="w-4 h-4 rounded-sm bg-primary/20 flex items-center justify-center mr-2 text-[9px] font-bold text-primary">A</div>
           
           {/* Interactive Dropdowns */}
-          <div className="flex items-center gap-1 text-slate-300">
+          <div className="flex items-center gap-1 text-slate-300 shrink-0">
             {/* File Dropdown */}
             <div className="relative">
               <button 
@@ -655,14 +812,20 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
                 File
               </button>
               {activeDropdown === 'file' && (
-                <div className="absolute top-full left-0 mt-1 w-44 bg-[#1e1e24] border border-white/10 rounded shadow-2xl z-50 flex flex-col py-1 text-slate-350 select-none animate-in fade-in duration-100">
+                <div className="absolute top-full left-0 mt-1 w-48 bg-[#1e1e24] border border-white/10 rounded shadow-2xl z-50 flex flex-col py-1 text-slate-350 select-none animate-in fade-in duration-100">
                   <button onClick={() => { handleCreateFile('') }} className="px-3 py-1.5 hover:bg-primary/20 hover:text-white text-left flex justify-between">
                     <span>New File...</span>
                     <span className="text-[9px] text-slate-500 font-mono">Ctrl+N</span>
                   </button>
+                  <button onClick={() => { handleCreateFolder('') }} className="px-3 py-1.5 hover:bg-primary/20 hover:text-white text-left flex justify-between">
+                    <span>New Folder...</span>
+                  </button>
                   <button onClick={handleFolderUploadClick} className="px-3 py-1.5 hover:bg-primary/20 hover:text-white text-left flex justify-between">
                     <span>Open Folder...</span>
                     <span className="text-[9px] text-slate-500 font-mono">Ctrl+K O</span>
+                  </button>
+                  <button onClick={handleDownloadWorkspaceZip} className="px-3 py-1.5 hover:bg-primary/20 hover:text-white text-left flex justify-between border-t border-white/5">
+                    <span>Download Workspace (ZIP)</span>
                   </button>
                   <button onClick={() => { setAutoSaveStatus('saved') }} className="px-3 py-1.5 hover:bg-primary/20 hover:text-white text-left flex justify-between border-b border-white/5">
                     <span>Save</span>
@@ -779,7 +942,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
                 <div className="absolute top-full left-0 mt-1 w-40 bg-[#1e1e24] border border-white/10 rounded shadow-2xl z-50 flex flex-col py-1 text-slate-350 select-none animate-in fade-in duration-100">
                   <button onClick={() => setShowTerminal(!showTerminal)} className="px-3 py-1.5 hover:bg-primary/20 hover:text-white text-left flex justify-between">
                     <span>Toggle Terminal</span>
-                    <span className="text-[9px] text-slate-500 font-mono">Ctrl+\`</span>
+                    <span className="text-[9px] text-slate-500 font-mono">Ctrl+`</span>
                   </button>
                 </div>
               )}
@@ -805,12 +968,12 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
         </div>
 
         {/* Display name of active workspace project center */}
-        <div className="text-slate-450 text-[10px] hidden md:block max-w-sm truncate">
-          {currentFile} — {rootFolderName} — Antigravity IDE
+        <div className="text-slate-400 text-[10px] hidden md:block max-w-xs truncate font-mono shrink-0">
+          {currentFile} — {rootFolderName}
         </div>
 
         {/* Sync & Share indicators on the right */}
-        <div className="flex items-center gap-2.5 text-slate-400">
+        <div className="flex items-center gap-2 text-slate-400 shrink-0 whitespace-nowrap">
           {/* Share / Broadcast Workspace Button */}
           <button
             onClick={() => {
@@ -819,16 +982,26 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
                 alert('📢 You are now presenting your Code Editor workspace to the room as a live screen share!')
               }
             }}
-            className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition active:scale-95 cursor-pointer"
+            className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition active:scale-95 cursor-pointer whitespace-nowrap shrink-0"
             title="Share & Present Code Editor workspace to all room participants as a live screen share"
           >
-            <span>📢 Share as Screen</span>
+            <span>📢 Share Screen</span>
+          </button>
+
+          {/* Download ZIP Button */}
+          <button
+            onClick={handleDownloadWorkspaceZip}
+            className="px-2.5 py-1 rounded-lg bg-sky-700 hover:bg-sky-600 text-white font-bold text-[10px] flex items-center gap-1 shadow transition active:scale-95 cursor-pointer whitespace-nowrap shrink-0"
+            title="Download full workspace project as a ZIP archive"
+          >
+            <Download className="w-3 h-3" />
+            <span>ZIP</span>
           </button>
 
           {/* Run Code Button */}
           <button
             onClick={runCode}
-            className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition active:scale-95 cursor-pointer"
+            className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition active:scale-95 cursor-pointer whitespace-nowrap shrink-0"
             title="Execute live JavaScript / HTML output in terminal"
           >
             <Play className="w-3 h-3 fill-current" />
@@ -842,14 +1015,14 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
                 editorRef.current.getAction('editor.action.formatDocument')?.run()
               }
             }}
-            className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 font-bold text-[10px] flex items-center gap-1 transition active:scale-95 cursor-pointer"
+            className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 font-bold text-[10px] flex items-center gap-1 transition active:scale-95 cursor-pointer whitespace-nowrap shrink-0"
             title="Format Document (Shift+Alt+F)"
           >
             <span>✨ Format</span>
           </button>
 
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] font-mono select-none">Language:</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] font-mono select-none">Lang:</span>
             <select 
               className="bg-slate-900 border border-white/10 rounded-md px-1.5 py-0.5 text-[10px] text-slate-300 font-mono focus:ring-0 cursor-pointer outline-none transition-all hover:bg-slate-800"
               value={activeFileInfo.language}
@@ -878,7 +1051,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
               <option value="rust">Rust</option>
             </select>
           </div>
-          <div className="flex items-center gap-1 text-[10px] text-slate-500 font-semibold select-none cursor-default" title="Auto Save Status">
+          <div className="flex items-center gap-1 text-[10px] text-slate-500 font-semibold select-none cursor-default shrink-0" title="Auto Save Status">
             <span className={`w-1.5 h-1.5 rounded-full ${autoSaveStatus === 'saved' ? 'bg-emerald-500' : 'bg-amber-500 animate-ping'}`} />
             <span className="hidden lg:inline">{autoSaveStatus === 'saved' ? 'Synced & Saved' : 'Saving...'}</span>
           </div>
@@ -892,6 +1065,8 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
             <ActivityBar 
               sidebarTab={sidebarTab}
               setSidebarTab={setSidebarTab}
+              showExplorer={showExplorer}
+              onToggleExplorer={() => setShowExplorer(!showExplorer)}
               onToggleAiSidebar={() => window.dispatchEvent(new CustomEvent('toggle_ai_sidebar'))}
             />
             <SidebarPane 
@@ -906,8 +1081,12 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
                 }
               }}
               onCreateFile={handleCreateFile}
+              onCreateFolder={handleCreateFolder}
               onDeleteFile={handleDeleteFile}
               onFolderUploadClick={handleFolderUploadClick}
+              onCloseExplorer={() => setShowExplorer(false)}
+              onDownloadFile={handleDownloadFile}
+              onDownloadWorkspaceZip={handleDownloadWorkspaceZip}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               replaceQuery={replaceQuery}
