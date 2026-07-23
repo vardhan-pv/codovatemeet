@@ -189,7 +189,7 @@ export default function RegisterPage() {
             </div>
 
             <Button type="submit" size="lg"
-              className="w-full h-13 btn-glow text-white font-bold rounded-xl text-base mt-2"
+              className="w-full h-13 btn-glow text-white font-bold rounded-full text-base mt-2"
               disabled={isLoading}>
               {isLoading ? (
                 <span className="flex items-center gap-2">

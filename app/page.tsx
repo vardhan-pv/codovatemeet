@@ -49,12 +49,12 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/login" className="hidden sm:inline-block">
-              <Button variant="ghost" className="font-medium text-muted-foreground hover:text-white hover:bg-white/5 rounded-lg">
+              <Button variant="ghost" className="font-medium text-muted-foreground hover:text-white hover:bg-white/5 rounded-full px-5">
                 Sign In
               </Button>
             </Link>
             <Link href="/register" className="hidden sm:inline-block">
-              <Button className="btn-glow text-white font-bold rounded-lg px-5">
+              <Button className="btn-glow text-white font-bold rounded-full px-6">
                 Start Building Free
               </Button>
             </Link>
@@ -63,7 +63,7 @@ export default function LandingPage() {
             <Button 
               variant="outline" 
               size="icon" 
-              className="md:hidden text-white ml-2 bg-white/5 border-white/10 hover:bg-white/10 rounded-lg h-9 w-9"
+              className="md:hidden text-white ml-2 bg-white/5 border-white/10 hover:bg-white/10 rounded-full h-9 w-9"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -79,12 +79,12 @@ export default function LandingPage() {
             <Link href="#workspace" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-muted-foreground hover:text-white py-2 px-4 rounded-lg hover:bg-white/5">Live Workspace</Link>
             <div className="h-px bg-white/10 my-2" />
             <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-              <Button variant="ghost" className="w-full justify-start text-base font-medium text-white hover:bg-white/5 rounded-lg">
+              <Button variant="ghost" className="w-full justify-start text-base font-medium text-white hover:bg-white/5 rounded-full">
                 Sign In
               </Button>
             </Link>
             <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-              <Button className="w-full btn-glow text-white font-bold rounded-lg">
+              <Button className="w-full btn-glow text-white font-bold rounded-full">
                 Start Building Free
               </Button>
             </Link>
@@ -104,6 +104,18 @@ export default function LandingPage() {
           initial="initial"
           animate="animate"
         >
+          {/* Announcement Banner */}
+          <motion.div 
+            variants={fadeInUp}
+            className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-slate-300 mb-8 backdrop-blur-md"
+          >
+            <span className="w-2 h-2 rounded-full bg-[#0B5CFF] animate-pulse" />
+            <span>AI-first note taking & development workspace.</span>
+            <Link href="#features" className="text-[#0B5CFF] hover:underline inline-flex items-center gap-1 font-semibold ml-1">
+              Explore features <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </motion.div>
+
           <motion.h1
             variants={fadeInUp}
             className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.05] tracking-tight mb-8"
@@ -121,19 +133,19 @@ export default function LandingPage() {
 
           <motion.p
             variants={fadeInUp}
-            className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-12"
+            className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-12"
           >
             Not just another video call. Codovate Meet is the ultimate collaboration workspace where engineering teams connect, communicate, and build side-by-side in real-time. Brainstorm ideas, solve complex problems, and maintain daily developer closeness.
           </motion.p>
 
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link href="/dashboard" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto h-14 px-10 rounded-xl text-base font-bold btn-glow text-white">
+              <Button size="lg" className="w-full sm:w-auto h-14 px-10 rounded-full text-base font-bold btn-glow text-white">
                 Launch Workspace <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link href="/join" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-10 rounded-xl text-base font-bold border-white/10 text-white bg-white/5 hover:bg-white/10 shadow-xl backdrop-blur-md transition-all">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-10 rounded-full text-base font-bold border-white/10 text-white bg-white/5 hover:bg-white/10 shadow-xl backdrop-blur-md transition-all">
                 <Play className="mr-2 h-4 w-4" /> Join a Session
               </Button>
             </Link>
@@ -147,9 +159,9 @@ export default function LandingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, type: "spring", bounce: 0.2 }}
         >
-          <div className="glass-card-dark p-2 blue-glow ring-1 ring-white/10">
+          <div className="glass-card-dark p-2 blue-glow ring-1 ring-white/10 rounded-[24px]">
             {/* Fake IDE Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-card rounded-t-xl border-b border-white/5">
+            <div className="flex items-center justify-between px-4 py-3 bg-card rounded-t-[22px] border-b border-white/5">
               <div className="flex items-center gap-2">
                 <div className="flex gap-1.5 mr-4">
                   <div className="w-3 h-3 rounded-full bg-red-500/80" />
@@ -164,14 +176,14 @@ export default function LandingPage() {
                   <div className="w-7 h-7 rounded-full border-2 border-background bg-primary flex items-center justify-center text-[10px] font-bold text-white">JD</div>
                   <div className="w-7 h-7 rounded-full border-2 border-background bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white">AK</div>
                 </div>
-                <Button size="sm" className="h-7 text-xs bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20">
+                <Button size="sm" className="h-7 text-xs bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-full">
                   <Play className="w-3 h-3 mr-1" fill="currentColor" /> Live
                 </Button>
               </div>
             </div>
             
             {/* Split View */}
-            <div className="grid grid-cols-12 gap-0 bg-card rounded-b-xl overflow-hidden h-[500px]">
+            <div className="grid grid-cols-12 gap-0 bg-card rounded-b-[22px] overflow-hidden h-[500px]">
               {/* Sidebar (Video + Chat) */}
               <div className="col-span-3 border-r border-white/5 flex flex-col bg-secondary">
                 <div className="p-3 grid grid-rows-2 gap-2 flex-1">
@@ -393,7 +405,7 @@ export default function LandingPage() {
                       <Terminal className="w-4 h-4 text-muted-foreground" />
                       <code className="text-xs text-slate-300">npm install next-auth @auth/prisma-adapter</code>
                     </div>
-                    <Button size="sm" className="w-full mt-3 h-8 text-xs bg-primary hover:bg-primary/90 text-white border-none">Execute Command</Button>
+                    <Button size="sm" className="w-full mt-3 h-8 text-xs bg-primary hover:bg-primary/90 text-white border-none rounded-full">Execute Command</Button>
                   </div>
                 </div>
               </div>
@@ -421,12 +433,12 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
             <Link href="/register" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto h-14 px-10 rounded-xl text-base font-bold btn-glow text-white border-none">
+              <Button size="lg" className="w-full sm:w-auto h-14 px-10 rounded-full text-base font-bold btn-glow text-white border-none">
                 Start Building Free
               </Button>
             </Link>
             <Link href="/login" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-10 rounded-xl text-base font-bold border-white/10 text-white bg-white/5 hover:bg-white/10 transition-all backdrop-blur-md">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-10 rounded-full text-base font-bold border-white/10 text-white bg-white/5 hover:bg-white/10 transition-all backdrop-blur-md">
                 Sign In to Workspace
               </Button>
             </Link>

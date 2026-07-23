@@ -39,34 +39,34 @@
 :root {
   color-scheme: dark;
 
-  --background: #08080a; /* Dark Zinc-950 base */
-  --foreground: #f4f4f5; /* Light Zinc-100 text */
+  --background: #04091e; /* High-contrast deep navy blue */
+  --foreground: #f8fafc; /* Crisp light gray/white text */
 
-  --card: #1e1e22; /* Opaque Zinc-900 Card Background - clearly separated */
-  --card-foreground: #f4f4f5;
+  --card: #0b1437; /* Navy blue card background */
+  --card-foreground: #f8fafc;
 
-  --popover: #1e1e22; /* Elevated Popover Container */
-  --popover-foreground: #f4f4f5;
+  --popover: #0b1437;
+  --popover-foreground: #f8fafc;
 
-  --primary: #2563EB; /* Electric Blue */
+  --primary: #0B5CFF; /* Zoom Vibrant Blue */
   --primary-foreground: #ffffff;
 
-  --secondary: #27272a; /* Zinc-800 Secondary Background */
+  --secondary: #101f52; /* Soft navy-blue secondary background */
   --secondary-foreground: #cbd5e1;
 
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa; /* Zinc-400 */
+  --muted: #101f52;
+  --muted-foreground: #94a3b8; /* Muted slate */
 
-  --accent: #f4f4f5; /* Zinc-100 Accent Highlight */
-  --accent-foreground: #1e1e22;
+  --accent: #f8fafc;
+  --accent-foreground: #0b1437;
 
-  --destructive: #ef4444; /* Danger */
+  --destructive: #ef4444;
 
-  --border: #3f3f46; /* Zinc-700 - Highly visible borders! */
-  --input: #2d2d30; /* Lighter Zinc input boxes - very visible inputs! */
-  --ring: #2563EB; /* Primary Action Blue Ring */
+  --border: #1d327d; /* Clear, visible navy-blue borders */
+  --input: #0b1437;
+  --ring: #0B5CFF;
   
-  --radius: 14px;
+  --radius: 9999px; /* Pill-shaped buttons by default */
 }
 
 @layer base {
@@ -85,52 +85,53 @@
 
 @layer components {
   .premium-card {
-    background: #1e1e22;
-    border: 1px solid #3f3f46; /* Visible border */
+    background: #0b1437;
+    border: 1px solid #1d327d;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-radius: 20px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .premium-card:hover {
-    background: #25252b;
-    border-color: #52525b;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
-    transform: translateY(-1px);
+    background: #101f52;
+    border-color: #0b5cff;
+    box-shadow: 0 8px 30px rgba(11, 92, 255, 0.15);
+    transform: translateY(-2px);
   }
 
   .glass-card-dark {
-    background: #1e1e22;
-    border: 1px solid #3f3f46;
+    background: #070e28/80;
+    border: 1px solid #1d327d;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-radius: 20px;
+    border-radius: 24px;
     box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
   }
 
   .glass-card {
-    background: #1e1e22;
-    border: 1px solid #3f3f46;
+    background: #0b1437/80;
+    border: 1px solid #1d327d;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-radius: 20px;
+    border-radius: 24px;
     padding: 1.5rem;
     box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
   }
 
   .btn-glow {
     position: relative;
-    background: #2563EB;
-    border-radius: 14px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    background: #0B5CFF;
+    border-radius: 9999px; /* Pill-shaped */
+    box-shadow: 0 4px 14px rgba(11, 92, 255, 0.3);
     font-weight: 600;
-    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .btn-glow:hover {
-    background: #1d4ed8;
+    background: #004fe6;
+    box-shadow: 0 6px 20px rgba(11, 92, 255, 0.4);
     transform: translateY(-1px);
   }
 

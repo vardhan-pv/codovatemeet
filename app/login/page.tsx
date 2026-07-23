@@ -203,9 +203,9 @@ export default function LoginPage() {
           </p>
           <div className="space-y-3">
             {['HD video conferencing', 'Real-time chat & screen share', 'Multi-factor authentication (MFA)'].map(f => (
-              <div key={f} className="flex items-center gap-3 text-blue-100/80 text-sm">
-                <div className="w-5 h-5 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
-                  <div className="w-2 h-2 rounded-full bg-white" />
+              <div key={f} className="flex items-center gap-3 text-[#cbd5e1] text-sm">
+                <div className="w-5 h-5 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
                 </div>
                 {f}
               </div>
@@ -264,7 +264,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 size="lg"
-                className="w-full h-13 btn-glow text-white font-bold rounded-xl text-base mt-2"
+                className="w-full h-13 btn-glow text-white font-bold rounded-full text-base mt-2"
                 disabled={isVerifying}
               >
                 {isVerifying ? 'Activating...' : 'Verify & Continue'}
@@ -312,7 +312,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 size="lg"
-                className="w-full h-13 btn-glow text-white font-bold rounded-xl text-base mt-2"
+                className="w-full h-13 btn-glow text-white font-bold rounded-full text-base mt-2"
                 disabled={isVerifying}
               >
                 {isVerifying ? 'Authenticating...' : 'Confirm & Sign In'}
@@ -375,7 +375,7 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full h-13 btn-glow text-white font-bold rounded-xl text-base mt-2"
+                  className="w-full h-13 btn-glow text-white font-bold rounded-full text-base mt-2"
                   disabled={isLoading}
                 >
                   {isLoading ? (
