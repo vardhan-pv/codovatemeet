@@ -73,15 +73,15 @@ export default function JoinMeetingPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-background to-blue-50/50 flex items-center justify-center">
+    <div className="relative min-h-screen overflow-hidden bg-background hero-gradient flex items-center justify-center">
       {/* Animated blobs */}
-      <GradientBlob className="top-0 left-0 w-96 h-96" variant="blue-cyan" />
-      <GradientBlob className="bottom-0 right-0 w-96 h-96" variant="cyan-blue" />
+      <GradientBlob className="top-0 left-0 w-96 h-96 opacity-30" variant="blue-cyan" />
+      <GradientBlob className="bottom-0 right-0 w-96 h-96 opacity-30" variant="cyan-blue" />
 
       {/* Back button */}
       <Link
         href="/"
-        className="absolute top-6 left-6 z-50 p-2.5 rounded-full bg-white border border-border shadow-sm hover:bg-slate-50 transition flex items-center justify-center text-foreground/75"
+        className="absolute top-6 left-6 z-50 p-2.5 rounded-full bg-card border border-border shadow-sm hover:bg-secondary transition flex items-center justify-center text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
       </Link>
@@ -92,27 +92,27 @@ export default function JoinMeetingPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <div className="bg-white border border-border rounded-2xl p-8 shadow-lg space-y-6">
+        <div className="bg-card border border-border rounded-3xl p-8 shadow-2xl space-y-6">
           <div className="space-y-1">
-            <h1 className="text-3xl font-black text-foreground tracking-tight">Join a Meeting</h1>
+            <h1 className="text-3xl font-black text-white tracking-tight">Join a Meeting</h1>
             <p className="text-muted-foreground text-sm">Enter meeting code and your name to join</p>
           </div>
 
           <form onSubmit={handleJoin} className="space-y-4">
             {joinError && (
-              <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl font-medium text-center flex items-center justify-center gap-2">
+              <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl font-medium text-center flex items-center justify-center gap-2">
                 <span>⚠</span> {joinError}
               </div>
             )}
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-foreground">
+              <label className="block text-sm font-semibold text-slate-300">
                 Your Name
               </label>
               <Input
                 type="text"
                 placeholder="Enter your name"
-                className="bg-white border-border focus:border-primary rounded-xl h-12 text-base"
+                className="bg-input border-border focus:border-primary rounded-xl h-12 text-base text-white"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
                 required
@@ -120,13 +120,13 @@ export default function JoinMeetingPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-foreground">
+              <label className="block text-sm font-semibold text-slate-300">
                 Meeting Code
               </label>
               <Input
                 type="text"
                 placeholder="CDV-XXXX-XXXX"
-                className="bg-white border-border focus:border-primary rounded-xl h-12 uppercase font-mono tracking-widest text-center text-lg font-bold"
+                className="bg-input border-border focus:border-primary rounded-xl h-12 uppercase font-mono tracking-widest text-center text-lg font-bold text-white"
                 value={meetingCode}
                 onChange={(e) => setMeetingCode(e.target.value.toUpperCase())}
                 required
@@ -136,7 +136,7 @@ export default function JoinMeetingPage() {
             <Button
               type="submit"
               size="lg"
-              className="w-full h-12 btn-glow text-white font-bold rounded-xl mt-2"
+              className="w-full h-12 btn-glow text-white font-bold rounded-full mt-2 border-none"
               disabled={isLoading}
             >
               {isLoading ? 'Joining...' : (

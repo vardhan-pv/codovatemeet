@@ -3172,7 +3172,7 @@ function RoomPageContent() {
                     <p className={`text-xs inline-block px-3 py-1.5 rounded-[20px] max-w-[85%] break-words shadow-sm ${
                       isMe 
                         ? 'bg-primary text-white rounded-tr-none' 
-                        : 'bg-white text-slate-900 rounded-tl-none border border-slate-200'
+                        : 'bg-secondary text-slate-200 rounded-tl-none border border-border'
                     }`}>
                       {displayedText}
                     </p>
@@ -4329,7 +4329,7 @@ function RoomPageContent() {
                       </div>
                       <button 
                         onClick={() => setPresentedWorkspaceLayout('grid')}
-                        className="bg-white text-indigo-700 text-xs px-3 py-1.5 rounded-lg font-extrabold hover:bg-indigo-50 shadow transition-all flex items-center gap-1 cursor-pointer"
+                        className="bg-white text-indigo-700 text-xs px-3.5 py-1.5 rounded-full font-extrabold hover:bg-indigo-50 shadow transition-all flex items-center gap-1 cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" /> View Presentation
                       </button>

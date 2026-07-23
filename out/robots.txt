@@ -1,0 +1,11 @@
+User-Agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /join
+Disallow: /dashboard
+Disallow: /room
+Disallow: /settings
+Disallow: /api/
+
+Sitemap: https://meet.codovatesolutions.in/sitemap.xml
