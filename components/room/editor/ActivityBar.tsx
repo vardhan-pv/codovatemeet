@@ -29,9 +29,13 @@ export function ActivityBar({
         )}
         <button 
           onClick={() => {
-            setSidebarTab('explorer')
-            if (!showExplorer && onToggleExplorer) {
-              onToggleExplorer()
+            if (sidebarTab === 'explorer' && showExplorer) {
+              if (onToggleExplorer) onToggleExplorer()
+            } else {
+              setSidebarTab('explorer')
+              if (!showExplorer && onToggleExplorer) {
+                onToggleExplorer()
+              }
             }
           }}
           className={`p-2 rounded-lg transition-all ${
@@ -52,9 +56,13 @@ export function ActivityBar({
         )}
         <button 
           onClick={() => {
-            setSidebarTab('search')
-            if (!showExplorer && onToggleExplorer) {
-              onToggleExplorer()
+            if (sidebarTab === 'search' && showExplorer) {
+              if (onToggleExplorer) onToggleExplorer()
+            } else {
+              setSidebarTab('search')
+              if (!showExplorer && onToggleExplorer) {
+                onToggleExplorer()
+              }
             }
           }}
           className={`p-2 rounded-lg transition-all ${
@@ -75,9 +83,13 @@ export function ActivityBar({
         )}
         <button 
           onClick={() => {
-            setSidebarTab('comments')
-            if (!showExplorer && onToggleExplorer) {
-              onToggleExplorer()
+            if (sidebarTab === 'comments' && showExplorer) {
+              if (onToggleExplorer) onToggleExplorer()
+            } else {
+              setSidebarTab('comments')
+              if (!showExplorer && onToggleExplorer) {
+                onToggleExplorer()
+              }
             }
           }}
           className={`p-2 rounded-lg transition-all ${

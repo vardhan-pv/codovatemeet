@@ -4244,7 +4244,7 @@ function RoomPageContent() {
         }`}>
           
           {/* Left panel: Active workspace if set */}
-          <div className={`h-full relative transition-all ${activeWorkspace === 'none' ? 'hidden' : isWorkspaceMaximized ? 'flex-1 min-w-0' : 'hidden md:block w-full md:w-80 shrink-0'}`}>
+          <div className={`h-full relative transition-all z-20 ${activeWorkspace === 'none' ? 'hidden' : isWorkspaceMaximized ? 'flex-1 min-w-0' : 'hidden md:block w-full md:w-80 shrink-0'}`}>
             <div className={activeWorkspace === 'code' ? 'h-full w-full' : 'hidden'}>
               <CodeEditor code={activeCode} onCodeChange={setActiveCode} room={room} lobbyName={lobbyName} sendData={sendData} readOnly={userRoles[lobbyName] === 'Guest' || (adminSettings.isCodeLocked && !isHostUser)} />
             </div>
@@ -4263,7 +4263,7 @@ function RoomPageContent() {
           </div>
 
           {/* Right panel: Video grid */}
-          <div className={`h-full overflow-y-auto transition-all ${isWorkspaceMaximized ? 'hidden' : 'flex-1'}`}>
+          <div className={`h-full overflow-y-auto transition-all z-10 ${isWorkspaceMaximized ? 'hidden' : 'flex-1'}`}>
             {statusText ? (
               <div className="h-full flex flex-col items-center justify-center gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
