@@ -115,39 +115,52 @@ interface CodeEditorProps {
   readOnly?: boolean
 }
 
-export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, readOnly = false }: CodeEditorProps) {
-  // Parse serialized files JSON or fallback to default structure
-  let files: { [filename: string]: { code: string; language: string } } = {
-    'index.html': { 
-      code: `<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="utf-8">\n  <title>Codovate Preview</title>\n</head>\n<body>\n  <h1>⚡ Live Preview Active!</h1>\n  <p>Edit index.html, style.css, or script.js in real-time.</p>\n  <button onclick="greet()">Click Me</button>\n</body>\n</html>`, 
-      language: 'html' 
-    },
-    'style.css': {
-      code: `body {\n  background: #0f172a;\n  color: #f8fafc;\n  font-family: system-ui, sans-serif;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 90vh;\n  margin: 0;\n}\nh1 {\n  color: #38bdf8;\n  margin-bottom: 8px;\n}\nbutton {\n  background: #38bdf8;\n  color: #0f172a;\n  border: none;\n  padding: 8px 16px;\n  border-radius: 8px;\n  font-weight: bold;\n  cursor: pointer;\n  margin-top: 16px;\n  transition: opacity 0.2s;\n}\nbutton:hover {\n  opacity: 0.9;\n}`,
-      language: 'css'
-    },
-    'script.js': {
-      code: `function greet() {\n  alert("Hello from script.js inside VS Code sandbox!");\n}`,
-      language: 'javascript'
-    }
+const defaultFiles = {
+  'index.html': {
+    code: `<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="utf-8">\n  <title>Codovate Preview</title>\n</head>\n<body>\n  <h1>⚡ Live Preview Active!</h1>\n  <p>Edit index.html, style.css, or script.js in real-time.</p>\n  <button onclick="greet()">Click Me</button>\n</body>\n</html>`,
+    language: 'html'
+  },
+  'style.css': {
+    code: `body {\n  background: #0f172a;\n  color: #f8fafc;\n  font-family: system-ui, sans-serif;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 90vh;\n  margin: 0;\n}\nh1 {\n  color: #38bdf8;\n  margin-bottom: 8px;\n}\nbutton {\n  background: #38bdf8;\n  color: #0f172a;\n  border: none;\n  padding: 8px 16px;\n  border-radius: 8px;\n  font-weight: bold;\n  cursor: pointer;\n  margin-top: 16px;\n  transition: opacity 0.2s;\n}\nbutton:hover {\n  opacity: 0.9;\n}`,
+    language: 'css'
+  },
+  'script.js': {
+    code: `function greet() {\n  alert("Hello from script.js inside VS Code sandbox!");\n}`,
+    language: 'javascript'
   }
-  
+}
+
+function parseFilesFromCode(code: string): { [filename: string]: { code: string; language: string } } {
+  let parsed: { [filename: string]: { code: string; language: string } } = { ...defaultFiles }
   try {
     if (code && code.trim().startsWith('{')) {
-      files = JSON.parse(code)
+      parsed = JSON.parse(code)
     } else if (code && code !== '// Write live collaborative code here\nconsole.log("Welcome developers!");') {
-      files = {
+      parsed = {
         'main.js': { code: code, language: 'javascript' }
       }
     }
   } catch (e) {
     // fallback
   }
+  return parsed
+}
 
-  const fileKeys = Object.keys(files)
+export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, readOnly = false }: CodeEditorProps) {
+  const [localFiles, setLocalFiles] = useState<{ [filename: string]: { code: string; language: string } }>(() => parseFilesFromCode(code))
+  const lastSentCodeRef = useRef<string>('')
+
+  // Sync from parent code prop when it changes from the outside
+  useEffect(() => {
+    if (code && code !== lastSentCodeRef.current) {
+      setLocalFiles(parseFilesFromCode(code))
+    }
+  }, [code])
+
+  const fileKeys = Object.keys(localFiles)
   const [activeFile, setActiveFile] = useState(fileKeys[0] || 'index.html')
   const currentFile = fileKeys.includes(activeFile) ? activeFile : (fileKeys[0] || 'index.html')
-  const activeFileInfo = files[currentFile] || { code: '', language: 'javascript' }
+  const activeFileInfo = localFiles[currentFile] || { code: '', language: 'javascript' }
 
   // Toggle Live Preview and Terminal to FALSE by default (VS Code clean mode)
   const [showExplorer, setShowExplorer] = useState(true)
@@ -187,6 +200,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
   const editorRef = useRef<any>(null)
   const xtermRef = useRef<XTerm | null>(null)
   const folderInputRef = useRef<HTMLInputElement>(null)
+  const lastKeyRef = useRef<{ key: string; time: number }>({ key: '', time: 0 })
 
   // Retrieve saved github credentials on mount
   useEffect(() => {
@@ -209,7 +223,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
 
   // Auto-generate preview content
   useEffect(() => {
-    const htmlFile = files['index.html'] || Object.values(files).find(f => f.language === 'html')
+    const htmlFile = localFiles['index.html'] || Object.values(localFiles).find(f => f.language === 'html')
     if (!htmlFile) {
       setPreviewContent(`
         <div style="background: #09090b; color: #71717a; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 20px;">
@@ -226,9 +240,9 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
 
     // Inject CSS
     let cssStyles = ''
-    Object.keys(files).forEach(name => {
-      if (files[name].language === 'css') {
-        cssStyles += `\n/* ${name} */\n${files[name].code}\n`
+    Object.keys(localFiles).forEach(name => {
+      if (localFiles[name].language === 'css') {
+        cssStyles += `\n/* ${name} */\n${localFiles[name].code}\n`
       }
     })
     if (cssStyles) {
@@ -240,9 +254,9 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
 
     // Inject JS
     let jsScripts = ''
-    Object.keys(files).forEach(name => {
-      if (files[name].language === 'javascript' && name !== 'main.js') {
-        jsScripts += `\n// ${name}\n${files[name].code}\n`
+    Object.keys(localFiles).forEach(name => {
+      if (localFiles[name].language === 'javascript' && name !== 'main.js') {
+        jsScripts += `\n// ${name}\n${localFiles[name].code}\n`
       }
     })
     if (jsScripts) {
@@ -253,7 +267,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     }
 
     setPreviewContent(compiledHtml)
-  }, [code, files])
+  }, [code, localFiles])
 
   // Track & Render Peer Cursors
   useEffect(() => {
@@ -331,15 +345,18 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     if (value !== undefined) {
       setAutoSaveStatus('saving')
       const updatedFiles = {
-        ...files,
+        ...localFiles,
         [currentFile]: {
-          ...files[currentFile],
+          ...localFiles[currentFile],
           code: value
         }
       }
-      onCodeChange(JSON.stringify(updatedFiles))
+      setLocalFiles(updatedFiles)
+      const jsonStr = JSON.stringify(updatedFiles)
+      lastSentCodeRef.current = jsonStr
+      onCodeChange(jsonStr)
       if (sendData) {
-        sendData('CODE_EDIT', { code: JSON.stringify(updatedFiles) })
+        sendData('CODE_EDIT', { code: jsonStr })
       }
       setTimeout(() => setAutoSaveStatus('saved'), 600)
     }
@@ -350,12 +367,13 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     if (readOnly && code) {
       try {
         const parsed = JSON.parse(code)
-        if (JSON.stringify(parsed) !== JSON.stringify(files)) {
+        if (JSON.stringify(parsed) !== JSON.stringify(localFiles)) {
           setActiveFile(Object.keys(parsed)[0] || 'index.html')
+          setLocalFiles(parsed)
         }
       } catch (e) {}
     }
-  }, [code, readOnly])
+  }, [code, readOnly, localFiles])
 
   // Listen for terminal sync command from admin
   useEffect(() => {
@@ -411,7 +429,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
   const handleCreateFile = (defaultPath?: string) => {
     const filename = prompt("Enter new filename (e.g. index.py, style.css, app.ts):", defaultPath || '')
     if (!filename) return
-    if (files[filename]) {
+    if (localFiles[filename]) {
       alert("File already exists!")
       return
     }
@@ -436,16 +454,19 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
           : `console.log("Hello from ${filename}!");`
 
     const updatedFiles = {
-      ...files,
+      ...localFiles,
       [filename]: {
         code: newFileCode,
         language: fileLang
       }
     }
     setActiveFile(filename)
-    onCodeChange(JSON.stringify(updatedFiles))
+    setLocalFiles(updatedFiles)
+    const jsonStr = JSON.stringify(updatedFiles)
+    lastSentCodeRef.current = jsonStr
+    onCodeChange(jsonStr)
     if (sendData) {
-      sendData('CODE_EDIT', { code: JSON.stringify(updatedFiles) })
+      sendData('CODE_EDIT', { code: jsonStr })
     }
   }
 
@@ -456,21 +477,24 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     if (!path.endsWith('/')) path += '/'
     const dummyFile = `${path}readme.md`
     const updatedFiles = {
-      ...files,
+      ...localFiles,
       [dummyFile]: {
         code: `# ${folderName.split('/').filter(Boolean).pop() || 'Folder'}\n\nFolder created in workspace.`,
         language: 'markdown'
       }
     }
     setActiveFile(dummyFile)
-    onCodeChange(JSON.stringify(updatedFiles))
+    setLocalFiles(updatedFiles)
+    const jsonStr = JSON.stringify(updatedFiles)
+    lastSentCodeRef.current = jsonStr
+    onCodeChange(jsonStr)
     if (sendData) {
-      sendData('CODE_EDIT', { code: JSON.stringify(updatedFiles) })
+      sendData('CODE_EDIT', { code: jsonStr })
     }
   }
 
   const handleDownloadFile = (filename: string) => {
-    const f = files[filename]
+    const f = localFiles[filename]
     if (!f) return
     const blob = new Blob([f.code], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
@@ -485,7 +509,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
 
   const handleDownloadWorkspaceZip = () => {
     try {
-      const zipBlob = createZipBlob(files)
+      const zipBlob = createZipBlob(localFiles)
       const url = URL.createObjectURL(zipBlob)
       const a = document.createElement('a')
       a.href = url
@@ -499,26 +523,105 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     }
   }
 
-  // Keyboard shortcut Ctrl+B / Cmd+B to toggle Explorer
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      const isCtrlOrMeta = e.ctrlKey || e.metaKey
+      const key = e.key.toLowerCase()
+
+      // Ctrl/Cmd + B: Toggle Explorer
+      if (isCtrlOrMeta && key === 'b') {
         e.preventDefault()
         setShowExplorer(prev => !prev)
+      }
+      
+      // Ctrl/Cmd + N: New File
+      else if (isCtrlOrMeta && key === 'n') {
+        e.preventDefault()
+        handleCreateFile('')
+      }
+
+      // Ctrl/Cmd + S: Save
+      else if (isCtrlOrMeta && key === 's') {
+        e.preventDefault()
+        setAutoSaveStatus('saved')
+      }
+
+      // Ctrl/Cmd + F: Find & Replace
+      else if (isCtrlOrMeta && key === 'f') {
+        e.preventDefault()
+        setSidebarTab('search')
+        setShowExplorer(true)
+      }
+
+      // Ctrl/Cmd + Shift + F: Search Files
+      else if (isCtrlOrMeta && e.shiftKey && key === 'f') {
+        e.preventDefault()
+        setSidebarTab('search')
+        setShowExplorer(true)
+      }
+
+      // Ctrl/Cmd + ` (backtick): Toggle Terminal
+      else if (isCtrlOrMeta && e.key === '`') {
+        e.preventDefault()
+        setShowTerminal(prev => !prev)
+      }
+
+      // F5: Run Without Debugging
+      else if (e.key === 'F5') {
+        e.preventDefault()
+        runCode()
+      }
+
+      // F11: Toggle Full Screen
+      else if (e.key === 'F11') {
+        e.preventDefault()
+        setIsFullScreen(prev => !prev)
+      }
+
+      // Shift + Alt + F: Format Document
+      else if (e.shiftKey && e.altKey && key === 'f') {
+        e.preventDefault()
+        if (editorRef.current) {
+          editorRef.current.getAction('editor.action.formatDocument')?.run()
+        }
+      }
+
+      // Ctrl+O or Ctrl+K followed by O: Open Folder
+      else if (isCtrlOrMeta && key === 'o') {
+        e.preventDefault()
+        handleFolderUploadClick()
+      }
+
+      // Chord Ctrl+K then O
+      const now = Date.now()
+      const isChord = lastKeyRef.current.key === 'k' && (now - lastKeyRef.current.time < 1000)
+      if (isChord && key === 'o') {
+        e.preventDefault()
+        handleFolderUploadClick()
+      }
+
+      if (isCtrlOrMeta && key === 'k') {
+        lastKeyRef.current = { key: 'k', time: now }
+      } else {
+        lastKeyRef.current = { key: '', time: 0 }
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [localFiles, currentFile, rootFolderName, activeFileInfo, editorRef])
 
   const handleDeleteFile = (fname: string) => {
-    const updatedFiles = { ...files }
+    const updatedFiles = { ...localFiles }
     delete updatedFiles[fname]
     const keys = Object.keys(updatedFiles)
     setActiveFile(keys[0] || 'index.html')
-    onCodeChange(JSON.stringify(updatedFiles))
+    setLocalFiles(updatedFiles)
+    const jsonStr = JSON.stringify(updatedFiles)
+    lastSentCodeRef.current = jsonStr
+    onCodeChange(jsonStr)
     if (sendData) {
-      sendData('CODE_EDIT', { code: JSON.stringify(updatedFiles) })
+      sendData('CODE_EDIT', { code: jsonStr })
     }
   }
 
@@ -587,9 +690,12 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     // COMPLETE OVERWRITE: Clean out existing duplicates or placeholders on new folder upload
     const firstUploaded = Object.keys(newFiles)[0]
     setActiveFile(firstUploaded)
-    onCodeChange(JSON.stringify(newFiles))
+    setLocalFiles(newFiles)
+    const jsonStr = JSON.stringify(newFiles)
+    lastSentCodeRef.current = jsonStr
+    onCodeChange(jsonStr)
     if (sendData) {
-      sendData('CODE_EDIT', { code: JSON.stringify(newFiles) })
+      sendData('CODE_EDIT', { code: jsonStr })
     }
   }
 
@@ -634,7 +740,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     setGithubErrorText('')
     setGithubSuccessUrl('')
 
-    const fileKeysToPush = Object.keys(files)
+    const fileKeysToPush = Object.keys(localFiles)
     const headers: HeadersInit = {
       'Authorization': `token ${githubToken}`,
       'Accept': 'application/vnd.github.v3+json',
@@ -644,7 +750,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
     try {
       for (let i = 0; i < fileKeysToPush.length; i++) {
         const fname = fileKeysToPush[i]
-        const fileContent = files[fname].code
+        const fileContent = localFiles[fname].code
         const base64Content = btoa(unescape(encodeURIComponent(fileContent)))
 
         setPushProgress(`Staging file: ${fname} (${i + 1}/${fileKeysToPush.length})...`)
@@ -698,8 +804,8 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
   const getSearchResults = () => {
     if (!searchQuery.trim()) return []
     const results: { filename: string; line: number; text: string }[] = []
-    Object.keys(files).forEach(filename => {
-      const lines = files[filename].code.split('\n')
+    Object.keys(localFiles).forEach(filename => {
+      const lines = localFiles[filename].code.split('\n')
       lines.forEach((lineText, idx) => {
         if (lineText.toLowerCase().includes(searchQuery.toLowerCase())) {
           results.push({
@@ -715,7 +821,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
 
   const handleReplaceAll = () => {
     if (!searchQuery.trim()) return
-    const updatedFiles = { ...files }
+    const updatedFiles = { ...localFiles }
     let changed = false
     Object.keys(updatedFiles).forEach(filename => {
       const originalCode = updatedFiles[filename].code
@@ -725,9 +831,12 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
       }
     })
     if (changed) {
-      onCodeChange(JSON.stringify(updatedFiles))
+      setLocalFiles(updatedFiles)
+      const jsonStr = JSON.stringify(updatedFiles)
+      lastSentCodeRef.current = jsonStr
+      onCodeChange(jsonStr)
       if (sendData) {
-        sendData('CODE_EDIT', { code: JSON.stringify(updatedFiles) })
+        sendData('CODE_EDIT', { code: jsonStr })
       }
       alert(`Replaced all occurrences of "${searchQuery}" with "${replaceQuery}"!`)
       setSearchQuery('')
@@ -1028,15 +1137,18 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
               value={activeFileInfo.language}
               onChange={(e) => {
                 const updatedFiles = {
-                  ...files,
+                  ...localFiles,
                   [currentFile]: {
-                    ...files[currentFile],
+                    ...localFiles[currentFile],
                     language: e.target.value
                   }
                 }
-                onCodeChange(JSON.stringify(updatedFiles))
+                setLocalFiles(updatedFiles)
+                const jsonStr = JSON.stringify(updatedFiles)
+                lastSentCodeRef.current = jsonStr
+                onCodeChange(jsonStr)
                 if (sendData) {
-                  sendData('CODE_EDIT', { code: JSON.stringify(updatedFiles) })
+                  sendData('CODE_EDIT', { code: jsonStr })
                 }
               }}
             >
@@ -1072,7 +1184,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
             <SidebarPane 
               sidebarTab={sidebarTab}
               fileKeys={fileKeys}
-              files={files}
+              files={localFiles}
               currentFile={currentFile}
               onSelectFile={(fname) => {
                 setActiveFile(fname)
@@ -1106,7 +1218,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
         <div className="flex-grow flex flex-col min-w-0 h-full relative">
           <TabBar 
             fileKeys={fileKeys}
-            files={files}
+            files={localFiles}
             currentFile={currentFile}
             onSelectFile={(fname) => {
               setActiveFile(fname)
