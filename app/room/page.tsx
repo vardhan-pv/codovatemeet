@@ -2205,7 +2205,19 @@ function RoomPageContent() {
           return
         }
         if (parsed.type === 'WHITEBOARD_DRAW' || parsed.type === 'WHITEBOARD_CLEAR' || parsed.type === 'CODE_EDIT') {
-          // Ignored. Workspaces are local unless presented.
+          // If the message is from the current presenter, update the presented state
+          setPresentedWorkspace(prev => {
+            if (prev && prev.presenterSid === senderSid) {
+              if (parsed.type === 'CODE_EDIT' && prev.type === 'code') {
+                return { ...prev, state: parsed.code }
+              }
+              if ((parsed.type === 'WHITEBOARD_DRAW' || parsed.type === 'WHITEBOARD_CLEAR') && prev.type === 'whiteboard') {
+                return { ...prev, state: parsed.state || prev.state }
+              }
+            }
+            return prev
+          })
+          // Local workspaces are not automatically synced unless presented
           return
         }
         if (parsed.type === 'PRESENT_WORKSPACE') {
@@ -4232,7 +4244,7 @@ function RoomPageContent() {
         }`}>
           
           {/* Left panel: Active workspace if set */}
-          <div className={`flex-1 min-w-0 h-full relative ${activeWorkspace === 'none' ? 'hidden' : ''}`}>
+          <div className={`h-full relative transition-all ${activeWorkspace === 'none' ? 'hidden' : isWorkspaceMaximized ? 'flex-1 min-w-0' : 'hidden md:block w-full md:w-80 shrink-0'}`}>
             <div className={activeWorkspace === 'code' ? 'h-full w-full' : 'hidden'}>
               <CodeEditor code={activeCode} onCodeChange={setActiveCode} room={room} lobbyName={lobbyName} sendData={sendData} readOnly={userRoles[lobbyName] === 'Guest' || (adminSettings.isCodeLocked && !isHostUser)} />
             </div>
@@ -4251,7 +4263,7 @@ function RoomPageContent() {
           </div>
 
           {/* Right panel: Video grid */}
-          <div className={`h-full overflow-y-auto transition-all ${isWorkspaceMaximized ? 'hidden' : activeWorkspace !== 'none' ? 'hidden md:block w-full md:w-80 shrink-0' : 'flex-1'}`}>
+          <div className={`h-full overflow-y-auto transition-all ${isWorkspaceMaximized ? 'hidden' : 'flex-1'}`}>
             {statusText ? (
               <div className="h-full flex flex-col items-center justify-center gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />

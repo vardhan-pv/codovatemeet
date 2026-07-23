@@ -41,8 +41,24 @@ export function Whiteboard({ room, lobbyName, sendData, readOnly = false, active
       if (!readOnly) {
         ;(window as any).codovateWhiteboardEditor = editor
       }
+      
+      // If we are not readOnly and we have a sendData function, 
+      // we should listen for local changes and broadcast them.
+      if (!readOnly && sendData) {
+        const cleanup = editor.store.listen((entry: any) => {
+          if (entry.source === 'user') {
+            try {
+              const snapshot = JSON.stringify(editor.store.getSnapshot())
+              sendData('WHITEBOARD_DRAW', { state: snapshot })
+            } catch (e) {
+              // ignore serialization errors
+            }
+          }
+        }, { source: 'user', scope: 'all' })
+        return () => cleanup()
+      }
     }
-  }, [editor, readOnly])
+  }, [editor, readOnly, sendData])
 
   useEffect(() => {
     if (editor && presentedState && readOnly) {

@@ -905,7 +905,7 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
       />
 
       {/* ── VS Code Style Header Menu Bar (Single Line Non-wrapping Layout) ── */}
-      <div className="h-10 bg-[#1c1c1e] border-b border-white/10 flex items-center justify-between px-3 shrink-0 shadow-md select-none text-[11px] font-sans overflow-x-auto whitespace-nowrap scrollbar-none gap-2">
+      <div className="h-10 bg-[#1c1c1e] border-b border-white/10 flex items-center justify-between px-3 shrink-0 shadow-md select-none text-[11px] font-sans overflow-visible whitespace-nowrap gap-2">
         <div className="flex items-center gap-1 shrink-0">
           {/* Logo icon */}
           <div className="w-4 h-4 rounded-sm bg-primary/20 flex items-center justify-center mr-2 text-[9px] font-bold text-primary">A</div>
@@ -1172,15 +1172,15 @@ export function CodeEditor({ code, onCodeChange, room, lobbyName, sendData, read
       
       <div className="flex-grow flex flex-row min-h-0 relative">
         {/* Activity Bar & Sidebar pane Wrapper */}
-        {showExplorer && (
-          <div className="flex h-full shrink-0 border-r border-white/5">
-            <ActivityBar 
-              sidebarTab={sidebarTab}
-              setSidebarTab={setSidebarTab}
-              showExplorer={showExplorer}
-              onToggleExplorer={() => setShowExplorer(!showExplorer)}
-              onToggleAiSidebar={() => window.dispatchEvent(new CustomEvent('toggle_ai_sidebar'))}
-            />
+        <div className="flex h-full shrink-0 border-r border-white/5">
+          <ActivityBar 
+            sidebarTab={sidebarTab}
+            setSidebarTab={setSidebarTab}
+            showExplorer={showExplorer}
+            onToggleExplorer={() => setShowExplorer(!showExplorer)}
+            onToggleAiSidebar={() => window.dispatchEvent(new CustomEvent('toggle_ai_sidebar'))}
+          />
+          {showExplorer && (
             <SidebarPane 
               sidebarTab={sidebarTab}
               fileKeys={fileKeys}
