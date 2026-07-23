@@ -14,12 +14,27 @@ export default function RegisterPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [agreeTerms, setAgreeTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const { register } = useAuth()
 
+  const handleGithubLogin = () => {
+    const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID
+    if (!clientId) {
+      alert('GitHub Client ID is not configured.')
+      return
+    }
+    const redirectUri = `${window.location.origin}/login`
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!agreeTerms) {
+      setFormError('You must agree to the Terms of Service and Privacy Policy.')
+      return
+    }
     setIsLoading(true)
     setFormError(null)
     try {
@@ -188,37 +203,58 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <Button type="submit" size="lg"
-              className="w-full h-13 btn-glow text-white font-bold rounded-full text-base mt-2"
-              disabled={isLoading}>
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Creating your account...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">Create Free Account <ArrowRight className="h-4 w-4" /></span>
-              )}
-            </Button>
+             <div className="flex items-start gap-2 pt-1 select-none">
+               <input
+                 type="checkbox"
+                 id="agreeTerms"
+                 checked={agreeTerms}
+                 onChange={(e) => setAgreeTerms(e.target.checked)}
+                 className="w-4 h-4 rounded border-border text-primary bg-input mt-0.5 cursor-pointer"
+                 required
+               />
+               <label htmlFor="agreeTerms" className="text-xs text-muted-foreground leading-tight cursor-pointer">
+                 I agree to the <Link href="/terms" className="text-primary hover:underline font-bold">Terms of Service</Link> and <Link href="/privacy" className="text-primary hover:underline font-bold">Privacy Policy</Link>
+               </label>
+             </div>
+
+             <Button type="submit" size="lg"
+               className="w-full h-13 btn-glow text-white font-bold rounded-full text-base mt-2"
+               disabled={isLoading}>
+               {isLoading ? (
+                 <span className="flex items-center gap-2">
+                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                   Creating your account...
+                 </span>
+               ) : (
+                 <span className="flex items-center gap-2">Create Free Account <ArrowRight className="h-4 w-4" /></span>
+               )}
+             </Button>
           </form>
 
           <div className="mt-8 flex items-center gap-4">
             <div className="h-px bg-border flex-1" />
-            <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold">OR</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold font-sans">OR</span>
             <div className="h-px bg-border flex-1" />
           </div>
 
-          <div className="mt-6 flex flex-col items-center gap-3">
+          <div className="mt-6 flex flex-col items-center gap-3 w-full">
             <div id="google-signin-btn" className="w-full max-w-sm flex justify-center"></div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGithubLogin}
+              className="w-full max-w-sm h-11 rounded-full border border-border bg-card text-white font-extrabold text-sm flex items-center justify-center gap-2 hover:bg-secondary transition-all"
+            >
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.11.82-.26.82-.577v-2.234c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.43.372.82 1.102.82 2.222v3.293c0 .319.22.694.825.576C20.565 21.795 24 17.3 24 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+              <span>Continue with GitHub</span>
+            </Button>
             <Script
               src="https://accounts.google.com/gsi/client"
               onLoad={initializeGoogle}
             />
           </div>
-
-          <p className="text-xs text-muted-foreground text-center mt-6">
-            By creating an account, you agree to our terms and privacy policy.
-          </p>
         </motion.div>
       </div>
     </div>

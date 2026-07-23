@@ -489,6 +489,20 @@ export function AdminCommandCenter({
                             <Button size="sm" variant="ghost" onClick={() => handleToggleRole(id, userRoles[id] || 'participant')} title={isCoHost ? "Demote from Co-Host" : "Make Co-Host"} className="h-8 px-2 text-[10px] text-indigo-400 hover:bg-indigo-500/10">
                               {isCoHost ? 'Demote' : '+ CoHost'}
                             </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to transfer Host control to ${displayName}? You will no longer be the meeting Host.`)) {
+                                  broadcastAdminCommand('TRANSFER_HOST', 'ALL', id)
+                                  onClose()
+                                }
+                              }}
+                              title="Transfer Host"
+                              className="h-8 px-2 text-[10px] text-amber-500 hover:bg-amber-500/10"
+                            >
+                              + Host
+                            </Button>
                             <Button size="sm" variant="ghost" onClick={() => handleKickUser(id)} title="Remove Participant" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10">
                               <UserMinus className="h-3.5 w-3.5" />
                             </Button>

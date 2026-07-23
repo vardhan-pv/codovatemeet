@@ -38,6 +38,9 @@ export const useAuth = create<AuthState>((set, get) => ({
     try {
       const data = await authService.login(email, password)
       localStorage.setItem('token', data.token)
+      if (data.refreshToken) {
+        localStorage.setItem('refreshToken', data.refreshToken)
+      }
       set({ token: data.token, user: data.user, loading: false })
       return true
     } catch (err: any) {
@@ -62,6 +65,7 @@ export const useAuth = create<AuthState>((set, get) => ({
 
   logout: () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
     set({ token: null, user: null, error: null })
   },
 
@@ -76,6 +80,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     } catch (err) {
       console.error('Failed to load user profile, logging out:', err)
       localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
       set({ token: null, user: null, loading: false })
     }
   }

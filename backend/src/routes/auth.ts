@@ -37,6 +37,14 @@ export function authenticateToken(req: AuthRequest, res: Response, next: NextFun
   })
 }
 
+export async function signUserTokens(user: any) {
+  const payload = { id: user.id, email: user.email, name: user.name, role: user.role || 'user' }
+  const token = jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '15m' })
+  const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret', { expiresIn: '7d' })
+  await query('UPDATE users SET refresh_token = $1 WHERE id = $2', [refreshToken, user.id])
+  return { token, refreshToken }
+}
+
 // 1. Signup / Register Route
 router.post('/register', async (req: Request, res: Response) => {
   try {
@@ -222,11 +230,7 @@ router.post('/login', async (req: Request, res: Response) => {
       })
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name, role: user.role || 'user' },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '7d' }
-    )
+    const { token, refreshToken } = await signUserTokens(user)
 
     await query(
       'INSERT INTO security_logs (id, event_type, user_id, details) VALUES ($1, $2, $3, $4)',
@@ -235,6 +239,7 @@ router.post('/login', async (req: Request, res: Response) => {
 
     return res.status(200).json({
       token,
+      refreshToken,
       user: {
         id: user.id,
         name: user.name,
@@ -310,11 +315,7 @@ router.post('/auth/google', async (req: Request, res: Response) => {
 
     await query('UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = $1', [user.id])
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name, role: user.role || 'user' },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '7d' }
-    )
+    const { token, refreshToken } = await signUserTokens(user)
 
     await query(
       'INSERT INTO security_logs (id, event_type, user_id, details) VALUES ($1, $2, $3, $4)',
@@ -328,6 +329,7 @@ router.post('/auth/google', async (req: Request, res: Response) => {
 
     return res.status(200).json({
       token,
+      refreshToken,
       user: {
         id: user.id,
         name: user.name,
@@ -338,6 +340,176 @@ router.post('/auth/google', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Google authentication API error:', error)
     return res.status(500).json({ error: 'Google authentication failed: ' + (error.message || 'Server error') })
+  }
+})
+
+// 4b. GitHub Sign-In Route
+router.post('/auth/github', async (req: Request, res: Response) => {
+  try {
+    const { code } = req.body
+    if (!code) {
+      return res.status(400).json({ error: 'Missing authorization code' })
+    }
+
+    const clientId = process.env.GITHUB_CLIENT_ID
+    const clientSecret = process.env.GITHUB_CLIENT_SECRET
+
+    if (!clientId || !clientSecret) {
+      return res.status(400).json({ error: 'GitHub OAuth is not configured on the server.' })
+    }
+
+    // Exchange code for token
+    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code
+      })
+    })
+
+    const tokenData = await tokenResponse.json() as any
+    if (tokenData.error) {
+      return res.status(400).json({ error: tokenData.error_description || 'GitHub OAuth code exchange failed' })
+    }
+
+    const accessToken = tokenData.access_token
+
+    // Fetch user details
+    const userResponse = await fetch('https://api.github.com/user', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'User-Agent': 'CodovateMeet-Server'
+      }
+    })
+
+    const githubUser = await userResponse.json() as any
+    if (!githubUser.id) {
+      return res.status(400).json({ error: 'Failed to retrieve GitHub user profile' })
+    }
+
+    // Fetch user email if not public
+    let email = githubUser.email
+    if (!email) {
+      const emailResponse = await fetch('https://api.github.com/user/emails', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'User-Agent': 'CodovateMeet-Server'
+        }
+      })
+      const emailsList = await emailResponse.json() as any[]
+      const primaryEmail = emailsList.find(e => e.primary)
+      email = primaryEmail ? primaryEmail.email : (emailsList[0] ? emailsList[0].email : null)
+    }
+
+    if (!email) {
+      return res.status(400).json({ error: 'No email address associated with this GitHub account' })
+    }
+
+    const emailLower = email.toLowerCase()
+    const name = githubUser.name || githubUser.login || 'GitHub User'
+
+    let userRes = await query('SELECT * FROM users WHERE email = $1', [emailLower])
+    let user;
+    let isNewUser = false;
+
+    if (userRes.rows.length === 0) {
+      isNewUser = true;
+      const userId = crypto.randomUUID()
+      const randomPassword = crypto.randomUUID() + Math.random().toString(36)
+      const hashedPassword = await bcrypt.hash(randomPassword, 10)
+
+      await query(
+        'INSERT INTO users (id, name, email, password, verification_code, is_verified, role) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [userId, name, emailLower, hashedPassword, null, true, 'user']
+      )
+
+      const freshRes = await query('SELECT * FROM users WHERE id = $1', [userId])
+      user = freshRes.rows[0]
+
+      await query(
+        'INSERT INTO security_logs (id, event_type, user_id, details) VALUES ($1, $2, $3, $4)',
+        [crypto.randomUUID(), 'SIGNUP', userId, `User ${emailLower} signed up using GitHub.`]
+      )
+    } else {
+      user = userRes.rows[0]
+
+      if (user.is_verified === false) {
+        await query('UPDATE users SET is_verified = TRUE, verification_code = NULL WHERE id = $1', [user.id])
+        user.is_verified = true
+      }
+    }
+
+    if (user.locked_until && new Date(user.locked_until) > new Date()) {
+      const diffMs = new Date(user.locked_until).getTime() - Date.now()
+      const diffMins = Math.ceil(diffMs / 60000)
+      return res.status(403).json({
+        error: `Account is locked. Try again in ${diffMins} minute(s).`
+      })
+    }
+
+    await query('UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = $1', [user.id])
+
+    const { token, refreshToken } = await signUserTokens(user)
+
+    await query(
+      'INSERT INTO security_logs (id, event_type, user_id, details) VALUES ($1, $2, $3, $4)',
+      [
+        crypto.randomUUID(),
+        'SUCCESSFUL_LOGIN',
+        user.id,
+        isNewUser ? `User signed up and logged in via GitHub.` : `User signed in successfully via GitHub.`
+      ]
+    )
+
+    return res.status(200).json({
+      token,
+      refreshToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role || 'user'
+      }
+    })
+  } catch (error: any) {
+    console.error('GitHub authentication API error:', error)
+    return res.status(500).json({ error: 'GitHub authentication failed: ' + (error.message || 'Server error') })
+  }
+})
+
+// 4c. Refresh Token Route
+router.post('/refresh', async (req: Request, res: Response) => {
+  try {
+    const { refreshToken } = req.body
+    if (!refreshToken) {
+      return res.status(400).json({ error: 'Missing refresh token' })
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret') as any
+    } catch (e) {
+      return res.status(401).json({ error: 'Invalid or expired refresh token' })
+    }
+
+    const userRes = await query('SELECT * FROM users WHERE id = $1 AND refresh_token = $2', [decoded.id, refreshToken])
+    if (userRes.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid refresh token: session revoked' })
+    }
+
+    const user = userRes.rows[0]
+    const payload = { id: user.id, email: user.email, name: user.name, role: user.role || 'user' }
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '15m' })
+    
+    return res.status(200).json({ token: accessToken })
+  } catch (error) {
+    console.error('Refresh token error:', error)
+    return res.status(500).json({ error: 'Refresh token process failed' })
   }
 })
 
@@ -427,11 +599,7 @@ router.post('/mfa-verify', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid verification code' })
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name, role: user.role || 'user' },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '7d' }
-    )
+    const { token, refreshToken } = await signUserTokens(user)
 
     await query(
       'INSERT INTO security_logs (id, event_type, user_id, details) VALUES ($1, $2, $3, $4)',
@@ -440,6 +608,7 @@ router.post('/mfa-verify', async (req: Request, res: Response) => {
 
     return res.status(200).json({
       token,
+      refreshToken,
       user: {
         id: user.id,
         name: user.name,
@@ -557,7 +726,7 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
   try {
     const userId = req.user?.id
     const resDb = await query(
-      'SELECT id, name, email, is_verified, mfa_enabled, role, plan, billing_period, ai_prompts_used, extra_ai_credits, active_workspaces FROM users WHERE id = $1',
+      'SELECT id, name, email, is_verified, mfa_enabled, role, plan, billing_period, ai_prompts_used, extra_ai_credits, active_workspaces, username, bio, timezone, language, avatar_url FROM users WHERE id = $1',
       [userId]
     )
     if (resDb.rows.length === 0) {
@@ -567,6 +736,29 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
   } catch (error) {
     console.error('Profile API error:', error)
     return res.status(500).json({ error: 'Server error retrieving profile' })
+  }
+})
+
+// 9b. Update Profile Route
+router.put('/profile', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id
+    const { name, username, bio, timezone, language, avatarUrl } = req.body
+
+    await query(
+      'UPDATE users SET name = $1, username = $2, bio = $3, timezone = $4, language = $5, avatar_url = $6 WHERE id = $7',
+      [name, username || null, bio || null, timezone || 'UTC', language || 'en', avatarUrl || null, userId]
+    )
+
+    await query(
+      'INSERT INTO security_logs (id, event_type, user_id, details) VALUES ($1, $2, $3, $4)',
+      [crypto.randomUUID(), 'PROFILE_UPDATED', userId, `User updated profile settings.`]
+    )
+
+    return res.status(200).json({ success: true, message: 'Profile updated successfully!' })
+  } catch (error) {
+    console.error('Update profile API error:', error)
+    return res.status(500).json({ error: 'Server error updating profile' })
   }
 })
 

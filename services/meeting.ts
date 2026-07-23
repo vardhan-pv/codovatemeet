@@ -26,8 +26,8 @@ export const meetingService = {
     return response.data
   },
 
-  async sendMessage(meetingCode: string, message: string) {
-    const response = await api.post('/api/messages', { meetingCode, message })
+  async sendMessage(meetingCode: string, message: string, attachmentUrl?: string, attachmentName?: string) {
+    const response = await api.post('/api/messages', { meetingCode, message, attachmentUrl, attachmentName })
     return response.data
   }
 }

@@ -23,7 +23,7 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert,
   X, Maximize2, Minimize2, Subtitles, Expand, Shrink, Sparkles, Code, Paintbrush,
   BarChart2, ShieldCheck, Crown, Flag, Calendar, Heart, Send, Clock,
-  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio, Settings, StopCircle, MoreHorizontal, Brain, Wrench, LogOut
+  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio, Settings, StopCircle, MoreHorizontal, Brain, Wrench, LogOut, Volume2
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const CodeEditor = dynamic(() => import('@/components/room/CodeEditor').then(m => ({ default: m.CodeEditor })), { ssr: false })
@@ -1376,8 +1376,9 @@ function RoomPageContent() {
   const [pinnedId, setPinnedId] = useState<string | null>(null)
 
   // Chat states
-  const [messages, setMessages] = useState<{sender: string, text: string, time: Date}[]>([])
+  const [messages, setMessages] = useState<{sender: string, text: string, time: Date, attachmentUrl?: string, attachmentName?: string}[]>([])
   const [messageInput, setMessageInput] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // Send data over LiveKit data channel
@@ -1528,6 +1529,22 @@ function RoomPageContent() {
         setMeetingTitle(title)
         setMeetingDescription(desc)
         setMeetingDuration(meetingData.duration_minutes || 60)
+
+        // Fetch historical messages
+        try {
+          const hist = await meetingService.fetchMessages(roomId)
+          if (Array.isArray(hist)) {
+            setMessages(hist.map((h: any) => ({
+              sender: h.sender_name || 'Guest',
+              text: h.message || '',
+              time: new Date(h.created_at),
+              attachmentUrl: h.attachment_url || undefined,
+              attachmentName: h.attachment_name || undefined
+            })))
+          }
+        } catch (e) {
+          console.error('Failed to load chat history:', e)
+        }
 
         if (title) setInterviewPurpose(title)
         if (desc) setInterviewObjectives(desc)
@@ -1825,6 +1842,15 @@ function RoomPageContent() {
           return
         }
         if (parsed.type === 'ADMIN_COMMAND') {
+          if (parsed.command === 'TRANSFER_HOST') {
+            const newHostId = parsed.value
+            setMeetingHostId(newHostId)
+            const newHostName = newHostId.split('_')[0]
+            setMeetingHostName(newHostName)
+            displayCaption('System', `👑 Host permissions have been transferred to ${newHostName}`)
+            return
+          }
+
           // If the target is a specific user, ensure it applies to us
           if (parsed.targetId && parsed.targetId !== 'ALL' && parsed.targetId !== room.localParticipant.identity) {
             return
@@ -1981,7 +2007,13 @@ function RoomPageContent() {
           return
         }
         if (parsed.type === 'CHAT_MESSAGE') {
-          setMessages(prev => [...prev, { sender, text: parsed.text, time: new Date() }])
+          setMessages(prev => [...prev, {
+            sender,
+            text: parsed.text,
+            time: new Date(),
+            attachmentUrl: parsed.attachmentUrl,
+            attachmentName: parsed.attachmentName
+          }])
           accumulateChatMessage({ sender, text: parsed.text })
           setMetrics(prev => ({ ...prev, chatMsgs: prev.chatMsgs + 1 }))
           // Show chat toast if chat panel is not open
@@ -2786,18 +2818,55 @@ function RoomPageContent() {
 
   const sendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!messageInput.trim() || !room) return
+    if (!messageInput.trim() && !selectedFile) return
+    if (!room) return
 
     try {
-      sendData('CHAT_MESSAGE', { text: messageInput })
-      setMessages(prev => [...prev, { sender: lobbyName, text: messageInput, time: new Date() }])
+      let attachmentUrl: string | undefined
+      let attachmentName: string | undefined
+
+      if (selectedFile) {
+        const formData = new FormData()
+        formData.append('file', selectedFile)
+
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+        const response = await fetch(`${backendUrl}/api/messages/upload`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: formData
+        })
+        if (response.ok) {
+          const data = await response.json()
+          attachmentUrl = data.url
+          attachmentName = data.name
+        }
+      }
+
+      sendData('CHAT_MESSAGE', {
+        text: messageInput,
+        attachmentUrl,
+        attachmentName
+      })
+
+      setMessages(prev => [...prev, {
+        sender: lobbyName,
+        text: messageInput,
+        time: new Date(),
+        attachmentUrl,
+        attachmentName
+      }])
       
       if (useAuth.getState().token) {
-        await meetingService.sendMessage(roomId, messageInput)
+        await meetingService.sendMessage(roomId, messageInput, attachmentUrl, attachmentName)
       }
+
       setMessageInput('')
+      setSelectedFile(null)
     } catch (e) {
       setMessageInput('')
+      setSelectedFile(null)
     }
   }
 
@@ -3169,13 +3238,39 @@ function RoomPageContent() {
                       <span className={`font-bold text-xs ${isMe ? 'text-blue-400' : 'text-primary'}`}>{msg.sender}</span>
                       <span className="text-[9px] text-slate-400">{new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
-                    <p className={`text-xs inline-block px-3 py-1.5 rounded-[20px] max-w-[85%] break-words shadow-sm ${
+                    <div className={`text-xs inline-block px-3 py-1.5 rounded-[20px] max-w-[85%] break-words shadow-sm ${
                       isMe 
                         ? 'bg-primary text-white rounded-tr-none' 
                         : 'bg-secondary text-slate-200 rounded-tl-none border border-border'
                     }`}>
-                      {displayedText}
-                    </p>
+                      {displayedText && <p>{displayedText}</p>}
+                      {msg.attachmentUrl && (
+                        <div className={`mt-1.5 p-2 rounded-xl flex flex-col gap-2 ${isMe ? 'bg-black/20 text-white' : 'bg-background/50 text-slate-200'} border border-white/5`}>
+                          {/\.(jpg|jpeg|png|webp|gif)$/i.test(msg.attachmentName || '') && (
+                            <img
+                              src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${msg.attachmentUrl}`}
+                              alt={msg.attachmentName}
+                              className="max-h-32 object-cover rounded-lg w-full"
+                              onError={(e) => { (e.target as HTMLElement).style.display = 'none' }}
+                            />
+                          )}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Paperclip className="h-4 w-4 shrink-0 text-slate-400" />
+                            <div className="flex flex-col min-w-0">
+                              <a
+                                href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${msg.attachmentUrl}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-bold hover:underline truncate text-[11px] block text-sky-400"
+                              >
+                                {msg.attachmentName || 'Attachment'}
+                              </a>
+                              <span className="text-[9px] text-slate-400">Click to download</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )
               })}
@@ -3186,11 +3281,39 @@ function RoomPageContent() {
                   💬 Chat has been locked by the host
                 </p>
               ) : (
-                <form onSubmit={sendChatMessage} className="flex gap-2">
-                  <Input placeholder="Type a message..." value={messageInput} onChange={(e) => setMessageInput(e.target.value)} className="bg-background border-border" />
-                  <Button type="submit" disabled={!messageInput.trim()} className="bg-primary text-primary-foreground hover:opacity-90">
-                    <Send className="h-4 w-4" />
-                  </Button>
+                <form onSubmit={sendChatMessage} className="flex flex-col gap-2">
+                  {selectedFile && (
+                    <div className="flex items-center justify-between p-1.5 px-3 bg-secondary rounded-full border border-border text-[11px] text-slate-200">
+                      <span className="truncate font-semibold max-w-[200px] flex items-center gap-1">
+                        📎 {selectedFile.name}
+                      </span>
+                      <button type="button" onClick={() => setSelectedFile(null)} className="text-red-400 hover:text-red-300 font-bold ml-2">✕</button>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      id="chat-file-upload"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setSelectedFile(e.target.files[0])
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('chat-file-upload')?.click()}
+                      className="h-9 w-9 p-0 rounded-full border-border bg-secondary hover:bg-secondary/80 flex items-center justify-center shrink-0 border-none"
+                    >
+                      <Paperclip className="h-4 w-4 text-slate-400" />
+                    </Button>
+                    <Input placeholder="Type a message..." value={messageInput} onChange={(e) => setMessageInput(e.target.value)} className="bg-background border-border" />
+                    <Button type="submit" disabled={!messageInput.trim() && !selectedFile} className="bg-primary text-primary-foreground hover:opacity-90 rounded-full shrink-0 h-9 w-9 p-0 flex items-center justify-center border-none">
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </form>
               )}
             </div>
@@ -3841,6 +3964,18 @@ function RoomPageContent() {
               </Button>
               <Button onClick={handleVideoToggle} size="icon" className={`h-11 w-11 rounded-full border-none transition-all duration-300 hover:scale-110 active:scale-90 ${isVideoOff ? 'bg-gradient-to-r from-rose-500 to-red-600 shadow-md shadow-red-500/20' : 'bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700'}`}>
                 {isVideoOff ? <VideoOff className="h-4.5 w-4.5 text-white" /> : <Video className="h-4.5 w-4.5 text-slate-300" />}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  const audio = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg')
+                  audio.play().catch(() => alert('Failed to play audio test. Ensure speaker volume is turned up.'))
+                }}
+                size="icon"
+                className="h-11 w-11 rounded-full border-none bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 transition-all duration-300 hover:scale-110 active:scale-90 cursor-pointer"
+                title="Test Speaker Output"
+              >
+                <Volume2 className="h-4.5 w-4.5 text-slate-300" />
               </Button>
             </div>
           </div>

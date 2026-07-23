@@ -69,6 +69,37 @@
   --radius: 9999px; /* Pill-shaped buttons by default */
 }
 
+.light {
+  color-scheme: light;
+
+  --background: #f8fafc; /* Crisp light gray background */
+  --foreground: #09090b; /* Dark text */
+
+  --card: #ffffff; /* Stark white card background */
+  --card-foreground: #09090b;
+
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+
+  --primary: #0B5CFF; /* Zoom Vibrant Blue */
+  --primary-foreground: #ffffff;
+
+  --secondary: #e2e8f0; /* Soft slate-200 background */
+  --secondary-foreground: #334155;
+
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  --accent: #0f172a;
+  --accent-foreground: #ffffff;
+
+  --destructive: #ef4444;
+
+  --border: #e2e8f0; /* Soft borders */
+  --input: #ffffff;
+  --ring: #0B5CFF;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -85,25 +116,25 @@
 
 @layer components {
   .premium-card {
-    background: #0b1437;
-    border: 1px solid #1d327d;
+    background: var(--card);
+    border: 1px solid var(--border);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-radius: 24px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .premium-card:hover {
-    background: #101f52;
+    background: var(--secondary);
     border-color: #0b5cff;
     box-shadow: 0 8px 30px rgba(11, 92, 255, 0.15);
     transform: translateY(-2px);
   }
 
   .glass-card-dark {
-    background: #070e28/80;
-    border: 1px solid #1d327d;
+    background: var(--card);
+    border: 1px solid var(--border);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 24px;
@@ -111,8 +142,8 @@
   }
 
   .glass-card {
-    background: #0b1437/80;
-    border: 1px solid #1d327d;
+    background: var(--card);
+    border: 1px solid var(--border);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-radius: 24px;

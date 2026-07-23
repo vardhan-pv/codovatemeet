@@ -63,7 +63,13 @@ async function initDB() {
         ADD COLUMN IF NOT EXISTS billing_period VARCHAR(255) DEFAULT 'monthly',
         ADD COLUMN IF NOT EXISTS ai_prompts_used INTEGER DEFAULT 0,
         ADD COLUMN IF NOT EXISTS extra_ai_credits INTEGER DEFAULT 0,
-        ADD COLUMN IF NOT EXISTS active_workspaces INTEGER DEFAULT 1;
+        ADD COLUMN IF NOT EXISTS active_workspaces INTEGER DEFAULT 1,
+        ADD COLUMN IF NOT EXISTS refresh_token VARCHAR(500) DEFAULT NULL,
+        ADD COLUMN IF NOT EXISTS username VARCHAR(255) DEFAULT NULL,
+        ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT NULL,
+        ADD COLUMN IF NOT EXISTS timezone VARCHAR(100) DEFAULT 'UTC',
+        ADD COLUMN IF NOT EXISTS language VARCHAR(50) DEFAULT 'en',
+        ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500) DEFAULT NULL;
       `)
 
       // Create Security Logs table
@@ -116,6 +122,12 @@ async function initDB() {
           message TEXT NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+      `)
+      
+      await client.query(`
+        ALTER TABLE messages
+        ADD COLUMN IF NOT EXISTS attachment_url VARCHAR(500) DEFAULT NULL,
+        ADD COLUMN IF NOT EXISTS attachment_name VARCHAR(255) DEFAULT NULL;
       `)
 
       // Create Meeting History table

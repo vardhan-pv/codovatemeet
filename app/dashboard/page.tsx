@@ -9,11 +9,12 @@ import {
   LogOut, Plus, Video, Copy, Check, ArrowRight, Clock, Calendar, Terminal, Layout,
   LayoutDashboard, Users, X, Globe, Tag, AlignLeft, Paperclip, Mail, Sparkles,
   ShieldCheck, KeyRound, Lock, MonitorPlay, Briefcase, GraduationCap, Lightbulb, Play, Zap, Shield, Cloud,
-  MessageSquare, Share2, PhoneCall, ChevronDown, ChevronUp, Settings2
+  MessageSquare, Share2, PhoneCall, ChevronDown, ChevronUp, Settings2, Sun, Moon
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useTheme } from '@/components/theme-provider'
 
 const fadeInUp = {
   initial: { opacity: 0, y: 15 },
@@ -58,6 +59,7 @@ const colorDotClasses: Record<string, string> = {
 
 export default function DashboardPage() {
   const { user, token, loadProfile, logout } = useAuth()
+  const { theme, setTheme } = useTheme()
   const [recentMeetings, setRecentMeetings] = useState<MeetingRecord[]>([])
   const [createdCode, setCreatedCode] = useState<string | null>(null)
   const [createdScheduledAt, setCreatedScheduledAt] = useState<string | null>(null)
@@ -559,8 +561,42 @@ export default function DashboardPage() {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="h-8 w-8 rounded-full border-border bg-secondary hover:bg-secondary/80 text-slate-200 p-0 shadow-xs flex items-center justify-center transition border-none"
+            title="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun className="h-4.5 w-4.5 text-amber-400" /> : <Moon className="h-4.5 w-4.5 text-indigo-400" />}
+          </Button>
+
+          {user && user.role === 'admin' && (
+            <Link href="/admin">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-full border-border bg-secondary hover:bg-secondary/80 text-slate-200 font-semibold text-xs px-3.5 shadow-xs flex items-center gap-1.5 transition border-none cursor-pointer"
+              >
+                <Shield className="h-3.5 w-3.5 text-primary" />
+                <span>Admin Panel</span>
+              </Button>
+            </Link>
+          )}
+
+          <Link href="/settings">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 rounded-full border-border bg-secondary hover:bg-secondary/80 text-slate-200 font-semibold text-xs px-3.5 shadow-xs flex items-center gap-1.5 transition border-none cursor-pointer"
+            >
+              <Settings2 className="h-3.5 w-3.5 text-[#64748B]" />
+              <span>Settings</span>
+            </Button>
+          </Link>
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={logout}
-            className="h-8 rounded-full border-border bg-secondary hover:bg-secondary/80 text-slate-200 font-semibold text-xs px-3.5 shadow-xs flex items-center gap-1.5 transition"
+            className="h-8 rounded-full border-border bg-secondary hover:bg-secondary/80 text-slate-200 font-semibold text-xs px-3.5 shadow-xs flex items-center gap-1.5 transition border-none cursor-pointer"
           >
             <LogOut className="h-3.5 w-3.5 text-[#64748B]" />
             <span>Logout</span>

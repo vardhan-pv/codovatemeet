@@ -24,6 +24,45 @@ export default function LoginPage() {
   const [mfaUserId, setMfaUserId] = useState<string | null>(null)
   const [mfaCode, setMfaCode] = useState('')
   const [isVerifying, setIsVerifying] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
+
+  const handleGithubCallback = async (code: string) => {
+    setIsLoading(true)
+    setFormError('Authenticating with GitHub...')
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${backendUrl}/api/auth/github`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        localStorage.setItem('token', data.token)
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken)
+        }
+        useAuth.setState({ token: data.token, user: data.user })
+        window.location.href = '/dashboard'
+      } else {
+        setFormError(data.error || 'GitHub Authentication failed')
+        setIsLoading(false)
+      }
+    } catch {
+      setFormError('Failed to verify GitHub login')
+      setIsLoading(false)
+    }
+  }
+
+  const handleGithubLogin = () => {
+    const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID
+    if (!clientId) {
+      alert('GitHub Client ID is not configured.')
+      return
+    }
+    const redirectUri = `${window.location.origin}/login`
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`
+  }
 
   const initializeGoogle = () => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
@@ -80,11 +119,23 @@ export default function LoginPage() {
       const rUserId = params.get('userId')
       const rEmail = params.get('email')
       const isReg = params.get('registered')
+      const code = params.get('code')
+
+      // Remember Me prefill
+      const savedEmail = localStorage.getItem('rememberedEmail')
+      if (savedEmail) {
+        setEmail(savedEmail)
+        setRememberMe(true)
+      }
       
       if (rUserId) {
         setUnverifiedUserId(rUserId)
         if (rEmail) setEmail(rEmail)
         if (isReg) setFormError('Account created successfully! Please enter the 6-digit verification code sent to your email.')
+      }
+
+      if (code) {
+        handleGithubCallback(code)
       }
     }
   }, [])
@@ -101,6 +152,11 @@ export default function LoginPage() {
     setIsLoading(true)
     setFormError(null)
     try {
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email)
+      } else {
+        localStorage.removeItem('rememberedEmail')
+      }
       const success = await login(email, password)
       if (success) {
         const params = new URLSearchParams(window.location.search)
@@ -164,6 +220,9 @@ export default function LoginPage() {
       const data = await response.json()
       if (response.ok) {
         localStorage.setItem('token', data.token)
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken)
+        }
         useAuth.setState({ token: data.token, user: data.user })
         window.location.href = '/dashboard'
       } else {
@@ -358,6 +417,7 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <label className="block text-sm font-semibold text-foreground">Password</label>
+                    <Link href="/forgot-password" className="text-xs text-primary font-bold hover:underline">Forgot password?</Link>
                   </div>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -370,6 +430,19 @@ export default function LoginPage() {
                       required
                     />
                   </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 select-none">
+                  <input
+                    type="checkbox"
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-border text-primary bg-input cursor-pointer"
+                  />
+                  <label htmlFor="rememberMe" className="text-xs text-muted-foreground cursor-pointer">
+                    Remember me
+                  </label>
                 </div>
 
                 <Button
@@ -395,9 +468,20 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="w-full flex justify-center">
-                <div id="google-signin-btn" className="w-full max-w-sm flex justify-center"></div>
-              </div>
+               <div className="w-full flex flex-col items-center gap-3">
+                 <div id="google-signin-btn" className="w-full max-w-sm flex justify-center"></div>
+                 <Button
+                   type="button"
+                   variant="outline"
+                   onClick={handleGithubLogin}
+                   className="w-full max-w-sm h-11 rounded-full border border-border bg-card text-white font-extrabold text-sm flex items-center justify-center gap-2 hover:bg-secondary transition-all"
+                 >
+                   <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                     <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.11.82-.26.82-.577v-2.234c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.43.372.82 1.102.82 2.222v3.293c0 .319.22.694.825.576C20.565 21.795 24 17.3 24 12c0-6.63-5.37-12-12-12z" />
+                   </svg>
+                   <span>Continue with GitHub</span>
+                 </Button>
+               </div>
 
               <div className="mt-8 pt-8 border-t border-border text-center">
                 <p className="text-sm text-muted-foreground">New to Codovate Meet? <Link href="/register" className="text-primary font-bold hover:underline">Create a free account →</Link></p>

@@ -19,7 +19,8 @@ import {
   HardDrive,
   RotateCcw,
   Volume2,
-  VolumeX
+  VolumeX,
+  Cloud
 } from 'lucide-react'
 import { RecordingMode, RecordingQuality } from '@/hooks/useMeetingRecorder'
 import { exportTranscriptFile } from '@/lib/transcriptExporter'
@@ -67,6 +68,8 @@ export function MeetingRecorderModal({
   const [selectedMode, setSelectedMode] = useState<RecordingMode>('full_meeting')
   const [selectedQuality, setSelectedQuality] = useState<RecordingQuality>('720p')
   const [withAudio, setWithAudio] = useState<boolean>(true)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null)
 
   if (!isOpen) return null
 
@@ -74,6 +77,35 @@ export function MeetingRecorderModal({
     const mins = Math.floor(totalSecs / 60)
     const secs = totalSecs % 60
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+  }
+
+  const handleSaveToCloud = async () => {
+    if (!recordedBlob) return
+    setIsUploading(true)
+    setUploadStatus('Uploading recording to cloud...')
+    try {
+      const formData = new FormData()
+      formData.append('recording', recordedBlob, `meeting-${roomId}-${Date.now()}.webm`)
+
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${backendUrl}/api/recordings/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      })
+      if (response.ok) {
+        setUploadStatus('Recording saved to cloud folder successfully!')
+      } else {
+        const errorData = await response.json()
+        setUploadStatus(`Upload failed: ${errorData.error || 'Server error'}`)
+      }
+    } catch (e: any) {
+      setUploadStatus(`Upload failed: ${e.message || 'Network error'}`)
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   return (
@@ -92,11 +124,11 @@ export function MeetingRecorderModal({
                 <Radio className={`w-5 h-5 ${isRecording ? 'animate-pulse' : ''}`} />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-                  Session Recorder & Local Exporter
+                <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2 font-sans">
+                  Session Recorder & Cloud Exporter
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Record meeting session directly to your local computer
+                  Record meeting session directly to cloud or local computer
                 </p>
               </div>
             </div>
@@ -139,7 +171,7 @@ export function MeetingRecorderModal({
                   {isPaused ? (
                     <Button
                       onClick={onResumeRecording}
-                      className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold gap-1.5 h-10 px-4 rounded-xl"
+                      className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold gap-1.5 h-10 px-4 rounded-xl border-none cursor-pointer"
                     >
                       <Play className="w-4 h-4" /> Resume
                     </Button>
@@ -147,7 +179,7 @@ export function MeetingRecorderModal({
                     <Button
                       onClick={onPauseRecording}
                       variant="outline"
-                      className="border-slate-700 bg-slate-800 text-slate-200 text-xs font-bold gap-1.5 h-10 px-4 rounded-xl"
+                      className="border-slate-700 bg-slate-800 text-slate-200 text-xs font-bold gap-1.5 h-10 px-4 rounded-xl border-none cursor-pointer"
                     >
                       <Pause className="w-4 h-4" /> Pause
                     </Button>
@@ -155,7 +187,7 @@ export function MeetingRecorderModal({
 
                   <Button
                     onClick={onStopRecording}
-                    className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold gap-1.5 h-10 px-4 rounded-xl shadow-lg shadow-rose-600/30"
+                    className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold gap-1.5 h-10 px-4 rounded-xl shadow-lg shadow-rose-600/30 border-none cursor-pointer"
                   >
                     <Square className="w-4 h-4" /> Stop & Export
                   </Button>
@@ -178,24 +210,39 @@ export function MeetingRecorderModal({
                     />
                   )}
 
+                  {uploadStatus && (
+                    <div className="p-2.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs rounded-xl font-semibold text-center animate-in fade-in">
+                      {uploadStatus}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Button
                       onClick={() => onDownloadLocal()}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-10 rounded-xl shadow-lg shadow-emerald-600/20 gap-2"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-10 rounded-xl shadow-lg shadow-emerald-600/20 gap-2 border-none cursor-pointer"
                     >
                       <HardDrive className="w-4 h-4" />
-                      Save File to Local Machine
+                      Save File Local
                     </Button>
 
                     <Button
-                      onClick={onResetRecorder}
-                      variant="outline"
-                      className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs h-10 rounded-xl gap-2"
+                      disabled={isUploading}
+                      onClick={handleSaveToCloud}
+                      className="bg-primary hover:bg-[#004fe6] text-white font-bold text-xs h-10 rounded-xl gap-2 border-none cursor-pointer"
                     >
-                      <RotateCcw className="w-4 h-4 text-blue-400" />
-                      Start New Recording
+                      <Cloud className={`w-4 h-4 ${isUploading ? 'animate-bounce' : ''}`} />
+                      Upload to Cloud
                     </Button>
                   </div>
+
+                  <Button
+                    onClick={onResetRecorder}
+                    variant="outline"
+                    className="w-full border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs h-10 rounded-xl gap-2 border-none cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4 text-blue-400" />
+                    Discard & Start New Recording
+                  </Button>
                 </div>
 
                 {/* Subtitle Downloads */}
