@@ -538,7 +538,7 @@ export default function DashboardPage() {
             />
           </div>
           <div className="flex flex-col leading-none">
-            <span className="font-extrabold text-base tracking-tight text-white group-hover:text-primary transition-colors">
+            <span className="font-extrabold text-base tracking-tight text-slate-950 group-hover:text-primary transition-colors">
               Codovate Meet
             </span>
             <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase mt-0.5">
@@ -550,22 +550,20 @@ export default function DashboardPage() {
         {/* Right User Profile Info & Logout */}
         <div className="flex items-center gap-3.5">
           <div className="hidden sm:flex flex-col items-end leading-tight select-none">
-            <span className="font-extrabold text-xs text-white">{displayUsername}</span>
-            <span className="text-[11px] text-muted-foreground">{displayEmail}</span>
+            <span className="font-extrabold text-xs text-slate-800">{displayUsername}</span>
+            <span className="text-[11px] text-slate-500 font-medium">{displayEmail}</span>
           </div>
 
-          <div className="w-9 h-9 rounded-full bg-secondary border border-border flex items-center justify-center text-primary font-extrabold text-sm shadow-xs select-none">
+          <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-primary font-extrabold text-sm shadow-xs select-none">
             {firstLetter}
           </div>
-
-
 
           {user && user.role === 'admin' && (
             <Link href="/admin">
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 rounded-full border-border bg-secondary hover:bg-secondary/80 text-slate-200 font-semibold text-xs px-3.5 shadow-xs flex items-center gap-1.5 transition border-none cursor-pointer"
+                className="h-8 rounded-full border border-gray-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs px-3.5 shadow-xs flex items-center gap-1.5 transition cursor-pointer"
               >
                 <Shield className="h-3.5 w-3.5 text-primary" />
                 <span>Admin Panel</span>
@@ -577,9 +575,9 @@ export default function DashboardPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 rounded-full border-border bg-secondary hover:bg-secondary/80 text-slate-200 font-semibold text-xs px-3.5 shadow-xs flex items-center gap-1.5 transition border-none cursor-pointer"
+              className="h-8 rounded-full border border-gray-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs px-3.5 shadow-xs flex items-center gap-1.5 transition cursor-pointer"
             >
-              <Settings2 className="h-3.5 w-3.5 text-[#64748B]" />
+              <Settings2 className="h-3.5 w-3.5 text-slate-500" />
               <span>Settings</span>
             </Button>
           </Link>
@@ -588,9 +586,9 @@ export default function DashboardPage() {
             variant="outline"
             size="sm"
             onClick={logout}
-            className="h-8 rounded-full border-border bg-secondary hover:bg-secondary/80 text-slate-200 font-semibold text-xs px-3.5 shadow-xs flex items-center gap-1.5 transition border-none cursor-pointer"
+            className="h-8 rounded-full border border-gray-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs px-3.5 shadow-xs flex items-center gap-1.5 transition cursor-pointer"
           >
-            <LogOut className="h-3.5 w-3.5 text-[#64748B]" />
+            <LogOut className="h-3.5 w-3.5 text-slate-500" />
             <span>Logout</span>
           </Button>
         </div>
