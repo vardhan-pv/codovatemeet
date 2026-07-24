@@ -558,15 +558,7 @@ export default function DashboardPage() {
             {firstLetter}
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="h-8 w-8 rounded-full border-border bg-secondary hover:bg-secondary/80 text-slate-200 p-0 shadow-xs flex items-center justify-center transition border-none"
-            title="Toggle theme"
-          >
-            {theme === 'dark' ? <Sun className="h-4.5 w-4.5 text-amber-400" /> : <Moon className="h-4.5 w-4.5 text-indigo-400" />}
-          </Button>
+
 
           {user && user.role === 'admin' && (
             <Link href="/admin">

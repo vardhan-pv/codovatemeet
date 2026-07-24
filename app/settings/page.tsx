@@ -98,12 +98,7 @@ export default function SettingsPage() {
             </Link>
             <h1 className="text-xl font-black tracking-tight">Account Settings</h1>
           </div>
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="text-xs font-bold px-3 py-1.5 bg-secondary border border-border rounded-full hover:bg-secondary/80 transition"
-          >
-            {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
-          </button>
+
         </div>
       </header>
 
