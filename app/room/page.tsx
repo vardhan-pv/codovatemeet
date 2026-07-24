@@ -23,7 +23,7 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, MonitorUp, ShieldAlert,
   X, Maximize2, Minimize2, Subtitles, Expand, Shrink, Sparkles, Code, Paintbrush,
   BarChart2, ShieldCheck, Crown, Flag, Calendar, Heart, Send, Clock,
-  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio, Settings, StopCircle, MoreHorizontal, Brain, Wrench, LogOut, Volume2
+  RefreshCw, Clipboard, Check, Play, User, Terminal, HelpCircle, Activity, PlayCircle, Eye, GitBranch, Rocket, Target, FileText, Timer, Share2, Archive, Radio, Settings, StopCircle, MoreHorizontal, Brain, Wrench, LogOut, Volume2, Paperclip
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const CodeEditor = dynamic(() => import('@/components/room/CodeEditor').then(m => ({ default: m.CodeEditor })), { ssr: false })
@@ -1378,6 +1378,8 @@ function RoomPageContent() {
   // Chat states
   const [messages, setMessages] = useState<{sender: string, text: string, time: Date, attachmentUrl?: string, attachmentName?: string}[]>([])
   const [messageInput, setMessageInput] = useState('')
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false)
+  const [mentionSearch, setMentionSearch] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -3309,7 +3311,50 @@ function RoomPageContent() {
                     >
                       <Paperclip className="h-4 w-4 text-slate-400" />
                     </Button>
-                    <Input placeholder="Type a message..." value={messageInput} onChange={(e) => setMessageInput(e.target.value)} className="bg-background border-border" />
+                    <div className="relative flex-1">
+                      {showMentionSuggestions && (
+                        <div className="absolute bottom-11 left-0 right-0 bg-popover border border-border rounded-xl shadow-xl z-50 max-h-36 overflow-y-auto p-1.5 flex flex-col gap-0.5">
+                          {participants
+                            .filter(p => getDisplayName(p.identity).toLowerCase().includes(mentionSearch.toLowerCase()))
+                            .map((p, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => {
+                                  const words = messageInput.split(' ')
+                                  words[words.length - 1] = `@${getDisplayName(p.identity)}`
+                                  setMessageInput(words.join(' ') + ' ')
+                                  setShowMentionSuggestions(false)
+                                }}
+                                className="w-full text-left px-3 py-1.5 hover:bg-secondary rounded-lg text-xs font-bold transition text-slate-200 border-none bg-transparent cursor-pointer"
+                              >
+                                @{getDisplayName(p.identity)}
+                              </button>
+                            ))
+                          }
+                          {participants.filter(p => getDisplayName(p.identity).toLowerCase().includes(mentionSearch.toLowerCase())).length === 0 && (
+                            <span className="text-[10px] text-muted-foreground p-2">No matching participants</span>
+                          )}
+                        </div>
+                      )}
+                      <Input
+                        placeholder="Type a message..."
+                        value={messageInput}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setMessageInput(val)
+                          const words = val.split(' ')
+                          const lastWord = words[words.length - 1]
+                          if (lastWord.startsWith('@')) {
+                            setMentionSearch(lastWord.slice(1))
+                            setShowMentionSuggestions(true)
+                          } else {
+                            setShowMentionSuggestions(false)
+                          }
+                        }}
+                        className="bg-background border-border w-full"
+                      />
+                    </div>
                     <Button type="submit" disabled={!messageInput.trim() && !selectedFile} className="bg-primary text-primary-foreground hover:opacity-90 rounded-full shrink-0 h-9 w-9 p-0 flex items-center justify-center border-none">
                       <Send className="h-4 w-4" />
                     </Button>
