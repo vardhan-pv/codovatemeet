@@ -21,10 +21,10 @@ if (!fs.existsSync(RECORDINGS_DIR)) {
 
 // Multer Storage configurations
 const uploadStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (req: any, file: any, cb: any) => {
     cb(null, UPLOADS_DIR)
   },
-  filename: (req, file, cb) => {
+  filename: (req: any, file: any, cb: any) => {
     const ext = path.extname(file.originalname)
     const base = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9]/g, '_')
     const unique = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}`
@@ -33,10 +33,10 @@ const uploadStorage = multer.diskStorage({
 })
 
 const recordingStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (req: any, file: any, cb: any) => {
     cb(null, RECORDINGS_DIR)
   },
-  filename: (req, file, cb) => {
+  filename: (req: any, file: any, cb: any) => {
     const ext = path.extname(file.originalname) || '.webm'
     const unique = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}`
     cb(null, `recording-${unique}${ext}`)

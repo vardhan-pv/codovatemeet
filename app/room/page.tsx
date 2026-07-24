@@ -3355,8 +3355,24 @@ function RoomPageContent() {
                         </div>
                         <div>
                           <p className="text-sm font-semibold flex items-center gap-2 text-foreground truncate max-w-32">
-                            {getDisplayName(p.identity)} {p.isLocal && <span className="text-[10px] text-muted-foreground">(You)</span>}
+                            {p.isLocal ? lobbyName || getDisplayName(p.identity) : getDisplayName(p.identity)} {p.isLocal && <span className="text-[10px] text-muted-foreground">(You)</span>}
                             {isHost && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 font-bold">Host</span>}
+                            {p.isLocal && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newName = prompt('Enter your new display name:', lobbyName || getDisplayName(p.identity))
+                                  if (newName && newName.trim()) {
+                                    setLobbyName(newName.trim())
+                                    displayCaption('System', `You changed your display name to ${newName.trim()}`)
+                                  }
+                                }}
+                                className="text-[10px] text-primary font-bold hover:underline border-none bg-transparent cursor-pointer ml-1"
+                                title="Rename Display Name"
+                              >
+                                ✏️
+                              </button>
+                            )}
                           </p>
                         </div>
                       </div>

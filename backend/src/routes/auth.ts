@@ -17,6 +17,7 @@ export interface AuthRequest extends Request {
     name: string
     role: string
   }
+  file?: any
 }
 
 // Authentication Middleware

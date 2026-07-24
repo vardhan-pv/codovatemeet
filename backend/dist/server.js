@@ -7,12 +7,15 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const path_1 = __importDefault(require("path"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const meetings_1 = __importDefault(require("./routes/meetings"));
 const messages_1 = __importDefault(require("./routes/messages"));
 const ai_1 = __importDefault(require("./routes/ai"));
 const run_1 = __importDefault(require("./routes/run"));
 const billing_1 = __importDefault(require("./routes/billing"));
+const upload_1 = __importDefault(require("./routes/upload"));
+const admin_1 = __importDefault(require("./routes/admin"));
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
 // Configure CORS to dynamically allow requests from local development origins
@@ -46,11 +49,16 @@ app.get('/health', (req, res) => {
 });
 // Register routes matching Next.js API endpoints
 app.use('/api', auth_1.default);
+app.use('/api', upload_1.default);
 app.use('/api/meetings', meetings_1.default);
 app.use('/api/messages', messages_1.default);
 app.use('/api/ai', ai_1.default);
 app.use('/api/run', run_1.default);
 app.use('/api/billing', billing_1.default);
+app.use('/api/admin', admin_1.default);
+// Static routes to access uploaded files and recordings
+app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../public/uploads')));
+app.use('/recordings', express_1.default.static(path_1.default.join(__dirname, '../public/recordings')));
 app.listen(PORT, () => {
     console.log(`[SERVER SUCCESS] Backend server running on port ${PORT}`);
 });
